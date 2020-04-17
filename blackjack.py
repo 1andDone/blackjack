@@ -641,7 +641,7 @@ def dealer_plays_hand(rules, cards, dealer, dealer_hole_card, dealer_hand):
                 dealer.hit(hand=dealer_hand, new_card=cards.deal_card())
 
 
-def compare_hands(table):
+def compare_hands(table, dealer_hand):
     """
     Players compare their hands against the dealer
 
@@ -649,6 +649,8 @@ def compare_hands(table):
     ----------
     table : class
         Table class instance
+    dealer_hand : list
+        List of string card elements representing the dealer's hand
 
     """
     dealer_total = max_count_hand(dealer_hand)
@@ -771,6 +773,6 @@ if __name__ == "__main__":
                     )
 
                 # compare players hands to dealer and pay out to winning players
-                compare_hands(table=t)
+                compare_hands(table=t, dealer_hand=dealer_hand)
 
                 print('------------------------------------------------------------------')
