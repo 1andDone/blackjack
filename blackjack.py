@@ -5,10 +5,10 @@ import counting_strategies
 from helper import count_hand, max_count_hand, splittable
 
 
-# TODO clean up classes and put in separate files
-# TODO Kelly Criterion for betting
-# TODO make poor players
-# TODO run simulations
+# TODO clean up classes
+# TODO BettingStrategy class (Kelly Criterion, Flat betting, betting ramp)
+# TODO make poor players (do not play optimal strategy)
+# TODO run simulations and make plots
 # TODO Player and Dealer classes can't take a Cards input because that value changes when shoe is run dry
 # TODO Player class is fixed once at the table
 
@@ -114,7 +114,7 @@ class CountingStrategy(object):
     cards : class
         Cards class instance
     strategy : str
-        Name of the strategy that uses either running count or true count
+        Name of the card counting strategy using either running count or true count
 
     """
     def __init__(self, cards, strategy):
@@ -140,17 +140,9 @@ class Dealer(object):
     """
     Dealer is an object that represents the dealer at the table.
 
-    Parameters
-    ----------
-    cards : class
-        Cards class instance
-
     """
-    def __init__(self, cards):
-        self.cards = cards
-
-    def hit(self, hand):
-        hand.append(self.cards.deal_card())
+    def hit(self, hand, new_card):
+        hand.append(new_card)
         return hand
 
 
@@ -215,20 +207,20 @@ class Player(object):
         Name of the player
     bank : class
         Bank class instance
-    cards : class
-        Cards class instance
     rules : class
         HouseRules class instance
     play_strategy : class
         BasicStrategy class instance
-    count_strategy : class
-        CountingStrategy class instance
+    count_strategy : string
+        Name of the card counting strategy used by the player
 
     """
-    def __init__(self, name, bank, cards, rules, play_strategy, count_strategy=None):
+    def __init__(self, name, bank, rules, play_strategy, count_strategy=None):
+        if count_strategy is not None:
+            if count_strategy not in ['Hi-Lo', 'Hi-Opt I', 'Hi-Opt II', 'Omega II', 'Halves', 'Zen Count']:
+                raise ValueError('Strategy must be Hi-Lo, Hi-Opt I, Hi-Opt II, Omega II, Halves, or Zen Count')
         self.name = name
         self.bank = bank
-        self.cards = cards
         self.rules = rules
         self.play_strategy = play_strategy
         self.count_strategy = count_strategy
@@ -279,8 +271,8 @@ class Player(object):
     def get_stand(self, key):
         return self.hands_dict[key]['stand']
 
-    def hit(self, key):
-        self.hands_dict[key]['hand'].append(self.cards.deal_card())
+    def hit(self, key, new_card):
+        self.hands_dict[key]['hand'].append(new_card)
 
     def stand(self, key):
         self.hands_dict[key]['stand'] = True
@@ -293,8 +285,8 @@ class Player(object):
         self.stand(key=key)
 
     def double_down(self, key):
-        self.hands_dict[key]['bet'] = self.hands_dict[key]['bet'] * 2
-        self.hit(key=key)
+        self.hands_dict[key]['bet'] = 2 * self.hands_dict[key]['bet']
+        self.hit(key=key, new_card=c.deal_card())
         self.stand(key=key)
 
     def split(self, key, new_key):
@@ -322,20 +314,29 @@ class Table(object):
     """
     Table is an object that represents an area where one or many players can play.
 
+    Parameters
+    ----------
+    size_limit : int
+        Number of players that can play at a table at any given time
+
     """
-    def __init__(self):
+    def __init__(self, size_limit=7):
+        if size_limit > 7:
+            raise ValueError('Table cannot have more than 7 seats.')
+        self.size_limit = int(size_limit)
         self.players = []
 
     def get_players(self):
         return self.players
 
-    # TODO fix assert statements
     def add_player(self, player):
         if isinstance(player, Player):
-            assert len(self.players) < 7, 'Table is at maximum capacity'
+            if len(self.players) + len([player]) > self.size_limit:
+                raise ValueError('Table is at maximum capacity.')
             self.players.append(player)
         elif isinstance(player, list):
-            assert len(self.players) + len(player) <= 7, 'Table is at maximum capacity'
+            if len(self.players) + len(player) > self.size_limit:
+                raise ValueError('Table is at maximum capacity.')
             self.players.extend(player)
         else:
             NotImplementedError('Did not expect this data type')
@@ -348,7 +349,8 @@ class Table(object):
 
 if __name__ == "__main__":
 
-    simulations = 1
+    # number of simulations (i.e. number of shoes played)
+    simulations = 5
 
     # initialize classes that only need to be set once
 
@@ -358,15 +360,7 @@ if __name__ == "__main__":
     # set up rules of table
     r = HouseRules(
         min_bet=5,
-        max_bet=500,
-        s17=True,
-        resplit_pairs=True,
-        resplit_limit=2,
-        blackjack_payout=1.5,
-        double_down=True,
-        double_after_split=True,
-        insurance=True,
-        late_surrender=True
+        max_bet=500
     )
 
     # basic strategy based on rules
@@ -376,25 +370,24 @@ if __name__ == "__main__":
     b1 = Bank(rules=r, bankroll=1000)
     b2 = Bank(rules=r, bankroll=1000)
 
+    # set up dealer
+    d = Dealer()
+
+    # pick a counting strategy
+    # cs = CountingStrategy(cards=c)
+
+    # set up players
+    p1 = Player(name='P1', rules=r, play_strategy=ps, count_strategy='Hi-Lo', bank=b1)
+    p2 = Player(name='P2', rules=r, play_strategy=ps, bank=b2)
+
+    # add players to table
+    # players are dealt in the same order that they are added to the table
+    t.add_player([p1, p2])
+
     for _ in range(0, simulations):
 
         # set up cards
         c = Cards(shoe_size=6)
-
-        # pick a counting strategy
-        cs = CountingStrategy(cards=c, strategy='Hi-Lo')
-
-        # set up dealer
-        d = Dealer(cards=c)
-
-        if _ == 0:
-            # set up players
-            player1 = Player(name='P1', cards=c, rules=r, play_strategy=ps, count_strategy=cs, bank=b1)
-            player2 = Player(name='P2', cards=c, rules=r, play_strategy=ps, bank=b2)
-
-            # add players to table
-            # players are dealt in the same order that they are added to the table
-            t.add_player([player1, player2])
 
         # shuffle cards
         c.shuffle()
@@ -403,8 +396,6 @@ if __name__ == "__main__":
             dealer_turn = False
 
             dealer_hand = []
-
-            print('True count:', cs.true_count())
 
             for p in t.get_players():
 
@@ -428,7 +419,7 @@ if __name__ == "__main__":
 
                 # second cards are dealt
                 # dealing a card is effectively the same as hitting
-                p.hit(key=1)
+                p.hit(key=1, new_card=c.deal_card())
 
             dealer_hand.append(c.deal_card())
 
@@ -489,8 +480,8 @@ if __name__ == "__main__":
                                     # if splitting aces, player only gets 1 card
                                     if 'A' in hand:
                                         p.split(key=k, new_key=num_hands + 1)
-                                        p.hit(key=k)
-                                        p.hit(key=num_hands + 1)
+                                        p.hit(key=k, new_card=c.deal_card())
+                                        p.hit(key=num_hands + 1, new_card=c.deal_card())
                                         p.stand(key=k)
                                         p.stand(key=num_hands + 1)
 
@@ -511,7 +502,7 @@ if __name__ == "__main__":
 
                                 # do not split cards - hit
                                 elif decision in ['Ph', 'Dh', 'H']:
-                                    p.hit(key=k)
+                                    p.hit(key=k, new_card=c.deal_card())
 
                                 # do not split cards - stand
                                 elif decision == 'S':
@@ -529,7 +520,7 @@ if __name__ == "__main__":
 
                                 # hit
                                 elif decision in ['Rh', 'Dh', 'H']:
-                                    p.hit(key=k)
+                                    p.hit(key=k, new_card=c.deal_card())
 
                                 # stand
                                 elif decision in ['Rs', 'Ds', 'S']:
@@ -560,7 +551,7 @@ if __name__ == "__main__":
                         dealer_turn = False
 
                     else:
-                        d.hit(hand=dealer_hand)
+                        d.hit(hand=dealer_hand, new_card=c.deal_card())
 
                 else:  # dealer must hit on soft 17
 
@@ -570,7 +561,7 @@ if __name__ == "__main__":
                         dealer_turn = False
 
                     else:
-                        d.hit(hand=dealer_hand)
+                        d.hit(hand=dealer_hand, new_card=c.deal_card())
 
             print('Dealer up card:', dealer_up_card)
 
