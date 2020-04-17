@@ -1,6 +1,6 @@
 import numpy as np
 
-# Basic Strategy Key
+# basic strategy key
 # H : hit
 # S : stand
 # Dh : double if allowed, otherwise hit
@@ -10,7 +10,7 @@ import numpy as np
 # Rh : surrender if allowed, otherwise hit
 # Rs : surrender if allowed, otherwise stand
 # Rp : surrender if allowed, otherwise split
-# Source: https://wizardofodds.com/games/blackjack/strategy/4-decks/
+# source: https://wizardofodds.com/games/blackjack/strategy/4-decks/
 
 # arrays of player's hand (y-axis) vs. dealers up card (x-axis)
 
