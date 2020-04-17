@@ -4,13 +4,13 @@ import basic_strategy
 import counting_strategies
 from helper import count_hand, max_count_hand, splittable
 
-
 # TODO clean up classes
 # TODO BettingStrategy class (Kelly Criterion, Flat betting, betting ramp)
 # TODO make poor players (do not play optimal strategy)
 # TODO run simulations and make plots
 # TODO Player and Dealer classes can't take a Cards input because that value changes when shoe is run dry
 # TODO Player class is fixed once at the table
+# TODO use actual chip amounts / chip increments
 
 class HouseRules(object):
     """
@@ -229,6 +229,9 @@ class Player(object):
     def get_name(self):
         return self.name
 
+    def get_count_strategy(self):
+        return self.count_strategy
+
     def sufficient_funds(self, amount):
         if self.bank.bankroll - amount >= 0:
             return True
@@ -248,9 +251,9 @@ class Player(object):
         self.set_bankroll(-amount)
         return amount
 
-    def create_hand(self, hand, amount):
+    def create_hand(self, amount):
         self.hands_dict = {1: {}}
-        self.hands_dict[1]['hand'] = hand
+        self.hands_dict[1]['hand'] = []
         self.hands_dict[1]['bet'] = amount
         self.hands_dict[1]['surrender'] = False
         self.hands_dict[1]['busted'] = False
@@ -289,11 +292,11 @@ class Player(object):
         self.hit(key=key, new_card=c.deal_card())
         self.stand(key=key)
 
-    def split(self, key, new_key):
+    def split(self, amount, key, new_key):
         if splittable(self.hands_dict[key]['hand']):
             self.hands_dict[new_key] = {}
             self.hands_dict[new_key]['hand'] = [self.get_hand(key=key).pop()]
-            self.hands_dict[new_key]['bet'] = bet
+            self.hands_dict[new_key]['bet'] = amount
             self.hands_dict[new_key]['busted'] = False
             self.hands_dict[new_key]['stand'] = False
 
@@ -347,10 +350,364 @@ class Table(object):
         return 'Player cannot be removed. Player is not at the table.'
 
 
+def players_place_bets(table, rules, amount):
+    """
+    Players at table place bets. If they're unable to bet that amount
+    they place a bet closest to that amount, while staying within the
+    betting constraints of the table. If they are unable to make the
+    minimum bet, they are removed from the table.
+
+    Parameters
+    ----------
+    table : class
+        Table class instance
+    rules : class
+        HouseRules class instance
+    amount : integer
+        Amount initially bet by player
+
+    """
+    for p in table.get_players():
+
+        # TODO Change amount wagered based on card counting
+        # if p.get_count_strategy() is not None:
+        #     if CountingStrategy(cards=c, strategy=p.get_count_strategy()).true_count() > some number:
+        #           do something
+
+        if p.sufficient_funds(amount) and rules.min_bet <= amount <= rules.max_bet:
+            wager = p.initial_bet(amount)
+
+        # amount did not meet the minimum bet
+        elif amount < rules.min_bet:
+            if p.sufficient_funds(rules.min_bet):
+                wager = p.initial_bet(rules.min_bet)
+            else:
+                t.remove_player(p)
+                break
+
+        # amount exceeded maximum bet
+        elif amount > rules.max_bet:
+            if p.sufficient_funds(rules.max_bet):
+                wager = p.initial_bet(rules.max_bet)
+            elif rules.min_bet <= p.get_bankroll() <= rules.max_bet:
+                wager = p.initial_bet(p.get_bankroll())
+            else:
+                t.remove_player(p)
+                break
+
+        # player does not have sufficient funds
+        elif not p.sufficient_funds(amount):
+            if rules.min_bet <= p.get_bankroll() <= rules.max_bet:
+                wager = p.initial_bet(p.get_bankroll())
+            else:
+                t.remove_player(p)
+                break
+
+        p.create_hand(amount=wager)
+
+
+def deal_hands(table, cards):
+    """
+    Deal first and second cards to each player seated at the table
+    and the dealer
+
+    Parameters
+    ----------
+    table : class
+        Table class instance
+    cards : class
+        Cards class instance
+
+    Returns
+    -------
+    return : tuple
+
+    """
+    dealer_hand = []
+
+    for p in table.get_players():
+        # dealing a card is effectively the same as hitting
+        p.hit(key=1, new_card=cards.deal_card())
+
+    dealer_hand.append(cards.deal_card(visible=False))
+
+    for p in table.get_players():
+        # dealing a card is effectively the same as hitting
+        p.hit(key=1, new_card=cards.deal_card())
+
+    dealer_hand.append(cards.deal_card())
+
+    dealer_hole_card = dealer_hand[0]
+    dealer_up_card = dealer_hand[1]
+
+    return dealer_hand, dealer_hole_card, dealer_up_card
+
+
+def players_play_hands(table, rules, cards, dealer_hand, dealer_up_card):
+    """
+    Players at the table play their individual hands
+
+    Parameters
+    ----------
+    table : class
+        Table class instance
+    rules : class
+        HouseRules class instance
+    cards : class
+        Cards class instance
+    dealer_hand : list
+        List of string card elements representing the dealer's hand
+    dealer_up_card : str
+        Dealer's card that is face up after each player receives two cards
+
+    """
+    dealer_total = max_count_hand(dealer_hand)
+
+    for p in table.get_players():
+
+        player_total = max_count_hand(p.get_hand(key=1))
+
+        # insurance option - basic strategy advises against it
+        # however, may be favorable to use at large counts
+        if rules.insurance and dealer_up_card == 'A':
+            pass
+
+        # dealer and players check for 21
+        if player_total == 21 or dealer_total == 21:
+            p.stand(key=1)
+
+        # late surrender option
+        if rules.late_surrender:
+            hand = p.get_hand(key=1)
+            bet = p.get_bet(key=1)
+            if p.decision(hand=hand, dealer_up_card=dealer_up_card, num_hands=1, amount=bet) in ['Rh', 'Rs', 'Rp']:
+                p.surrender()
+                p.stand(key=1)
+
+        processed = set()
+
+        # plays out each hand before moving to next hand
+        while True:
+            keys = set(p.hands_dict) - processed
+
+            if not keys:
+                break
+
+            for k in keys:
+                processed.add(k)
+
+                while not p.get_stand(key=k):
+
+                    num_hands = max(p.hands_dict.keys())
+                    hand = p.get_hand(key=k)
+                    bet = p.get_bet(key=k)
+                    decision = p.decision(dealer_up_card=dealer_up_card, hand=hand, num_hands=num_hands, amount=bet)
+                    # check if hand is splittable
+                    # determine if re-splitting limit has been reached
+                    # i.e. if the re-split limit is 2, a maximum of 4 hands can be played by the player
+                    if splittable(hand) and num_hands < (rules.resplit_limit + 2):
+
+                        # split cards
+                        if decision in ['P', 'Rp'] and p.sufficient_funds(bet):
+                            p.set_bankroll(-bet)
+
+                            # if splitting aces, player only gets 1 card
+                            if 'A' in hand:
+                                p.split(amount=bet, key=k, new_key=num_hands + 1)
+                                p.hit(key=k, new_card=cards.deal_card())
+                                p.hit(key=num_hands + 1, new_card=cards.deal_card())
+                                p.stand(key=k)
+                                p.stand(key=num_hands + 1)
+
+                            else:
+                                p.split(amount=bet, key=k, new_key=num_hands + 1)
+
+                        # split cards and double down
+                        elif rules.double_after_split and decision == 'Ph' and p.sufficient_funds(3 * bet):
+                            p.set_bankroll(-3 * bet)
+                            p.split(amount=bet, key=k, new_key=num_hands + 1)
+                            p.double_down(key=k)
+                            p.double_down(key=num_hands + 1)
+
+                        # do not split cards - double down
+                        elif rules.double_down and decision == 'Dh' and p.sufficient_funds(bet):
+                            p.set_bankroll(-bet)
+                            p.double_down(key=k)
+
+                        # do not split cards - hit
+                        elif decision in ['Ph', 'Dh', 'H']:
+                            p.hit(key=k, new_card=cards.deal_card())
+
+                        # do not split cards - stand
+                        elif decision == 'S':
+                            p.stand(key=k)
+
+                        else:
+                            raise NotImplementedError('No implementation for that flag')
+
+                    else:
+
+                        # double down
+                        if rules.double_down and decision in ['Dh', 'Ds'] and p.sufficient_funds(bet):
+                            p.set_bankroll(-bet)
+                            p.double_down(key=k)
+
+                        # hit
+                        elif decision in ['Rh', 'Dh', 'H']:
+                            p.hit(key=k, new_card=cards.deal_card())
+
+                        # stand
+                        elif decision in ['Rs', 'Ds', 'S']:
+                            p.stand(key=k)
+
+                        elif decision == 'B':
+                            p.busted(key=k)
+
+                        else:
+                            raise NotImplementedError('No implementation for that flag')
+
+
+def dealer_turn(table):
+    """
+    Determines whether or not a dealer needs to take his turn. If a single player
+    does not have a busted or surrendered hand, the dealer will need to play out
+    their hand.
+
+    Parameters
+    ----------
+    table : class
+        Table class instance
+
+    Return
+    ------
+    return : boolean
+
+    """
+    num_surrender = 0
+    num_busted = 0
+    num_stand = 0
+    for p in table.get_players():
+        if p.get_surrender():
+            num_surrender += 1
+        for k in p.hands_dict.keys():
+            if p.get_busted(key=k):
+                num_busted += 1
+            if p.get_stand(key=k):
+                num_stand += 1
+    return num_surrender + num_busted < num_stand
+
+
+def dealer_plays_hand(rules, cards, dealer, dealer_hole_card, dealer_hand):
+    """
+    Dealer plays out hand
+
+    Parameters
+    ----------
+    rules : class
+        HouseRules class instance
+    cards : class
+        Cards class instance
+    dealer : class
+        Dealer class instance
+    dealer_hole_card : str
+        Dealer's card that is face down after each player receives two cards
+    dealer_hand : list
+        List of string card elements representing the dealer's hand
+
+    Return
+    ------
+    return : list
+
+    """
+    while True:
+        soft_total, hard_total = count_hand(dealer_hand)
+
+        if rules.s17:  # dealer must stay on soft 17 (ace counted as 11)
+
+            if 17 <= soft_total <= 21 or hard_total >= 17:
+                cards.add_to_visible_cards(dealer_hole_card)  # add hole card to visible card list
+                return dealer_hand
+
+            else:
+                dealer.hit(hand=dealer_hand, new_card=cards.deal_card())
+
+        else:  # dealer must hit on soft 17
+
+            if 17 < soft_total <= 21 or hard_total >= 17:
+                cards.add_to_visible_cards(dealer_hole_card)  # add hole card to visible card list
+                return dealer_hand
+
+            else:
+                dealer.hit(hand=dealer_hand, new_card=cards.deal_card())
+
+
+def compare_hands(table):
+    """
+    Players compare their hands against the dealer
+
+    Parameters
+    ----------
+    table : class
+        Table class instance
+
+    """
+    dealer_total = max_count_hand(dealer_hand)
+    print('Dealers hand:', dealer_hand)
+    print('Dealer total:', dealer_total)
+
+    for p in table.get_players():
+
+        # get player totals
+        for k in p.hands_dict.keys():
+            print(p.get_name(), 'hand #', k, ':', p.get_hand(key=k))
+            player_total = max_count_hand(p.get_hand(key=k))
+            player_bet = p.get_bet(key=k)
+            print(p.get_name(), 'total on hand #', k, ':', player_total)
+
+            if p.get_surrender():
+                print('**', p.get_name(), 'surrenders hand **')
+                p.set_bankroll(0.5 * player_bet)  # player receives half of original wager back
+
+            elif player_total == 21 and dealer_total == 21:
+                print('** Push -', p.get_name(), 'and dealer both have 21 **')
+                p.set_bankroll(player_bet)  # pushes
+
+            elif player_total == 21:
+                print('**', p.get_name(), 'has blackjack **')
+                p.set_bankroll(player_bet + (player_bet * r.blackjack_payout))  # player receives blackjack payout
+
+            elif dealer_total == 21:
+                print('** Dealer has blackjack **')
+                pass  # player loses wager
+
+            elif player_total > 21:
+                print('**', p.get_name(), 'busts on hand #', k, '**')
+                pass  # busted and dealer wins automatically
+
+            elif dealer_total > 21:
+                print('** Dealer busts on hand #', k, '**')
+                p.set_bankroll(2 * player_bet)  # dealer busted and player wins bet amount
+
+            else:
+                if dealer_total == player_total:
+                    print('** Push on hand #', k, '**')
+                    p.set_bankroll(player_bet)  # push
+
+                elif player_total > dealer_total:
+                    print('**', p.get_name(), 'beats dealer on hand #', k, '**')
+                    p.set_bankroll(2 * player_bet)  # player beats dealer
+
+                else:
+                    print('** Dealer beats', p.get_name(), 'on hand #', k, '**')
+                    pass  # dealer beats player
+
+        print(p.get_name(), 'ending bankroll:', p.get_bankroll())
+
+
 if __name__ == "__main__":
 
     # number of simulations (i.e. number of shoes played)
-    simulations = 5
+    simulations = 10
 
     # initialize classes that only need to be set once
 
@@ -373,9 +730,6 @@ if __name__ == "__main__":
     # set up dealer
     d = Dealer()
 
-    # pick a counting strategy
-    # cs = CountingStrategy(cards=c)
-
     # set up players
     p1 = Player(name='P1', rules=r, play_strategy=ps, count_strategy='Hi-Lo', bank=b1)
     p2 = Player(name='P2', rules=r, play_strategy=ps, bank=b2)
@@ -393,234 +747,30 @@ if __name__ == "__main__":
         c.shuffle()
 
         while not c.cut_card_reached(penetration=0.75) and len(t.get_players()) > 0:
-            dealer_turn = False
 
-            dealer_hand = []
+            # players place bets and empty hand with wager is created
+            players_place_bets(table=t, rules=r, amount=10)
 
-            for p in t.get_players():
+            # only deal hands if there are players
+            if len(t.get_players()) > 0:
 
-                print(p.get_name(), 'starting bankroll:', p.get_bankroll())
+                # deal first and second cards to all players and the dealer
+                dealer_hand, dealer_hole_card, dealer_up_card = deal_hands(table=t, cards=c)
 
-                # TODO Change amount wagered based on card counting
-                # TODO make sure the bet is within the min/max bounds
-                if p.sufficient_funds(5):
-                    wager = p.initial_bet(5)  # place initial wager
-                else:
-                    print('**', p.get_name(), 'ran out of money **')
-                    t.remove_player(p)  # remove player from table
-                    break  # insufficient funds to place a bet
+                # players play out each of their hands
+                players_play_hands(table=t, rules=r, cards=c, dealer_hand=dealer_hand, dealer_up_card=dealer_up_card)
 
-                # first cards are dealt - players are dealt before dealer
-                p.create_hand(hand=[c.deal_card()], amount=wager)
+                # only show dealer cards if one or more players do not bust or surrender
+                if dealer_turn(table=t):
+                    dealer_hand = dealer_plays_hand(
+                                                rules=r,
+                                                cards=c,
+                                                dealer=d,
+                                                dealer_hole_card=dealer_hole_card,
+                                                dealer_hand=dealer_hand
+                    )
 
-            dealer_hand.append(c.deal_card(visible=False))
+                # compare players hands to dealer and pay out to winning players
+                compare_hands(table=t)
 
-            for p in t.get_players():
-
-                # second cards are dealt
-                # dealing a card is effectively the same as hitting
-                p.hit(key=1, new_card=c.deal_card())
-
-            dealer_hand.append(c.deal_card())
-
-            # dealer cards
-            dealer_hole_card = dealer_hand[0]
-            dealer_up_card = dealer_hand[1]
-
-            dealer_total = max_count_hand(dealer_hand)
-
-            for p in t.get_players():
-
-                player_total = max_count_hand(p.get_hand(key=1))
-
-                # insurance option - basic strategy advises against it
-                # however, may be favorable to use at large counts
-                if r.insurance and dealer_up_card == 'A':
-                    pass
-
-                # dealer and players check for 21
-                if player_total == 21 or dealer_total == 21:
-                    p.stand(key=1)
-
-                # late surrender option
-                if r.late_surrender:
-                    hand = p.get_hand(key=1)
-                    bet = p.get_bet(key=1)
-                    if p.decision(hand=hand, dealer_up_card=dealer_up_card, num_hands=1, amount=bet) in ['Rh', 'Rs', 'Rp']:
-                        p.surrender()
-                        p.stand(key=1)
-
-                processed = set()
-
-                # plays out each hand before moving to next hand
-                while True:
-                    keys = set(p.hands_dict) - processed
-
-                    if not keys:
-                        break
-
-                    for k in keys:
-                        processed.add(k)
-
-                        while not p.get_stand(key=k):
-
-                            num_hands = max(p.hands_dict.keys())  # current number of hands
-                            hand = p.get_hand(key=k)
-                            bet = p.get_bet(key=k)
-                            decision = p.decision(dealer_up_card=dealer_up_card, hand=hand, num_hands=num_hands, amount=bet)
-                            # check if hand is splittable
-                            # determine if re-splitting limit has been reached
-                            # i.e. if the re-split limit is 2, a maximum of 4 hands can be played by the player
-                            if splittable(hand) and num_hands < (r.resplit_limit + 2):
-
-                                # split cards
-                                if decision in ['P', 'Rp'] and p.sufficient_funds(bet):
-                                    p.set_bankroll(-bet)
-
-                                    # if splitting aces, player only gets 1 card
-                                    if 'A' in hand:
-                                        p.split(key=k, new_key=num_hands + 1)
-                                        p.hit(key=k, new_card=c.deal_card())
-                                        p.hit(key=num_hands + 1, new_card=c.deal_card())
-                                        p.stand(key=k)
-                                        p.stand(key=num_hands + 1)
-
-                                    else:
-                                        p.split(key=k, new_key=num_hands + 1)
-
-                                # split cards and double down
-                                elif r.double_after_split and decision == 'Ph' and p.sufficient_funds(3*bet):
-                                    p.set_bankroll(-3*bet)
-                                    p.split(key=k, new_key=num_hands + 1)
-                                    p.double_down(key=k)
-                                    p.double_down(key=num_hands + 1)
-
-                                # do not split cards - double down
-                                elif r.double_down and decision == 'Dh' and p.sufficient_funds(bet):
-                                    p.set_bankroll(-bet)
-                                    p.double_down(key=k)
-
-                                # do not split cards - hit
-                                elif decision in ['Ph', 'Dh', 'H']:
-                                    p.hit(key=k, new_card=c.deal_card())
-
-                                # do not split cards - stand
-                                elif decision == 'S':
-                                    p.stand(key=k)
-
-                                else:
-                                    raise NotImplementedError('No implementation for that flag')
-
-                            else:
-
-                                # double down
-                                if r.double_down and decision in ['Dh', 'Ds'] and p.sufficient_funds(bet):
-                                    p.set_bankroll(-bet)
-                                    p.double_down(key=k)
-
-                                # hit
-                                elif decision in ['Rh', 'Dh', 'H']:
-                                    p.hit(key=k, new_card=c.deal_card())
-
-                                # stand
-                                elif decision in ['Rs', 'Ds', 'S']:
-                                    p.stand(key=k)
-
-                                elif decision == 'B':
-                                    p.busted(key=k)
-
-                                else:
-                                    raise NotImplementedError('No implementation for that flag')
-
-                # if a single player does not have a busted or surrendered hand, dealer has to play out hand
-                num_surrender = sum([p.get_surrender()])
-                num_busted = sum([p.get_busted(key=k) for k in p.hands_dict.keys()])
-                num_stand = sum([p.get_stand(key=k) for k in p.hands_dict.keys()])
-
-                if num_surrender + num_busted < num_stand:
-                    dealer_turn = True
-
-            while dealer_turn:
-                soft_total, hard_total = count_hand(dealer_hand)
-
-                if r.s17:  # dealer must stay on soft 17 (ace counted as 11)
-
-                    if 17 <= soft_total <= 21 or hard_total >= 17:
-                        dealer_total = max_count_hand(dealer_hand)
-                        c.add_to_visible_cards(dealer_hole_card)  # add hole card to visible card list
-                        dealer_turn = False
-
-                    else:
-                        d.hit(hand=dealer_hand, new_card=c.deal_card())
-
-                else:  # dealer must hit on soft 17
-
-                    if 17 < soft_total <= 21 or hard_total >= 17:
-                        dealer_total = max_count_hand(dealer_hand)
-                        c.add_to_visible_cards(dealer_hole_card)  # add hole card to visible card list
-                        dealer_turn = False
-
-                    else:
-                        d.hit(hand=dealer_hand, new_card=c.deal_card())
-
-            print('Dealer up card:', dealer_up_card)
-
-            while True:
-
-                # get dealer total
-                dealer_total = max_count_hand(dealer_hand)
-                print('Dealers hand:', dealer_hand)
-                print('Dealer total:', dealer_total)
-
-                for p in t.get_players():
-
-                    # get player totals
-                    for k in p.hands_dict.keys():
-                        print(p.get_name(), 'hand #', k, ':', p.get_hand(key=k))
-                        player_total = max_count_hand(p.get_hand(key=k))
-                        player_bet = p.get_bet(key=k)
-                        print(p.get_name(), 'total on hand #', k, ':', player_total)
-
-                        if p.get_surrender():
-                            print('**', p.get_name(), 'surrenders hand **')
-                            p.set_bankroll(0.5 * player_bet)  # player receives half of original wager back
-
-                        elif player_total == 21 and dealer_total == 21:
-                            print('** Push -', p.get_name(), 'and dealer both have 21 **')
-                            p.set_bankroll(player_bet)  # pushes
-
-                        elif player_total == 21:
-                            print('**', p.get_name(), 'has blackjack **')
-                            p.set_bankroll(player_bet + (player_bet * r.blackjack_payout))  # player receives blackjack payout
-
-                        elif dealer_total == 21:
-                            print('** Dealer has blackjack **')
-                            pass  # player loses wager
-
-                        elif player_total > 21:
-                            print('**', p.get_name(), 'busts on hand #', k, '**')
-                            pass  # busted and dealer wins automatically
-
-                        elif dealer_total > 21:
-                            print('** Dealer busts on hand #', k, '**')
-                            p.set_bankroll(2 * player_bet)  # dealer busted and player wins bet amount
-
-                        else:
-                            if dealer_total == player_total:
-                                print('** Push on hand #', k, '**')
-                                p.set_bankroll(player_bet)  # push
-
-                            elif player_total > dealer_total:
-                                print('**', p.get_name(), 'beats dealer on hand #', k, '**')
-                                p.set_bankroll(2 * player_bet)  # player beats dealer
-
-                            else:
-                                print('** Dealer beats', p.get_name(), 'on hand #', k, '**')
-                                pass  # dealer beats player
-
-                    print(p.get_name(), 'ending bankroll:', p.get_bankroll())
-                    print('Remaining decks:', c.remaining_decks())
-
-                break
-
-            print('------------------------------------------------------------------')
+                print('------------------------------------------------------------------')
