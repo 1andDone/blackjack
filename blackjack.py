@@ -1,5 +1,15 @@
 import random
 import basic_strategy as bs
+
+## It's generally not recommended to to do something like `from X import *`
+## The issue with it being that when you import *, you lose the namespace of
+## where the code came from. As an example, if in the process of your code here
+## you reference the variable `hi_lo` -- one would have no idea where that
+## variable is defined. It would require them digging through other files just
+## to find it. On the other hand, if you do `import counting_strategies` then
+## `counting_strategies.hi_lo` is much clearer. (It's not _that_ big of a deal,
+## because most modern IDEs will allow you follow a variable to its definition
+## regardless, just something to keep in mind.)
 from counting_strategies import *
 from helper import *
 
@@ -14,6 +24,16 @@ class HouseRules(object):
             self, min_bet, max_bet, s17, resplit_pairs, resplit_limit, blackjack_payout,
             double_down, double_after_split, insurance, late_surrender
     ):
+        ## You should include a docstring here describing what the object is
+        ## and what the variables are. I implicitly know what some of these
+        ## variables are, but others -- such as s17 -- I have no idea what they
+        ## do.
+        ##
+        ## You likely also want to take some of these variables and give them
+        ## default values. There's nothing wrong with having 10 variables used
+        ## to instantiate a class, but from a usability perspective, you often
+        ## want a smaller number of required variables and many of the
+        ## less-often-changed variables to take on a default value. 
         self.min_bet = int(min_bet)
         self.max_bet = int(max_bet)
         self.s17 = s17
@@ -32,6 +52,18 @@ class HouseRules(object):
 class Cards(object):
 
     def __init__(self, shoe_size):
+        ## Just looking through the code, I think you might be overusing
+        ## assert statements. They are definitely useful, but typically they
+        ## are reserved for catching unintended errors in your coding logic,
+        ## not catching errors that have to do with incorrect parameters. This
+        ## type of situation would be best handled by a ValueError exception,
+        ## so you would do something like:
+        ##
+        ## if shoe_size not in (4, 6, 8):
+        ##   raise ValueError('Shoe size must be in (4, 6, 8)')
+        ##
+        ## Assertions crash the program indiscriminantly, whereas Exceptions
+        ## can be caught with try/except statements and handled appropriately. 
         assert shoe_size in [4, 6, 8], 'Shoe size must be either 4, 6, or 8 decks'
         self.shoe_size = int(shoe_size)
         self.deck = ['2', '3', '4', '5', '6', '7', '8', '9', '10', 'J', 'Q', 'K', 'A'] * int(shoe_size) * 4
@@ -58,6 +90,23 @@ class Cards(object):
 
     def cut_card_reached(self, penetration):
         assert 0.5 <= float(penetration) <= 0.9, 'Penetration must be a float between 0.5 and 0.9'
+        ## Minor point here, I would take the below calculation and break it up
+        ## into more than one variable so that it's slightly more clear what is
+        ## happening, for example:
+        ##
+        ## total_cards = 52 * self.shoe_size
+        ## remaining_cards = total_cards - len(self.deck)
+        ## return remaining_cards / total_cards >= float(penetration)
+        ##
+        ## Also if you are even in a situation where you are doing something
+        ## like:
+        ##
+        ## if condition:
+        ##   return True
+        ## return False
+        ##
+        ## You can just do:
+        ## return condition
         if ((52 * self.shoe_size) - len(self.deck))/(52 * self.shoe_size) >= float(penetration):
             return True
         return False
@@ -74,6 +123,11 @@ class CountingStrategy(object):
     def running_count(self):
         # TODO add additional counting systems from https://en.wikipedia.org/wiki/Card_counting
         # TODO some counting systems require the type of card (spade, diamond, etc.)
+        ##
+        ## This is a minor point, but you could probably clean this up with a
+        ## few different methods. One simple way would be when you get the
+        ## strategy in the __init__ you can save the count dict you are using
+        ## as a variable, so you don't have to do self.strategy == whatever. 
         if self.strategy == 'Hi-Lo':
             return sum([hi_lo.get(card) for card in self.cards.visible_cards])
         elif self.strategy == 'Hi-Opt I':
@@ -97,6 +151,11 @@ class CountingStrategy(object):
 class Dealer(object):
 
     def __init__(self, cards):
+        ## Another point that should be made about assert statements is they
+        ## are pretty unnecessary if the code will throw an exception anyways.
+        ## For example, if pass something that is _not_ a Cards object to the
+        ## Dealer init, then an exception will be thrown when the hit() method
+        ## is called.
         assert isinstance(cards, Cards), 'cards must be an instance of Cards'
         self.cards = cards
 
@@ -206,7 +265,7 @@ class Player(object):
             self.hands_dict[new_key]['hand'] = [self.get_hand(key=key).pop()]
             self.hands_dict[new_key]['bet'] = bet
             self.hands_dict[new_key]['busted'] = False
-            self.hands_dict[new_key]['stand'] = False
+            self.hands_dict[new_key]['stand'] = Fal se
 
     def decision(self, hand, dealer_up_card, num_hands, amount):
         if splittable(hand) and num_hands < (r.resplit_limit + 2) and self.sufficient_funds(amount):
@@ -246,6 +305,11 @@ class Table(object):
 
 
 if __name__ == "__main__":
+    ## Overall this main block is too unwieldly -- you need to break this up
+    ## into multiple functions. Multiple nested while statements over a few
+    ## hundred lines are very challenging to read and understand. You did a
+    ## solid job defining functions within the classes, but that doesn't mean
+    ## you shouldn't do it in the main block as well. 
 
     # Initialize classes
     r = HouseRules(
