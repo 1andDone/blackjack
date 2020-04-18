@@ -1,5 +1,6 @@
 import random
 import matplotlib.pyplot as plt
+import numpy as np
 
 import basic_strategy
 import counting_strategies
@@ -8,9 +9,7 @@ from helper import count_hand, max_count_hand, splittable
 # TODO clean up classes
 # TODO BettingStrategy class (Kelly Criterion, Flat betting, betting ramp)
 # TODO make poor players (do not play optimal strategy)
-# TODO run simulations and make plots
-# TODO Player and Dealer classes can't take a Cards input because that value changes when shoe is run dry
-# TODO Player class is fixed once at the table
+# TODO run simulations and make plots -- for more than one player
 # TODO use actual chip amounts / chip increments
 
 class HouseRules(object):
@@ -365,12 +364,18 @@ class SimulationStats(object):
     def create_key(self, key):
         if key not in self.stats_dict.keys():
             self.stats_dict[key] = {}
+            self.stats_dict[key]['net winnings'] = 0
             self.stats_dict[key]['player win'] = 0
             self.stats_dict[key]['push'] = 0
             self.stats_dict[key]['player surrender'] = 0
             self.stats_dict[key]['player bust'] = 0
+            self.stats_dict[key]['dealer bust'] = 0
             self.stats_dict[key]['player natural blackjack'] = 0
+            self.stats_dict[key]['dealer natural blackjack'] = 0
             self.stats_dict[key]['number of hands'] = 0
+
+    def net_winnings(self, key, amount):
+        self.stats_dict[key]['net winnings'] += amount
 
     def number_of_hands(self, key):
         self.stats_dict[key]['number of hands'] += 1
@@ -387,8 +392,16 @@ class SimulationStats(object):
         self.stats_dict[key]['player surrender'] += 1
         self.stats_dict[key]['number of hands'] += 1
 
+    def dealer_bust(self, key):
+        self.stats_dict[key]['dealer bust'] += 1
+        self.stats_dict[key]['number of hands'] += 1
+
     def player_bust(self, key):
         self.stats_dict[key]['player bust'] += 1
+        self.stats_dict[key]['number of hands'] += 1
+
+    def dealer_natural_blackjack(self, key):
+        self.stats_dict[key]['dealer natural blackjack'] += 1
         self.stats_dict[key]['number of hands'] += 1
 
     def player_natural_blackjack(self, key):
@@ -614,9 +627,9 @@ def players_play_hands(table, rules, cards, dealer_hand, dealer_up_card):
 
 def dealer_turn(table):
     """
-    Determines whether or not a dealer needs to take his turn. If a player does not have
-    a natural blackjack and does not surrender or bust, the dealer will need to play out
-    their turn.
+    Determines whether or not a dealer needs to take his turn. If any player at the table
+    does not have a natural blackjack and does not surrender their hand or bust, the dealer
+    will need to play out their turn in its entirety.
 
     Parameters
     ----------
@@ -628,10 +641,7 @@ def dealer_turn(table):
     return : boolean
 
     """
-    num_natural_blackjack = 0
-    num_surrender = 0
-    num_busted = 0
-    num_stand = 0
+    num_natural_blackjack, num_surrender, num_busted, num_stand = 0, 0, 0, 0
     for p in table.get_players():
         if p.get_natural_blackjack():
             num_natural_blackjack += 1
@@ -647,7 +657,9 @@ def dealer_turn(table):
 
 def dealer_plays_hand(rules, cards, dealer, dealer_hole_card, dealer_hand):
     """
-    Dealer plays out hand
+    Dealer plays out hand. Depending on the rules of the table, the dealer
+    will either stand or hit on a soft 17. When the dealer plays out their
+    hand, the hole card will be revealed.
 
     Parameters
     ----------
@@ -707,91 +719,140 @@ def compare_hands(table, stats, key, dealer_hand):
     """
     dealer_total = max_count_hand(hand=dealer_hand)
     dealer_hand_length = len(dealer_hand)
-    print('Dealers hand:', dealer_hand)
-    print('Dealer total:', dealer_total)
 
     for p in table.get_players():
 
         # get player totals
         for k in p.hands_dict.keys():
-            print(p.get_name(), 'hand #', k, ':', p.get_hand(key=k))
             player_total = max_count_hand(hand=p.get_hand(key=k))
             player_bet = p.get_bet(key=k)
             player_hand_length = len(p.get_hand(key=k))
-            print(p.get_name(), 'total on hand #', k, ':', player_total)
 
             if p.get_surrender():
-                print('**', p.get_name(), 'surrenders hand **')
                 p.set_bankroll(amount=0.5 * player_bet)  # player receives half of original wager back
                 stats.player_surrender(key=key)
+                stats.net_winnings(key=key, amount=-0.5 * player_bet)
 
             elif player_total == 21 and dealer_total == 21:
                 # case where dealer has natural blackjack and player has blackjack is impossible
                 if player_hand_length > 2 and dealer_hand_length > 2:
-                    print('** Push ', p.get_name(), 'and dealer both have 21 **')
-                    p.set_bankroll(amount=player_bet)  # pushes
+                    p.set_bankroll(amount=player_bet)  # pushes - player and dealer both have 21
                     stats.push(key=key)
                 elif p.get_natural_blackjack() and dealer_hand_length == 2:
-                    print('** Push ', p.get_name(), 'and dealer both have natural 21 **')
-                    p.set_bankroll(amount=player_bet)  # pushes
+                    p.set_bankroll(amount=player_bet)  # pushes - player and dealer both have natural 21
                     stats.push(key=key)
-                else:  # player has natural blackjack, dealer has blackjack
-                    print('**', p.get_name(), 'has natural blackjack **')
-                    p.set_bankroll(amount=player_bet + (player_bet * r.blackjack_payout))  # blackjack payout
+                else:
+                    p.set_bankroll(amount=player_bet + (player_bet * r.blackjack_payout))  # player has natural 21
                     stats.player_natural_blackjack(key=key)
+                    stats.net_winnings(key=key, amount=player_bet * r.blackjack_payout)
 
             elif player_total == 21:
                 if p.get_natural_blackjack():
-                    print('**', p.get_name(), 'has natural blackjack **')
-                    p.set_bankroll(amount=player_bet + (player_bet * r.blackjack_payout))  # blackjack payout
+                    p.set_bankroll(amount=player_bet + (player_bet * r.blackjack_payout))  # player has natural 21
                     stats.player_natural_blackjack(key=key)
+                    stats.net_winnings(key=key, amount=player_bet * r.blackjack_payout)
 
                 else:
-                    print('**', p.get_name(), 'has blackjack **')
-                    p.set_bankroll(amount=2 * player_bet)
+                    p.set_bankroll(amount=2 * player_bet)  # player has 21
                     stats.player_win(key=key)
+                    stats.net_winnings(key=key, amount=player_bet)
 
             elif dealer_total == 21:
-                if dealer_hand_length == 2:
-                    print('** Dealer has natural blackjack **')
-                    pass
-                else:
-                    print('** Dealer has blackjack **')
-                    pass  # player loses wager
                 stats.number_of_hands(key=key)
+                stats.net_winnings(key=key, amount=-player_bet)
+
+                if dealer_hand_length == 2:
+                    stats.dealer_natural_blackjack(key=key)
+                    pass  # dealer has natural 21
+
+                else:
+                    pass  # dealer has 21
 
             elif p.get_busted(key=k):
-                print('**', p.get_name(), 'busts on hand #', k, '**')
                 stats.player_bust(key=key)
-                pass  # busted and dealer wins automatically
+                stats.net_winnings(key=key, amount=-player_bet)
+                pass  # player busts
 
             elif dealer_total > 21:
-                print('** Dealer busts on hand #', k, '**')
-                p.set_bankroll(amount=2 * player_bet)  # dealer busted and player wins bet amount
+                p.set_bankroll(amount=2 * player_bet)  # dealer busts
                 stats.number_of_hands(key=key)
+                stats.dealer_bust(key=key)
+                stats.net_winnings(key=key, amount=player_bet)
 
             elif dealer_total == player_total:
-                print('** Push on hand #', k, '**')
                 p.set_bankroll(amount=player_bet)  # push
                 stats.push(key=key)
 
             elif player_total > dealer_total:
-                print('**', p.get_name(), 'beats dealer on hand #', k, '**')
                 p.set_bankroll(amount=2 * player_bet)  # player beats dealer
                 stats.player_win(key=key)
+                stats.net_winnings(key=key, amount=player_bet)
 
             else:
-                print('** Dealer beats', p.get_name(), 'on hand #', k, '**')
-                s.number_of_hands(key=key)
+                stats.number_of_hands(key=key)
+                stats.net_winnings(key=key, amount=-player_bet)
                 pass  # dealer beats player
 
-        print(p.get_name(), 'ending bankroll:', p.get_bankroll())
+
+def make_one_curve_plot(x_coords, y_coords, x_label, y_label, title):
+    """
+    Makes a plot of the x-coordinates and the y-coordinates with the labels
+    and title provided.
+
+    Parameters
+    ----------
+    x_coords : list of floats
+        x-coordinates of graph
+    y_coords : list of floats
+        y-coordinates of graph
+    x_label : str
+        Label for x-axis
+    y_label : str
+        Label for y-axis
+    title : str
+        Title for the graph
+
+    """
+    plt.figure()
+    plt.plot(x_coords, y_coords)
+    plt.xlabel(x_label)
+    plt.ylabel(y_label)
+    plt.title(title)
+    plt.show()
+
+
+def make_bar_chart(x_coords, y_coords, x_label, y_label, title):
+    """
+    Makes a bar plot of the x-coordinates and y-coordinates with the labels
+    and title provided.
+
+    Parameters
+    ----------
+    x_coords : list of floats
+        x-coordinates of graph
+    y_coords : list of floats
+        y-coordinates of graph
+    x_label : str
+        Label for x-axis
+    y_label : str
+        Label for y-axis
+    title : str
+        Title for the graph
+
+    """
+    plt.figure()
+    plt.bar(x=x_coords[y_coords > 0], height=y_coords[y_coords > 0], color='b', width=0.2)
+    plt.bar(x=x_coords[y_coords < 0], height=y_coords[y_coords < 0], color='r', width=0.2)
+    plt.xlabel(x_label)
+    plt.ylabel(y_label)
+    plt.title(title)
+    plt.show()
 
 
 if __name__ == "__main__":
 
     # number of simulations (i.e. number of shoes played)
-    simulations = 1000
+    simulations = 100000
 
     # initialize classes that only need to be set once
 
@@ -812,11 +873,10 @@ if __name__ == "__main__":
 
     # set up players
     p1 = Player(name='P1', rules=r, play_strategy=ps, count_strategy='Hi-Lo', bankroll=10000)
-    p2 = Player(name='P2', rules=r, play_strategy=ps, bankroll=10000)
 
     # add players to table
     # players are dealt in the same order that they are added to the table
-    t.add_player([p1, p2])
+    t.add_player(p1)
 
     s = SimulationStats()
 
@@ -865,4 +925,55 @@ if __name__ == "__main__":
                 # compare players hands to dealer and pay out to winning players
                 compare_hands(table=t, stats=s, key=true_count, dealer_hand=dealer_hand)
 
-                print('------------------------------------------------------------------')
+    # analysis
+    true_count = np.array([])
+    net_winnings = np.array([])
+    player_win = np.array([])
+    push = np.array([])
+    player_surrender = np.array([])
+    player_bust = np.array([])
+    dealer_bust = np.array([])
+    player_natural_blackjack = np.array([])
+    dealer_natural_blackjack = np.array([])
+    num_hands = np.array([])
+
+    # unpack nested dictionary
+    for x, y in sorted(s.get_stats_dict().items()):
+        true_count = np.append(true_count, x)
+        for z in y.items():
+            if z[0] == 'net winnings':
+                net_winnings = np.append(net_winnings, z[1])
+            if z[0] == 'player win':
+                player_win = np.append(player_win, z[1])
+            if z[0] == 'push':
+                push = np.append(push, z[1])
+            if z[0] == 'player surrender':
+                player_surrender = np.append(player_surrender, z[1])
+            if z[0] == 'player bust':
+                player_bust = np.append(player_bust, z[1])
+            if z[0] == 'dealer bust':
+                dealer_bust = np.append(dealer_bust, z[1])
+            if z[0] == 'player natural blackjack':
+                player_natural_blackjack = np.append(player_natural_blackjack, z[1])
+            if z[0] == 'dealer natural blackjack':
+                dealer_natural_blackjack = np.append(dealer_natural_blackjack, z[1])
+            if z[0] == 'number of hands':
+                num_hands = np.append(num_hands, z[1])
+
+    make_bar_chart(
+        x_coords=true_count,
+        y_coords=net_winnings,
+        x_label='True Count',
+        y_label='Net Winnings',
+        title='Player vs. Dealer: \n'
+              'Shoe Size 6, 75% Deck Penetration, \n'
+              'Flat Bet $5, 100,000 simulations'
+    )
+
+    # make_one_curve_plot(
+    #     x_coords=true_count,
+    #     y_coords=bankroll,
+    #     x_label='True Count',
+    #     y_label='Net Winnings',
+    #     title='1 Player: shoe size 6, 75% penetration, 100,000 simulations'
+    # )

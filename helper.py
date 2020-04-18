@@ -7,7 +7,7 @@ def count_hand(hand):
     Parameters
     ----------
     hand : list
-        List of string card elements (i.e. '2', '3', 'J', 'Q')
+        List of string card elements
 
     Returns
     -------
@@ -41,7 +41,7 @@ def max_count_hand(hand):
     Parameters
     ----------
     hand : list
-        List of string card elements (i.e. '2', '3', 'J', 'Q')
+        List of string card elements
 
     Returns
     -------
@@ -62,12 +62,13 @@ def max_count_hand(hand):
 
 def splittable(hand):
     """
-    Determines if a hand is splittable or not
+    Determines if a hand is splittable or not. ['A', 'A'] would be
+    considered a splittable hand while ['7', '8'] would not.
 
     Parameters
     ----------
     hand : list
-        List of string card elements (i.e. '2', '3', 'J', 'Q')
+        List of string card elements
 
     Returns
     -------
