@@ -104,6 +104,14 @@ class Cards(object):
         return remaining_cards/total_cards >= float(penetration)
 
 
+# TODO add BettingStrategy
+class BettingStrategy(object):
+
+    def __init__(self, rules, bank):
+        self.rules = rules
+        self.bank = bank
+
+
 class CountingStrategy(object):
     """
     CountingStrategy is an object that represents the card counting strategy used by
@@ -255,6 +263,7 @@ class Player(object):
         self.hands_dict = {1: {}}
         self.hands_dict[1]['hand'] = []
         self.hands_dict[1]['bet'] = amount
+        self.hands_dict[1]['natural blackjack'] = False
         self.hands_dict[1]['surrender'] = False
         self.hands_dict[1]['busted'] = False
         self.hands_dict[1]['stand'] = False
@@ -264,6 +273,9 @@ class Player(object):
 
     def get_bet(self, key):
         return self.hands_dict[key]['bet']
+
+    def get_natural_blackjack(self):
+        return self.hands_dict[1]['natural blackjack']
 
     def get_surrender(self):
         return self.hands_dict[1]['surrender']
@@ -279,6 +291,9 @@ class Player(object):
 
     def stand(self, key):
         self.hands_dict[key]['stand'] = True
+
+    def natural_blackjack(self):
+        self.hands_dict[1]['natural blackjack'] = True
 
     def surrender(self):
         self.hands_dict[1]['surrender'] = True
@@ -350,6 +365,51 @@ class Table(object):
         return 'Player cannot be removed. Player is not at the table.'
 
 
+class SimulationStats(object):
+    """
+    SimulationStats is an object that stores results from simulations being run
+
+    """
+    def __init__(self):
+        self.stats_dict = {}
+
+    def get_stats_dict(self):
+        return self.stats_dict
+
+    def create_key(self, key):
+        if key not in self.stats_dict.keys():
+            self.stats_dict[key] = {}
+            self.stats_dict[key]['player win'] = 0
+            self.stats_dict[key]['push'] = 0
+            self.stats_dict[key]['player surrender'] = 0
+            self.stats_dict[key]['player bust'] = 0
+            self.stats_dict[key]['player natural blackjack'] = 0
+            self.stats_dict[key]['number of hands'] = 0
+
+    def number_of_hands(self, key):
+        self.stats_dict[key]['number of hands'] += 1
+
+    def player_win(self, key):
+        self.stats_dict[key]['player win'] += 1
+        self.stats_dict[key]['number of hands'] += 1
+
+    def push(self, key):
+        self.stats_dict[key]['push'] += 1
+        self.stats_dict[key]['number of hands'] += 1
+
+    def player_surrender(self, key):
+        self.stats_dict[key]['player surrender'] += 1
+        self.stats_dict[key]['number of hands'] += 1
+
+    def player_bust(self, key):
+        self.stats_dict[key]['player bust'] += 1
+        self.stats_dict[key]['number of hands'] += 1
+
+    def player_natural_blackjack(self, key):
+        self.stats_dict[key]['player natural blackjack'] += 1
+        self.stats_dict[key]['number of hands'] += 1
+
+
 def players_place_bets(table, rules, amount):
     """
     Players at table place bets. If they're unable to bet that amount
@@ -371,8 +431,13 @@ def players_place_bets(table, rules, amount):
 
         # TODO Change amount wagered based on card counting
         # if p.get_count_strategy() is not None:
-        #     if CountingStrategy(cards=c, strategy=p.get_count_strategy()).true_count() > some number:
-        #           do something
+        #     cs = CountingStrategy(cards=c, strategy=p.get_count_strategy())
+        #     if cs in ['Hi-Lo', 'Omega II', 'Halves', 'Zen Count']:
+        #         if cs.true_count() > some_number:
+        #             # do something
+        #     else:
+        #         if cs.running_count() > some_number:
+        #             # do something
 
         if p.sufficient_funds(amount) and rules.min_bet <= amount <= rules.max_bet:
             wager = p.initial_bet(amount)
@@ -474,6 +539,7 @@ def players_play_hands(table, rules, cards, dealer_hand, dealer_up_card):
 
         # dealer and players check for 21
         if player_total == 21 or dealer_total == 21:
+            p.natural_blackjack()
             p.stand(key=1)
 
         # late surrender option
@@ -569,9 +635,9 @@ def players_play_hands(table, rules, cards, dealer_hand, dealer_up_card):
 
 def dealer_turn(table):
     """
-    Determines whether or not a dealer needs to take his turn. If a single player
-    does not have a busted or surrendered hand, the dealer will need to play out
-    their hand.
+    Determines whether or not a dealer needs to take his turn. If a player does not have
+    a natural blackjack and does not surrender or bust, the dealer will need to play out
+    their turn.
 
     Parameters
     ----------
@@ -583,10 +649,13 @@ def dealer_turn(table):
     return : boolean
 
     """
+    num_natural_blackjack = 0
     num_surrender = 0
     num_busted = 0
     num_stand = 0
     for p in table.get_players():
+        if p.get_natural_blackjack():
+            num_natural_blackjack += 1
         if p.get_surrender():
             num_surrender += 1
         for k in p.hands_dict.keys():
@@ -594,7 +663,7 @@ def dealer_turn(table):
                 num_busted += 1
             if p.get_stand(key=k):
                 num_stand += 1
-    return num_surrender + num_busted < num_stand
+    return num_natural_blackjack + num_surrender + num_busted < num_stand
 
 
 def dealer_plays_hand(rules, cards, dealer, dealer_hole_card, dealer_hand):
@@ -641,7 +710,7 @@ def dealer_plays_hand(rules, cards, dealer, dealer_hole_card, dealer_hand):
                 dealer.hit(hand=dealer_hand, new_card=cards.deal_card())
 
 
-def compare_hands(table, dealer_hand):
+def compare_hands(table, stats, key, dealer_hand):
     """
     Players compare their hands against the dealer
 
@@ -649,11 +718,16 @@ def compare_hands(table, dealer_hand):
     ----------
     table : class
         Table class instance
+    stats : class
+        SimulationStats class instance
+    key : int
+        Key to SimulationStats dictionary
     dealer_hand : list
         List of string card elements representing the dealer's hand
 
     """
     dealer_total = max_count_hand(dealer_hand)
+    dealer_hand_length = len(dealer_hand)
     print('Dealers hand:', dealer_hand)
     print('Dealer total:', dealer_total)
 
@@ -664,44 +738,77 @@ def compare_hands(table, dealer_hand):
             print(p.get_name(), 'hand #', k, ':', p.get_hand(key=k))
             player_total = max_count_hand(p.get_hand(key=k))
             player_bet = p.get_bet(key=k)
+            player_hand_length = len(p.get_hand(key=k))
             print(p.get_name(), 'total on hand #', k, ':', player_total)
 
             if p.get_surrender():
                 print('**', p.get_name(), 'surrenders hand **')
                 p.set_bankroll(0.5 * player_bet)  # player receives half of original wager back
+                s.player_surrender(key=key)
 
-            elif player_total == 21 and dealer_total == 21:
-                print('** Push -', p.get_name(), 'and dealer both have 21 **')
+            elif player_total == 21 and dealer_total == 21 and player_hand_length > 2 and dealer_hand_length > 2:
+                print('** Push ', p.get_name(), 'and dealer both have 21 **')
                 p.set_bankroll(player_bet)  # pushes
+                s.push(key=key)
 
-            elif player_total == 21:
-                print('**', p.get_name(), 'has blackjack **')
+            elif player_total == 21 and dealer_total == 21 and player_hand_length == 2 and dealer_hand_length == 2:
+                print('** Push ', p.get_name(), 'and dealer both have natural 21 **')
+                p.set_bankroll(player_bet)  # pushes
+                s.push(key=key)
+
+            elif player_total == 21 and dealer_total == 21 and player_hand_length == 2 and dealer_hand_length > 2:
+                print('**', p.get_name(), 'has natural blackjack **')
                 p.set_bankroll(player_bet + (player_bet * r.blackjack_payout))  # player receives blackjack payout
+                s.player_natural_blackjack(key=key)
 
-            elif dealer_total == 21:
+            elif player_total == 21 and dealer_total == 21 and player_hand_length > 2 and dealer_hand_length == 2:
                 print('** Dealer has blackjack **')
+                s.number_of_hands(key=key)
                 pass  # player loses wager
+
+            elif player_total == 21 and player_hand_length == 2:
+                print('**', p.get_name(), 'has natural blackjack **')
+                p.set_bankroll(player_bet + (player_bet * r.blackjack_payout))  # player receives blackjack payout
+                s.player_natural_blackjack(key=key)
+
+            elif player_total == 21 and player_hand_length > 2:
+                print('**', p.get_name(), 'has blackjack **')
+                p.set_bankroll(2 * player_bet)
+                s.player_win(key=key)
+
+            elif dealer_total == 21 and dealer_hand_length == 2:
+                print('** Dealer has natural blackjack **')
+                s.number_of_hands(key=key)
+                pass  # player loses wager
+
+            elif dealer_total == 21 and dealer_hand_length > 2:
+                print('** Dealer has blackjack **')
+                s.number_of_hands(key=key)
 
             elif player_total > 21:
                 print('**', p.get_name(), 'busts on hand #', k, '**')
+                s.player_bust(key=key)
                 pass  # busted and dealer wins automatically
 
             elif dealer_total > 21:
                 print('** Dealer busts on hand #', k, '**')
                 p.set_bankroll(2 * player_bet)  # dealer busted and player wins bet amount
+                s.number_of_hands(key=key)
+
+            elif dealer_total == player_total:
+                print('** Push on hand #', k, '**')
+                p.set_bankroll(player_bet)  # push
+                s.push(key=key)
+
+            elif player_total > dealer_total:
+                print('**', p.get_name(), 'beats dealer on hand #', k, '**')
+                p.set_bankroll(2 * player_bet)  # player beats dealer
+                s.player_win(key=key)
 
             else:
-                if dealer_total == player_total:
-                    print('** Push on hand #', k, '**')
-                    p.set_bankroll(player_bet)  # push
-
-                elif player_total > dealer_total:
-                    print('**', p.get_name(), 'beats dealer on hand #', k, '**')
-                    p.set_bankroll(2 * player_bet)  # player beats dealer
-
-                else:
-                    print('** Dealer beats', p.get_name(), 'on hand #', k, '**')
-                    pass  # dealer beats player
+                print('** Dealer beats', p.get_name(), 'on hand #', k, '**')
+                s.number_of_hands(key=key)
+                pass  # dealer beats player
 
         print(p.get_name(), 'ending bankroll:', p.get_bankroll())
 
@@ -709,7 +816,7 @@ def compare_hands(table, dealer_hand):
 if __name__ == "__main__":
 
     # number of simulations (i.e. number of shoes played)
-    simulations = 10
+    simulations = 100
 
     # initialize classes that only need to be set once
 
@@ -740,6 +847,8 @@ if __name__ == "__main__":
     # players are dealt in the same order that they are added to the table
     t.add_player([p1, p2])
 
+    s = SimulationStats()
+
     for _ in range(0, simulations):
 
         # set up cards
@@ -751,10 +860,16 @@ if __name__ == "__main__":
         while not c.cut_card_reached(penetration=0.75) and len(t.get_players()) > 0:
 
             # players place bets and empty hand with wager is created
-            players_place_bets(table=t, rules=r, amount=10)
+            players_place_bets(table=t, rules=r, amount=r.min_bet)
 
             # only deal hands if there are players
             if len(t.get_players()) > 0:
+
+                # get true count
+                true_count = CountingStrategy(cards=c, strategy='Hi-Lo').true_count()
+
+                # create stats dictionary to store results
+                s.create_key(key=true_count)
 
                 # deal first and second cards to all players and the dealer
                 dealer_hand, dealer_hole_card, dealer_up_card = deal_hands(table=t, cards=c)
@@ -773,6 +888,6 @@ if __name__ == "__main__":
                     )
 
                 # compare players hands to dealer and pay out to winning players
-                compare_hands(table=t, dealer_hand=dealer_hand)
+                compare_hands(table=t, stats=s, key=true_count, dealer_hand=dealer_hand)
 
                 print('------------------------------------------------------------------')
