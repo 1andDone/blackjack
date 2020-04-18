@@ -6,11 +6,14 @@ import basic_strategy
 import counting_strategies
 from helper import count_hand, max_count_hand, splittable
 
+random.seed(10)
 # TODO clean up classes
 # TODO BettingStrategy class (Kelly Criterion, Flat betting, betting ramp)
 # TODO make poor players (do not play optimal strategy)
 # TODO run simulations and make plots -- for more than one player
 # TODO use actual chip amounts / chip increments
+# TODO tests
+# TODO Game class?
 
 class HouseRules(object):
     """
@@ -107,9 +110,31 @@ class Cards(object):
 # TODO add BettingStrategy
 class BettingStrategy(object):
 
-    def __init__(self, rules, bank):
-        self.rules = rules
-        self.bank = bank
+    def __init__(self, strategy):
+        if strategy not in ['Fixed', 'Variable']:
+            raise ValueError('Betting strategy must be either Fixed or Variable.')
+        self.strategy = strategy
+
+    def get_strategy(self):
+        return self.strategy()
+
+    def bet(self, min_bet, bet_spread, true_count=None, count_strategy=None):
+        if self.strategy == 'Fixed':
+            return min_bet
+        elif self.strategy == 'Variable':
+            if count_strategy in ['Hi-Lo', 'Omega II', 'Halves', 'Zen Count']:
+                if true_count < 1:
+                    return min_bet
+                elif true_count < 3:
+                    return min_bet * (1 + (0.25 * (bet_spread - 1)))
+                elif true_count < 5:
+                    return min_bet * (1 + (0.5 * (bet_spread - 1)))
+                elif true_count < 10:
+                    return min_bet * (1 + (0.75 * (bet_spread - 1)))
+                else:
+                    return min_bet * bet_spread
+            else:
+                raise NotImplementedError('Betting strategy is not implemented.')
 
 
 class CountingStrategy(object):
@@ -132,26 +157,18 @@ class CountingStrategy(object):
         self.strategy = strategy
         self.count_dict = counting_strategies.count_dict[strategy]
 
+    def get_strategy(self):
+        return self.strategy
+
     def running_count(self):
         # TODO add additional counting systems from https://en.wikipedia.org/wiki/Card_counting
         # TODO some counting systems require the type of card (spade, diamond, etc.)
         return sum([self.count_dict.get(card) for card in self.cards.visible_cards])
 
-    def true_count(self):
-        # TODO may want to tweak accuracy -- players have to eyeball remaining decks while playing
+    def true_count(self, accuracy=1):
         if self.strategy in ['Hi-Lo', 'Omega II', 'Halves', 'Zen Count']:
-            return round(self.running_count()/self.cards.remaining_decks(), 1)
+            return round(self.running_count()/self.cards.remaining_decks(), accuracy)
         raise ValueError('True count not used for this counting strategy.')
-
-
-class Dealer(object):
-    """
-    Dealer is an object that represents the dealer at the table.
-
-    """
-    def hit(self, hand, new_card):
-        hand.append(new_card)
-        return hand
 
 
 class BasicStrategy(object):
@@ -185,6 +202,7 @@ class BasicStrategy(object):
         return basic_strategy.h17_hard
 
 
+# TODO min bet must be some combination of chips
 class Player(object):
     """
     Player is an object that represents a single player at the table.
@@ -195,46 +213,75 @@ class Player(object):
         Name of the player
     rules : class
         HouseRules class instance
-    play_strategy : class
-        BasicStrategy class instance
-    count_strategy : string
-        Name of the card counting strategy used by the player
     bankroll : float
         Amount of money a player starts out with when sitting down at a table
+    min_bet : float
+        Minimum amount of money a player would like to bet when playing a hand
+    bet_spread : float
+        Ratio of maximum bet to minimum bet
+    play_strategy : class
+        BasicStrategy class instance
+    bet_strategy : class
+        Name of the bet strategy used by the player
+    count_strategy : string
+        Name of the card counting strategy used by the player
 
     """
-    def __init__(self, name, rules, play_strategy, bankroll, count_strategy=None):
+    def __init__(self, name, rules, bankroll, min_bet, play_strategy, bet_spread=1,
+                 bet_strategy='Fixed', count_strategy=None):
         if count_strategy is not None:
             if count_strategy not in ['Hi-Lo', 'Hi-Opt I', 'Hi-Opt II', 'Omega II', 'Halves', 'Zen Count']:
-                raise ValueError('Strategy must be Hi-Lo, Hi-Opt I, Hi-Opt II, Omega II, Halves, or Zen Count')
+                raise ValueError('Count Strategy must be Hi-Lo, Hi-Opt I, Hi-Opt II, Omega II, Halves, or Zen Count')
         self.name = name
+        self.rules = rules
         if bankroll <= rules.min_bet:
             raise ValueError('Bankroll must be greater than minimum bet.')
         self.bankroll = float(bankroll)
-        self.rules = rules
+        if bet_strategy not in ['Fixed', 'Variable']:
+            raise ValueError('Betting strategy must be either Fixed or Variable.')
+        if min_bet < rules.min_bet or min_bet > rules.max_bet:
+            raise ValueError('Minimum bet is not allowed according to the table rules.')
+        self.min_bet = float(min_bet)
+        if bet_spread > float(rules.max_bet/rules.min_bet) or bet_spread > float(bankroll/min_bet):
+            raise ValueError('Bet spread is too large.')
+        if bet_strategy == 'Variable' and bet_spread < 1:
+            raise ValueError('Bet spread must be greater than 1.')
+        self.bet_spread = float(bet_spread)
         self.play_strategy = play_strategy
+        self.bet_strategy = bet_strategy
+        if bet_strategy == 'Variable' and count_strategy is None:
+            raise ValueError('Count strategy cannot be none with a Variable Bet Strategy.')
         self.count_strategy = count_strategy
         self.hands_dict = {}
 
     def get_name(self):
         return self.name
 
-    def get_play_strategy(self):
-        return self.play_strategy
+    def get_bankroll(self):
+        return self.bankroll
 
-    def get_count_strategy(self):
-        return self.count_strategy
+    def get_min_bet(self):
+        return self.min_bet
+
+    def get_bet_spread(self):
+        return self.bet_spread
+
+    def set_bankroll(self, amount):
+        self.bankroll = self.bankroll + amount
 
     def sufficient_funds(self, amount):
         if self.bankroll - amount >= 0:
             return True
         return False
 
-    def get_bankroll(self):
-        return self.bankroll
+    def get_bet_strategy(self):
+        return self.bet_strategy
 
-    def set_bankroll(self, amount):
-        self.bankroll = self.bankroll + amount
+    def get_play_strategy(self):
+        return self.play_strategy
+
+    def get_count_strategy(self):
+        return self.count_strategy
 
     def create_hand(self, amount):
         self.hands_dict = {1: {}}
@@ -409,7 +456,7 @@ class SimulationStats(object):
         self.stats_dict[key]['number of hands'] += 1
 
 
-def players_place_bets(table, rules, amount):
+def players_place_bets(table, rules):
     """
     Players at table place bets. If they're unable to bet that amount
     they place a bet closest to that amount, while staying within the
@@ -422,22 +469,33 @@ def players_place_bets(table, rules, amount):
         Table class instance
     rules : class
         HouseRules class instance
-    amount : integer
-        Amount initially bet by player
 
     """
     for p in table.get_players():
 
-        # TODO Change amount wagered based on card counting
-        # if p.get_count_strategy() is not None:
-        #     cs = CountingStrategy(cards=c, strategy=p.get_count_strategy())
-        #     if cs in ['Hi-Lo', 'Omega II', 'Halves', 'Zen Count']:
-        #         if cs.true_count() > some_number:
-        #             # do something
-        #     else:
-        #         if cs.running_count() > some_number:
-        #             # do something
+        bs = BettingStrategy(strategy=p.get_bet_strategy())
 
+        if p.get_bet_strategy() == 'Variable':
+            cs = CountingStrategy(cards=c, strategy=p.get_count_strategy())
+
+            if p.get_count_strategy() in ['Hi-Lo', 'Omega II', 'Halves', 'Zen Count']:
+                amount = bs.bet(
+                            min_bet=p.get_min_bet(),
+                            bet_spread=p.get_bet_spread(),
+                            true_count=cs.true_count(),
+                            count_strategy=p.get_count_strategy()
+                )
+
+            else:
+                raise NotImplementedError('Have not implemented for running counts')
+
+        else:
+            amount = bs.bet(
+                        min_bet=p.get_min_bet(),
+                        bet_spread=p.get_bet_spread()
+            )
+
+        # rules once you have the amount
         if p.sufficient_funds(amount=amount) and rules.min_bet <= amount <= rules.max_bet:
             p.bet(amount=amount)
 
@@ -485,12 +543,10 @@ def deal_hands(table, cards):
     return : list
 
     """
-    dealer_hand = []
-
     for p in table.get_players():
         p.hit(key=1, new_card=cards.deal_card())  # dealing a card is effectively the same as hitting
 
-    dealer_hand.append(cards.deal_card(visible=False))
+    dealer_hand = [cards.deal_card(visible=False)]
 
     for p in table.get_players():
         p.hit(key=1, new_card=cards.deal_card())
@@ -655,7 +711,7 @@ def dealer_turn(table):
     return num_natural_blackjack + num_surrender + num_busted < num_stand
 
 
-def dealer_plays_hand(rules, cards, dealer, dealer_hole_card, dealer_hand):
+def dealer_plays_hand(rules, cards, dealer_hole_card, dealer_hand):
     """
     Dealer plays out hand. Depending on the rules of the table, the dealer
     will either stand or hit on a soft 17. When the dealer plays out their
@@ -667,8 +723,6 @@ def dealer_plays_hand(rules, cards, dealer, dealer_hole_card, dealer_hand):
         HouseRules class instance
     cards : class
         Cards class instance
-    dealer : class
-        Dealer class instance
     dealer_hole_card : str
         Dealer's card that is face down after each player receives two cards
     dealer_hand : list
@@ -689,7 +743,7 @@ def dealer_plays_hand(rules, cards, dealer, dealer_hole_card, dealer_hand):
                 return dealer_hand
 
             else:
-                dealer.hit(hand=dealer_hand, new_card=cards.deal_card())
+                dealer_hand.append(cards.deal_card())
 
         else:  # dealer must hit on soft 17
 
@@ -698,7 +752,7 @@ def dealer_plays_hand(rules, cards, dealer, dealer_hole_card, dealer_hand):
                 return dealer_hand
 
             else:
-                dealer.hit(hand=dealer_hand, new_card=cards.deal_card())
+                dealer_hand.append(cards.deal_card())
 
 
 def compare_hands(table, stats, key, dealer_hand):
@@ -849,38 +903,48 @@ def make_bar_chart(x_coords, y_coords, x_label, y_label, title):
     plt.show()
 
 
+# TODO set random.seed() when running simulations if you want to see impact of different variables
 if __name__ == "__main__":
 
     # number of simulations (i.e. number of shoes played)
-    simulations = 100000
+    simulations = 10000
 
-    # initialize classes that only need to be set once
-
-    # set up table
-    t = Table()
+    # initialize classes that can be set up once
 
     # set up rules of table
     r = HouseRules(
         min_bet=5,
-        max_bet=500
+        max_bet=500,
+        s17=True,
+        blackjack_payout=1.5
     )
 
     # basic strategy based on rules
     ps = BasicStrategy(rules=r)
 
-    # set up dealer
-    d = Dealer()
-
-    # set up players
-    p1 = Player(name='P1', rules=r, play_strategy=ps, count_strategy='Hi-Lo', bankroll=10000)
-
-    # add players to table
-    # players are dealt in the same order that they are added to the table
-    t.add_player(p1)
-
+    # keeps track of statistics during simulations
     s = SimulationStats()
 
     for _ in range(0, simulations):
+
+        # set up table
+        t = Table()
+
+        # set up players each simulation in case no funds remain
+        p1 = Player(
+                name='P1',
+                rules=r,
+                play_strategy=ps,
+                bet_strategy='Variable',
+                count_strategy='Hi-Lo',
+                min_bet=10,
+                bet_spread=10,
+                bankroll=10000
+        )
+
+        # add players to table
+        # players are dealt in the same order that they are added to the table
+        t.add_player(p1)
 
         # set up cards
         c = Cards(shoe_size=6)
@@ -890,17 +954,17 @@ if __name__ == "__main__":
 
         while not c.cut_card_reached(penetration=0.75) and len(t.get_players()) > 0:
 
+            # get true count using Hi-Lo strategy
+            true_count = CountingStrategy(cards=c, strategy='Hi-Lo').true_count()
+
+            # create stats dictionary to store results
+            s.create_key(key=true_count)
+
             # players place bets and empty hand with wager is created
-            players_place_bets(table=t, rules=r, amount=r.min_bet)
+            players_place_bets(table=t, rules=r)
 
             # only deal hands if there are players
             if len(t.get_players()) > 0:
-
-                # get true count
-                true_count = CountingStrategy(cards=c, strategy='Hi-Lo').true_count()
-
-                # create stats dictionary to store results
-                s.create_key(key=true_count)
 
                 # deal hand to all players and dealer
                 dealer_hand = deal_hands(table=t, cards=c)
@@ -917,7 +981,6 @@ if __name__ == "__main__":
                     dealer_hand = dealer_plays_hand(
                                                 rules=r,
                                                 cards=c,
-                                                dealer=d,
                                                 dealer_hole_card=dealer_hole_card,
                                                 dealer_hand=dealer_hand
                     )
@@ -943,37 +1006,45 @@ if __name__ == "__main__":
         for z in y.items():
             if z[0] == 'net winnings':
                 net_winnings = np.append(net_winnings, z[1])
-            if z[0] == 'player win':
+            elif z[0] == 'player win':
                 player_win = np.append(player_win, z[1])
-            if z[0] == 'push':
+            elif z[0] == 'push':
                 push = np.append(push, z[1])
-            if z[0] == 'player surrender':
+            elif z[0] == 'player surrender':
                 player_surrender = np.append(player_surrender, z[1])
-            if z[0] == 'player bust':
+            elif z[0] == 'player bust':
                 player_bust = np.append(player_bust, z[1])
-            if z[0] == 'dealer bust':
+            elif z[0] == 'dealer bust':
                 dealer_bust = np.append(dealer_bust, z[1])
-            if z[0] == 'player natural blackjack':
+            elif z[0] == 'player natural blackjack':
                 player_natural_blackjack = np.append(player_natural_blackjack, z[1])
-            if z[0] == 'dealer natural blackjack':
+            elif z[0] == 'dealer natural blackjack':
                 dealer_natural_blackjack = np.append(dealer_natural_blackjack, z[1])
-            if z[0] == 'number of hands':
+            elif z[0] == 'number of hands':
                 num_hands = np.append(num_hands, z[1])
+            else:
+                raise NotImplementedError('Need to add numpy array')
 
+    # TODO Make titles automatic
     make_bar_chart(
         x_coords=true_count,
         y_coords=net_winnings,
         x_label='True Count',
         y_label='Net Winnings',
-        title='Player vs. Dealer: \n'
+        title='Player vs. Dealer Bar Plot: \n'
               'Shoe Size 6, 75% Deck Penetration, \n'
-              'Flat Bet $5, 100,000 simulations'
+              'Variable $10, ' + str(r.blackjack_payout) + ' Blackjack Payout, \n' +
+              str(simulations) + ' Shoe Simulations'
     )
 
-    # make_one_curve_plot(
-    #     x_coords=true_count,
-    #     y_coords=bankroll,
-    #     x_label='True Count',
-    #     y_label='Net Winnings',
-    #     title='1 Player: shoe size 6, 75% penetration, 100,000 simulations'
-    # )
+    # TODO Make titles automatic
+    make_one_curve_plot(
+        x_coords=true_count,
+        y_coords=np.cumsum(net_winnings),
+        x_label='True Count',
+        y_label='Net Winnings',
+        title='Player vs. Dealer Cumulative Sum: \n'
+              'Shoe Size 6, 75% Deck Penetration, \n'
+              'Variable $10, ' + str(r.blackjack_payout) + ' Blackjack Payout, \n' +
+              str(simulations) + ' Shoe Simulations'
+    )
