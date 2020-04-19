@@ -7,13 +7,13 @@ import counting_strategies
 from helper import count_hand, max_count_hand, splittable
 
 random.seed(10)
-# TODO clean up classes
-# TODO BettingStrategy class (Kelly Criterion, Flat betting, betting ramp)
-# TODO make poor players (do not play optimal strategy)
-# TODO run simulations and make plots -- for more than one player
-# TODO use actual chip amounts / chip increments
-# TODO tests
-# TODO Game class?
+
+# TODO clean up classes - Player may be too large, may need Game class
+# TODO BettingStrategy class -- Kelly Criterion
+# TODO PlayStrategy should be a class that includes basicstrategy
+# TODO run simulations and make plots -- for more than one player -- may need to include player in dict
+# TODO use actual chip amounts -- only allow bets using chip increments
+# TODO tests -- test out every type of hand, situation
 
 class HouseRules(object):
     """
@@ -31,7 +31,7 @@ class HouseRules(object):
         True if split pairs can be re-split, false otherwise
     resplit_limit : int
         Number of times a split pair can be re-split. The maximum number of hands that a player
-        can play is resplit_limit + 2.
+        can play is re-split limit + 2.
     blackjack_payout : float
         The payout for a player receiving a natural blackjack (2 cards)
     double_down : boolean
@@ -62,7 +62,6 @@ class HouseRules(object):
         self.late_surrender = late_surrender
 
 
-# TODO stack cards to be a certain count
 class Cards(object):
     """
     Cards is an object that deals with a shoe at a table.
@@ -107,7 +106,6 @@ class Cards(object):
         return remaining_cards/total_cards >= float(penetration)
 
 
-# TODO add BettingStrategy
 class BettingStrategy(object):
 
     def __init__(self, strategy):
@@ -118,23 +116,23 @@ class BettingStrategy(object):
     def get_strategy(self):
         return self.strategy()
 
-    def bet(self, min_bet, bet_spread, true_count=None, count_strategy=None):
+    def bet(self, min_bet, bet_spread, count=None, count_strategy=None):
         if self.strategy == 'Fixed':
             return min_bet
         elif self.strategy == 'Variable':
             if count_strategy in ['Hi-Lo', 'Omega II', 'Halves', 'Zen Count']:
-                if true_count < 1:
+                if count < 1:
                     return min_bet
-                elif true_count < 3:
+                elif count < 3:
                     return min_bet * (1 + (0.25 * (bet_spread - 1)))
-                elif true_count < 5:
+                elif count < 5:
                     return min_bet * (1 + (0.5 * (bet_spread - 1)))
-                elif true_count < 10:
+                elif count < 10:
                     return min_bet * (1 + (0.75 * (bet_spread - 1)))
                 else:
                     return min_bet * bet_spread
             else:
-                raise NotImplementedError('Betting strategy is not implemented.')
+                raise NotImplementedError('Betting strategy is not implemented for running counts.')
 
 
 class CountingStrategy(object):
@@ -399,7 +397,8 @@ class Table(object):
 
 class SimulationStats(object):
     """
-    SimulationStats is an object that stores results from simulations being run
+    SimulationStats is an object that stores results from one or many
+    simulations being run
 
     """
     def __init__(self):
@@ -482,7 +481,7 @@ def players_place_bets(table, rules):
                 amount = bs.bet(
                             min_bet=p.get_min_bet(),
                             bet_spread=p.get_bet_spread(),
-                            true_count=cs.true_count(),
+                            count=cs.true_count(),
                             count_strategy=p.get_count_strategy()
                 )
 
@@ -855,9 +854,9 @@ def make_one_curve_plot(x_coords, y_coords, x_label, y_label, title):
 
     Parameters
     ----------
-    x_coords : list of floats
+    x_coords : list or array
         x-coordinates of graph
-    y_coords : list of floats
+    y_coords : list or array
         y-coordinates of graph
     x_label : str
         Label for x-axis
@@ -875,16 +874,20 @@ def make_one_curve_plot(x_coords, y_coords, x_label, y_label, title):
     plt.show()
 
 
-def make_bar_chart(x_coords, y_coords, x_label, y_label, title):
+def make_two_color_bar_chart(x_coords1, x_coords2, y_coords1, y_coords2, x_label, y_label, title):
     """
     Makes a bar plot of the x-coordinates and y-coordinates with the labels
     and title provided.
 
     Parameters
     ----------
-    x_coords : list of floats
+    x_coords1 : list or array
         x-coordinates of graph
-    y_coords : list of floats
+    x_coords2 : list or array
+        x-coordinates of graph
+    y_coords1 : list or array
+        y-coordinates of graph
+    y_coords2 : list or array
         y-coordinates of graph
     x_label : str
         Label for x-axis
@@ -895,15 +898,14 @@ def make_bar_chart(x_coords, y_coords, x_label, y_label, title):
 
     """
     plt.figure()
-    plt.bar(x=x_coords[y_coords > 0], height=y_coords[y_coords > 0], color='b', width=0.2)
-    plt.bar(x=x_coords[y_coords < 0], height=y_coords[y_coords < 0], color='r', width=0.2)
+    plt.bar(x=x_coords1, height=y_coords1, color='b', width=0.2)
+    plt.bar(x=x_coords2, height=y_coords2, color='r', width=0.2)
     plt.xlabel(x_label)
     plt.ylabel(y_label)
     plt.title(title)
     plt.show()
 
 
-# TODO set random.seed() when running simulations if you want to see impact of different variables
 if __name__ == "__main__":
 
     # number of simulations (i.e. number of shoes played)
@@ -1026,9 +1028,11 @@ if __name__ == "__main__":
                 raise NotImplementedError('Need to add numpy array')
 
     # TODO Make titles automatic
-    make_bar_chart(
-        x_coords=true_count,
-        y_coords=net_winnings,
+    make_two_color_bar_chart(
+        x_coords1=true_count[net_winnings > 0],
+        x_coords2=true_count[net_winnings < 0],
+        y_coords1=net_winnings[net_winnings > 0],
+        y_coords2=net_winnings[net_winnings < 0],
         x_label='True Count',
         y_label='Net Winnings',
         title='Player vs. Dealer Bar Plot: \n'
