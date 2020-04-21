@@ -6,8 +6,10 @@ import basic_strategy
 import counting_strategies
 from helper import count_hand, max_count_hand, splittable
 
-random.seed(12)
+# random.seed(11)
 
+# TODO make plot size bigger
+# TODO distribution of amounts?
 # TODO clean up classes - Player may be too large, may need Game class
 # TODO BettingStrategy class -- Kelly Criterion
 # TODO run simulations and make plots -- for more than one player -- may need to include player in dict
@@ -176,9 +178,16 @@ class CountingStrategy(object):
     def running_count(self):
         return sum([self.count_dict.get(card) for card in self.cards.visible_cards])
 
-    def true_count(self, accuracy=1):
+    def true_count(self, accuracy=0.5):
+        if accuracy not in [0.1, 0.5, 1]:
+            raise ValueError('Accuracy must be 0.1, 0.5, or 1.')
         if self.strategy in ['Hi-Lo', 'Omega II', 'Halves', 'Zen Count']:
-            return round(self.running_count()/self.cards.remaining_decks(), accuracy)
+            if accuracy == 0.1:
+                return round(self.running_count()/self.cards.remaining_decks(), 1)
+            elif accuracy == 0.5:
+                return round((self.running_count()/self.cards.remaining_decks()) * 2, 0)/2
+            else:
+                return round(self.running_count()/self.cards.remaining_decks(), 0)
         raise ValueError('True count not used for this counting strategy.')
 
 
@@ -867,10 +876,12 @@ def compare_hands(table, stats, key, dealer_hand):
 if __name__ == "__main__":
 
     # number of simulations (i.e. number of shoes played)
-    simulations = 100000
+    simulations = 10000
+
+    # variable used to store ending bankroll
+    end_bankroll = []
 
     # initialize classes that can be set up once
-
     # set up rules of table
     r = HouseRules(
         min_bet=5,
@@ -892,7 +903,7 @@ if __name__ == "__main__":
                 name='P1',
                 rules=r,
                 play_strategy='Basic',
-                bet_strategy='Fixed',
+                bet_strategy='Variable',
                 count_strategy='Hi-Lo',
                 min_bet=10,
                 bet_spread=10,
@@ -912,7 +923,7 @@ if __name__ == "__main__":
         while not c.cut_card_reached(penetration=0.75) and len(t.get_players()) > 0:
 
             # get true count using Hi-Lo strategy
-            true_count = CountingStrategy(cards=c, strategy='Hi-Lo').true_count(accuracy=0)
+            true_count = CountingStrategy(cards=c, strategy='Hi-Lo').true_count(accuracy=0.1)
 
             # create stats dictionary to store results
             s.create_key(key=true_count)
@@ -1000,10 +1011,10 @@ if __name__ == "__main__":
     # TODO Make titles automatic
     # figure 1
     plt.figure()
-    plt.bar(x=true_count[net_winnings > 0], height=net_winnings[net_winnings > 0], color='b', width=0.2)
-    plt.bar(x=true_count[net_winnings < 0], height=net_winnings[net_winnings < 0], color='r', width=0.2)
-    plt.xlabel('True count using Hi-Lo Count')
-    plt.ylabel('Net Winnings')
+    plt.bar(x=true_count[net_winnings > 0], height=net_winnings[net_winnings > 0]/simulations, color='b', width=0.2)
+    plt.bar(x=true_count[net_winnings < 0], height=net_winnings[net_winnings < 0]/simulations, color='r', width=0.2)
+    plt.xlabel('Hi-Lo True count')
+    plt.ylabel('Net Winnings per Shoe (Dollars)')
     plt.title('Player vs. Dealer Bar Plot: \n'
               'Shoe Size 6, 75% Deck Penetration, \n'
               'Variable $10, ' + str(r.blackjack_payout) + ' Blackjack Payout, \n' +
@@ -1013,9 +1024,9 @@ if __name__ == "__main__":
 
     # figure 2
     plt.figure()
-    plt.plot(true_count, np.cumsum(net_winnings))
-    plt.xlabel('True count using Hi-Lo Count')
-    plt.ylabel('Net Winnings')
+    plt.plot(true_count, np.cumsum(net_winnings)/simulations)
+    plt.xlabel('Hi-Lo True Count')
+    plt.ylabel('Net Winnings per Shoe (Dollars)')
     plt.title('Player vs. Dealer Cumulative Sum: \n'
               'Shoe Size 6, 75% Deck Penetration, \n'
               'Variable $10, ' + str(r.blackjack_payout) + ' Blackjack Payout, \n' +
@@ -1025,35 +1036,12 @@ if __name__ == "__main__":
 
     # figure 3
     plt.figure()
-    plt.bar(x=[1], height=np.sum(player_natural_blackjack) - np.sum(dealer_natural_blackjack), color='b', width=0.2)
-    plt.bar(x=[2], height=np.sum(dealer_bust) - np.sum(player_bust), color='b', width=0.2)
-    plt.bar(x=[3], height=np.sum(player_showdown_win) - np.sum(dealer_showdown_win), color='b', width=0.2)
-    plt.bar(x=[4], height=-1 * np.sum(player_surrender), color='b', width=0.2)
-    plt.xticks([1, 2, 3, 4], ['Natural Blackjack', 'Bust', 'Showdown', 'Surrender']),
-    plt.xlabel('Different Hand Outcomes')
-    plt.ylabel('Number of Hands')
-    plt.title('Player vs. Dealer: Number of Hands with a Particular Outcome')
-    plt.grid(axis='y')
-    plt.show()
-
-    # figure 4 -- group true counts together
-    plt.figure()
-    plt.bar(x=[1], height=np.sum(net_winnings), color='b', width=0.2)
-    plt.bar(x=[2], height=np.sum(net_natural_blackjack_winnings), color='r', width=0.2)
-    plt.bar(x=[3], height=np.sum(net_bust_winnings), color='r', width=0.2)
-    plt.bar(x=[4], height=np.sum(net_showdown_winnings), color='r', width=0.2)
-    plt.bar(x=[5], height=np.sum(net_surrender_winnings), color='r', width=0.2)
-    plt.xticks([1, 2, 3, 4, 5], ['Overall', 'Natural Blackjack', 'Bust', 'Showdown', 'Surrender']),
-    plt.xlabel('Different Hand Outcomes')
-    plt.ylabel('Net Winnings')
-    plt.title('Player vs. Dealer: Net Winnings of Different Hand Outcomes')
-    plt.grid(axis='y')
-    plt.show()
-
-    # figure 5
-    plt.figure()
-    plt.plot(true_count[num_hands > 100], (player_natural_blackjack[num_hands > 100] + player_showdown_win[num_hands > 100] + dealer_bust[num_hands > 100])/num_hands[num_hands > 100])
-    plt.xlabel('True count using Hi-Lo Count')
+    plt.plot(true_count[num_hands > 1000],
+             (player_natural_blackjack[num_hands > 1000] +
+              player_showdown_win[num_hands > 1000] +
+              dealer_bust[num_hands > 1000]) /
+             (num_hands[num_hands > 1000] - push[num_hands > 1000]))
+    plt.xlabel('Hi-Lo True Count')
     plt.ylabel('Player Win Percentage')
     plt.title('Player vs. Dealer Win Percentage: \n'
               'Shoe Size 6, 75% Deck Penetration, \n'
@@ -1061,3 +1049,20 @@ if __name__ == "__main__":
               str(simulations) + ' Shoe Simulations')
     plt.grid(axis='y')
     plt.show()
+
+    # figure 4
+    plt.figure()
+    x = [1, 2, 3]
+    y = [np.sum(player_natural_blackjack + player_showdown_win + dealer_bust)/np.sum(num_hands),
+         np.sum(dealer_natural_blackjack + dealer_showdown_win + player_bust + player_surrender)/np.sum(num_hands),
+         np.sum(push)/np.sum(num_hands)]
+    plt.bar(x=x, height=y, width=0.2, color='b')
+    plt.xticks([1, 2, 3], ['Player Win Percentage', 'Dealer Win Percentage', 'Push Percentage'])
+    plt.ylabel('Percentage')
+    plt.title('Overall Winning Percentages for Player vs. Dealer over \n' +
+              str(simulations) + 'Shoe Simulations')
+    for i in range(len(y)):
+        plt.annotate('{:.2%}'.format(y[i]), xy=(x[i] - 0.1, y[i] + 0.005))
+    plt.grid(axis='y')
+    plt.show()
+
