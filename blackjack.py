@@ -6,19 +6,19 @@ import basic_strategy
 import counting_strategies
 from helper import count_hand, max_count_hand, splittable
 
-random.seed(11)
+random.seed(1100)
 
 # TODO add re-splitting aces option
-# TODO make plot size bigger
-# TODO distribution of amounts?
+# TODO make plot size bigger -- figsize
+# TODO distribution of end bankroll amounts
 # TODO clean up classes - Player may be too large, may need Game class
-# TODO BettingStrategy class -- Kelly Criterion
-# TODO run simulations and make plots -- for more than one player -- may need to include player in dict
-# TODO use actual chip amounts -- only allow bets using chip increments
-# TODO tests -- test out every type of hand, situation
-# TODO min bet must be some combination of chips
+# TODO Kelly Criterion?
+# TODO run simulations and make plots for more than one player -- may need to include player in dict
+# TODO use actual chip amounts -- only allow bets using chip increments?
+# TODO tests -- test out every type of hand, multiple ways to get blackjack, bust, etc.
 # TODO add additional counting systems from https://en.wikipedia.org/wiki/Card_counting
 # TODO some counting systems require the type of card (spade, diamond, etc.)
+# TODO composition dependent strategy https://wizardofodds.com/gambling/glossary/
 
 
 class HouseRules(object):
@@ -64,7 +64,7 @@ class HouseRules(object):
         self.max_bet = int(max_bet)
         self.s17 = s17
         self.resplit_pairs = resplit_pairs
-        self.resplit_limit = int(resplit_limit)  # naturally bounded by 4 * shoe size
+        self.resplit_limit = int(resplit_limit)
         self.blackjack_payout = blackjack_payout
         self.double_down = double_down
         self.double_after_split = double_after_split
@@ -109,7 +109,7 @@ class Cards(object):
         return len(self.deck)/52
 
     def cut_card_reached(self, penetration):
-        if float(penetration) < 0.5 or float(penetration) > 0.9:
+        if penetration < 0.5 or penetration > 0.9:
             raise ValueError('Penetration must be between 0.5 and 0.9.')
         total_cards = 52 * self.shoe_size
         remaining_cards = total_cards - len(self.deck)
@@ -129,7 +129,7 @@ class BettingStrategy(object):
     """
     def __init__(self, strategy):
         if strategy not in ['Fixed', 'Variable']:
-            raise ValueError('Betting strategy must be either Fixed or Variable.')
+            raise ValueError('Betting strategy must be either "Fixed" or "Variable".')
         self.strategy = strategy
 
     def get_strategy(self):
@@ -169,7 +169,7 @@ class CountingStrategy(object):
     """
     def __init__(self, cards, strategy):
         if strategy not in ['Hi-Lo', 'Hi-Opt I', 'Hi-Opt II', 'Omega II', 'Halves', 'Zen Count']:
-            raise ValueError('Strategy must be Hi-Lo, Hi-Opt I, Hi-Opt II, Omega II, Halves, or Zen Count')
+            raise ValueError('Strategy must be "Hi-Lo", "Hi-Opt I", "Hi-Opt II", "Omega II", "Halves", or "Zen Count".')
         self.cards = cards
         self.strategy = strategy
         self.count_dict = counting_strategies.count_dict[strategy]
@@ -209,7 +209,7 @@ class PlayingStrategy(object):
     """
     def __init__(self, rules, strategy):
         if strategy not in ['Basic']:
-            raise ValueError('Strategy must be Basic.')
+            raise ValueError('Strategy must be "Basic".')
         self.rules = rules
         self.strategy = strategy
 
@@ -269,19 +269,20 @@ class Player(object):
         if bet_strategy == 'Variable' and count_strategy is None:
             raise ValueError('Count strategy cannot be None with a Variable betting strategy.')
         if play_strategy not in ['Basic']:
-            raise ValueError('Playing strategy must be Basic.')
+            raise ValueError('Playing strategy must be "Basic".')
         if bet_strategy not in ['Fixed', 'Variable']:
-            raise ValueError('Betting strategy must be either Fixed or Variable.')
+            raise ValueError('Betting strategy must be either "Fixed" or "Variable".')
         if count_strategy is not None:
             if count_strategy not in ['Hi-Lo', 'Hi-Opt I', 'Hi-Opt II', 'Omega II', 'Halves', 'Zen Count']:
-                raise ValueError('Count Strategy must be Hi-Lo, Hi-Opt I, Hi-Opt II, Omega II, Halves, or Zen Count')
+                raise ValueError('Count Strategy must be "Hi-Lo", "Hi-Opt I", "Hi-Opt II", "Omega II", '
+                                 '"Halves", or "Zen Count".')
         self.name = name
         self.rules = rules
         self.bankroll = float(bankroll)
         self.min_bet = float(min_bet)
         self.bet_spread = float(bet_spread)
-        self.play_strategy = PlayingStrategy(rules=r, strategy=play_strategy)
-        self.bet_strategy = bet_strategy
+        self.play_strategy = PlayingStrategy(rules=rules, strategy=play_strategy)
+        self.bet_strategy = BettingStrategy(strategy=bet_strategy)
         self.count_strategy = count_strategy
         self.hands_dict = {}
 
@@ -304,9 +305,6 @@ class Player(object):
         if self.bankroll - amount >= 0:
             return True
         return False
-
-    def get_bet_strategy(self):
-        return self.bet_strategy
 
     def get_count_strategy(self):
         return self.count_strategy
@@ -375,7 +373,6 @@ class Player(object):
         if splittable(hand=self.hands_dict[key]['hand']):
             self.hands_dict[new_key] = {}
             self.hands_dict[new_key]['hand'] = [self.get_hand(key=key).pop()]
-            self.hands_dict[new_key]['initial bet'] = amount
             self.hands_dict[new_key]['bet'] = amount
             self.hands_dict[new_key]['busted'] = False
             self.hands_dict[new_key]['stand'] = False
@@ -389,8 +386,8 @@ class Player(object):
                 return self.play_strategy.soft()[soft_total][dealer_up_card]
             elif 2 <= hard_total <= 21:
                 return self.play_strategy.hard()[hard_total][dealer_up_card]
-            else:
-                return 'B'  # player is busted
+            else:  # player is busted
+                return 'B'
 
 
 class Table(object):
@@ -422,12 +419,12 @@ class Table(object):
                 raise ValueError('Table is at maximum capacity.')
             self.players.extend(player)
         else:
-            raise ValueError('Expected a list or Player class object.')
+            raise ValueError('Expected a list or "Player" class object.')
 
     def remove_player(self, player):
         if player in self.players:
             self.players.remove(player)
-        return 'Player cannot be removed. Player is not at the table.'
+        return 'Player cannot be removed because the player is not at the table.'
 
 
 class SimulationStats(object):
@@ -478,11 +475,11 @@ class SimulationStats(object):
         self.stats_dict[key]['overall bet'] += amount
         self.stats_dict[key]['net winnings'] += -amount
 
-    def push(self, key):
+    def push(self, key, amount, initial_amount):
         self.stats_dict[key]['push'] += 1
         self.stats_dict[key]['number of hands'] += 1
-        # self.stats_dict[key]['initial bet'] += initial_amount
-        # self.stats_dict[key]['overall bet'] += amount
+        self.stats_dict[key]['initial bet'] += initial_amount
+        self.stats_dict[key]['overall bet'] += amount
 
     def player_surrender(self, key, amount, initial_amount):
         self.stats_dict[key]['player surrender'] += 1
@@ -522,9 +519,9 @@ class SimulationStats(object):
 
 def players_place_bets(table, rules):
     """
-    Players at table place bets. If they're unable to bet that amount
-    they place a bet closest to that amount, while staying within the
-    betting constraints of the table. If they are unable to make the
+    Players at table place bets. If they're unable to bet the desired
+    amount, they place a bet closest to that amount, while staying within
+    the betting constraints of the table. If they are unable to make the
     minimum bet, they are removed from the table.
 
     Parameters
@@ -537,27 +534,24 @@ def players_place_bets(table, rules):
     """
     for p in table.get_players():
 
-        bs = BettingStrategy(strategy=p.get_bet_strategy())
+        cs = CountingStrategy(cards=c, strategy=p.get_count_strategy())
 
-        if p.get_bet_strategy() == 'Variable':
-            cs = CountingStrategy(cards=c, strategy=p.get_count_strategy())
+        if p.get_count_strategy() is None:
+            amount = p.bet_strategy.initial_bet(
+                                        min_bet=p.get_min_bet(),
+                                        bet_spread=p.get_bet_spread()
+            )
 
-            if p.get_count_strategy() in ['Hi-Lo', 'Omega II', 'Halves', 'Zen Count']:
-                amount = bs.initial_bet(
-                            min_bet=p.get_min_bet(),
-                            bet_spread=p.get_bet_spread(),
-                            count=cs.true_count(),
-                            count_strategy=p.get_count_strategy()
-                )
-
-            else:
-                raise NotImplementedError('No implementation for running counts')
+        elif p.get_count_strategy() in ['Hi-Lo', 'Omega II', 'Halves', 'Zen Count']:
+            amount = p.bet_strategy.initial_bet(
+                                        min_bet=p.get_min_bet(),
+                                        bet_spread=p.get_bet_spread(),
+                                        count=cs.true_count(),
+                                        count_strategy=p.get_count_strategy()
+            )
 
         else:
-            amount = bs.initial_bet(
-                        min_bet=p.get_min_bet(),
-                        bet_spread=p.get_bet_spread()
-            )
+            raise NotImplementedError('No implementation for running counts')
 
         # rules once you have the amount
         if p.sufficient_funds(amount=amount) and rules.min_bet <= amount <= rules.max_bet:
@@ -725,7 +719,7 @@ def players_play_hands(table, rules, cards, dealer_hand, dealer_up_card):
                             p.stand(key=k)
 
                         else:
-                            raise NotImplementedError('No implementation for that flag')
+                            raise NotImplementedError('No implementation for flag.')
 
                     else:
 
@@ -747,7 +741,7 @@ def players_play_hands(table, rules, cards, dealer_hand, dealer_up_card):
                             p.busted(key=k)
 
                         else:
-                            raise NotImplementedError('No implementation for that flag')
+                            raise NotImplementedError('No implementation for flag.')
 
 
 def dealer_turn(table):
@@ -849,27 +843,38 @@ def compare_hands(table, stats, key, dealer_hand):
         for k in p.hands_dict.keys():
 
             player_total = max_count_hand(hand=p.get_hand(key=k))
-            player_bet = p.get_bet(key=k)
-            player_initial_bet = p.get_initial_bet(key=k)
             player_hand_length = len(p.get_hand(key=k))
+            player_bet = p.get_bet(key=k)
+
+            if k == 1:
+                player_initial_bet = p.get_initial_bet(key=k)
+            else:
+                player_initial_bet = 0
 
             if p.get_surrender():  # player surrenders
                 p.set_bankroll(amount=0.5 * player_bet)
                 stats.player_surrender(key=key, amount=player_bet, initial_amount=player_initial_bet)
 
             elif player_total == 21 and dealer_total == 21:
+
                 if p.get_natural_blackjack() and dealer_hand_length == 2:  # push - both dealer/player have natural 21
                     p.set_bankroll(amount=player_bet)
-                    stats.push(key=key)
-                # the following case is only possible with > 1 players at the table
+                    stats.push(key=key, amount=player_bet, initial_amount=player_initial_bet)
+
                 elif p.get_natural_blackjack() and dealer_hand_length > 2:  # player has natural 21
-                    p.set_bankroll(amount=(1 + r.blackjack_payout) * player_bet)
-                    stats.player_natural_blackjack(key=key, amount=player_bet, initial_amount=player_initial_bet)
+                    if len(table.get_players()) > 1:
+                        p.set_bankroll(amount=(1 + r.blackjack_payout) * player_bet)
+                        stats.player_natural_blackjack(key=key, amount=player_bet, initial_amount=player_initial_bet)
+                    else:
+                        raise ValueError('Impossible for a player to get a natural 21 and dealer to have 3+ cards when '
+                                         'playing heads up.')
+
                 elif not p.get_natural_blackjack() and dealer_hand_length > 2:  # push - both dealer/player have 21
                     p.set_bankroll(amount=player_bet)
-                    stats.push(key=key)
+                    stats.push(key=key, amount=player_bet, initial_amount=player_initial_bet)
+
                 else:
-                    raise ValueError('Impossible for a dealer to get a natural 21 and a player to get a regular 21.')
+                    raise ValueError('Impossible for a dealer to get a natural 21 and a player to have 3+ cards.')
 
             elif p.get_natural_blackjack() and player_total == 21 and player_hand_length == 2:  # player has natural 21
                 p.set_bankroll(amount=(1 + r.blackjack_payout) * player_bet)
@@ -887,7 +892,7 @@ def compare_hands(table, stats, key, dealer_hand):
 
             elif dealer_total == player_total:  # push
                 p.set_bankroll(amount=player_bet)
-                stats.push(key=key)
+                stats.push(key=key, amount=player_bet, initial_amount=player_initial_bet)
 
             elif player_total > dealer_total:  # player beats dealer
                 p.set_bankroll(amount=2 * player_bet)
@@ -949,7 +954,7 @@ if __name__ == "__main__":
             # create stats dictionary to store results
             s.create_key(key=true_count)
 
-            # players place bets and an empty hand with wager is created
+            # players place initial bets and an empty hand is created
             players_place_bets(table=t, rules=r)
 
             # only deal hands if there are players

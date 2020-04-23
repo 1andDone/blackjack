@@ -12,10 +12,11 @@ import numpy as np
 # Rp : surrender if allowed, otherwise split
 # source: https://wizardofodds.com/games/blackjack/strategy/4-decks/
 
-# extended the above table to include soft 12 (A-A) -- this case is possible if
-# the player does not have sufficient funds to split or has reached the re-split limit
+# extended the above table to include soft 12 (A-A)
+# this case is possible if the player does not have sufficient funds to split A-A
 
-# also included options when 2 and 3 are split and a decision needs to be made with a hard 2 or 3
+# also included options when 2, 2 and 3, 3 are split against a dealer up card 2-7 and decision needs to be
+# made on a hard 2 or 3
 
 # arrays of player's hand (y-axis) vs. dealers up card (x-axis)
 
