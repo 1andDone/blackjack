@@ -6,7 +6,7 @@ import basic_strategy
 import counting_strategies
 from helper import count_hand, max_count_hand, splittable
 
-random.seed(99)
+random.seed(11)
 
 # TODO add re-splitting aces option
 # TODO make plot size bigger
@@ -19,6 +19,7 @@ random.seed(99)
 # TODO min bet must be some combination of chips
 # TODO add additional counting systems from https://en.wikipedia.org/wiki/Card_counting
 # TODO some counting systems require the type of card (spade, diamond, etc.)
+
 
 class HouseRules(object):
     """
@@ -132,9 +133,9 @@ class BettingStrategy(object):
         self.strategy = strategy
 
     def get_strategy(self):
-        return self.strategy()
+        return self.strategy
 
-    def bet(self, min_bet, bet_spread, count=None, count_strategy=None):
+    def initial_bet(self, min_bet, bet_spread, count=None, count_strategy=None):
         if self.strategy == 'Fixed':
             return min_bet
         elif self.strategy == 'Variable':
@@ -150,7 +151,7 @@ class BettingStrategy(object):
                 else:
                     return min_bet * bet_spread
             else:
-                raise NotImplementedError('Betting strategy is not implemented for running counts.')
+                raise NotImplementedError('No implementation for running counts.')
 
 
 class CountingStrategy(object):
@@ -255,10 +256,10 @@ class Player(object):
         Name of the card counting strategy used by the player
 
     """
-    def __init__(self, name, rules, bankroll, min_bet, bet_spread=1,
-                 play_strategy='Basic', bet_strategy='Fixed', count_strategy=None):
+    def __init__(self, name, rules, bankroll, min_bet, bet_spread=1, play_strategy='Basic',
+                 bet_strategy='Fixed', count_strategy=None):
         if bankroll <= rules.min_bet:
-            raise ValueError('Bankroll must be greater than minimum bet.')
+            raise ValueError('Initial bankroll must be greater than minimum bet.')
         if bet_strategy == 'Variable' and bet_spread < 1:
             raise ValueError('Bet spread must be greater than 1.')
         if min_bet < rules.min_bet or min_bet > rules.max_bet:
@@ -306,9 +307,6 @@ class Player(object):
 
     def get_bet_strategy(self):
         return self.bet_strategy
-
-    def get_play_strategy(self):
-        return self.play_strategy
 
     def get_count_strategy(self):
         return self.count_strategy
@@ -424,7 +422,7 @@ class Table(object):
                 raise ValueError('Table is at maximum capacity.')
             self.players.extend(player)
         else:
-            NotImplementedError('Expected a list or Player class object.')
+            raise ValueError('Expected a list or Player class object.')
 
     def remove_player(self, player):
         if player in self.players:
@@ -454,7 +452,7 @@ class SimulationStats(object):
         if key not in self.stats_dict.keys():
             self.stats_dict[key] = {}
             self.stats_dict[key]['initial bet'] = 0
-            self.stats_dict[key]['all bet'] = 0
+            self.stats_dict[key]['overall bet'] = 0
             self.stats_dict[key]['net winnings'] = 0
             self.stats_dict[key]['player showdown win'] = 0
             self.stats_dict[key]['dealer showdown win'] = 0
@@ -470,53 +468,55 @@ class SimulationStats(object):
         self.stats_dict[key]['player showdown win'] += 1
         self.stats_dict[key]['number of hands'] += 1
         self.stats_dict[key]['initial bet'] += initial_amount
-        self.stats_dict[key]['all bet'] += amount
+        self.stats_dict[key]['overall bet'] += amount
         self.stats_dict[key]['net winnings'] += amount
 
     def dealer_showdown_win(self, key, amount, initial_amount):
         self.stats_dict[key]['dealer showdown win'] += 1
         self.stats_dict[key]['number of hands'] += 1
         self.stats_dict[key]['initial bet'] += initial_amount
-        self.stats_dict[key]['all bet'] += amount
+        self.stats_dict[key]['overall bet'] += amount
         self.stats_dict[key]['net winnings'] += -amount
 
     def push(self, key):
         self.stats_dict[key]['push'] += 1
         self.stats_dict[key]['number of hands'] += 1
+        # self.stats_dict[key]['initial bet'] += initial_amount
+        # self.stats_dict[key]['overall bet'] += amount
 
     def player_surrender(self, key, amount, initial_amount):
         self.stats_dict[key]['player surrender'] += 1
         self.stats_dict[key]['number of hands'] += 1
         self.stats_dict[key]['initial bet'] += initial_amount
-        self.stats_dict[key]['all bet'] += amount
+        self.stats_dict[key]['overall bet'] += amount
         self.stats_dict[key]['net winnings'] += -0.5 * amount
 
     def dealer_bust(self, key, amount, initial_amount):
         self.stats_dict[key]['dealer bust'] += 1
         self.stats_dict[key]['number of hands'] += 1
         self.stats_dict[key]['initial bet'] += initial_amount
-        self.stats_dict[key]['all bet'] += amount
+        self.stats_dict[key]['overall bet'] += amount
         self.stats_dict[key]['net winnings'] += amount
 
     def player_bust(self, key, amount, initial_amount):
         self.stats_dict[key]['player bust'] += 1
         self.stats_dict[key]['number of hands'] += 1
         self.stats_dict[key]['initial bet'] += initial_amount
-        self.stats_dict[key]['all bet'] += amount
+        self.stats_dict[key]['overall bet'] += amount
         self.stats_dict[key]['net winnings'] += -amount
 
     def dealer_natural_blackjack(self, key, amount, initial_amount):
         self.stats_dict[key]['dealer natural blackjack'] += 1
         self.stats_dict[key]['number of hands'] += 1
         self.stats_dict[key]['initial bet'] += initial_amount
-        self.stats_dict[key]['all bet'] += amount
+        self.stats_dict[key]['overall bet'] += amount
         self.stats_dict[key]['net winnings'] += -amount
 
     def player_natural_blackjack(self, key, amount, initial_amount):
         self.stats_dict[key]['player natural blackjack'] += 1
         self.stats_dict[key]['number of hands'] += 1
         self.stats_dict[key]['initial bet'] += initial_amount
-        self.stats_dict[key]['all bet'] += amount
+        self.stats_dict[key]['overall bet'] += amount
         self.stats_dict[key]['net winnings'] += self.rules.blackjack_payout * amount
 
 
@@ -543,7 +543,7 @@ def players_place_bets(table, rules):
             cs = CountingStrategy(cards=c, strategy=p.get_count_strategy())
 
             if p.get_count_strategy() in ['Hi-Lo', 'Omega II', 'Halves', 'Zen Count']:
-                amount = bs.bet(
+                amount = bs.initial_bet(
                             min_bet=p.get_min_bet(),
                             bet_spread=p.get_bet_spread(),
                             count=cs.true_count(),
@@ -551,10 +551,10 @@ def players_place_bets(table, rules):
                 )
 
             else:
-                raise NotImplementedError('Have not implemented for running counts')
+                raise NotImplementedError('No implementation for running counts')
 
         else:
-            amount = bs.bet(
+            amount = bs.initial_bet(
                         min_bet=p.get_min_bet(),
                         bet_spread=p.get_bet_spread()
             )
@@ -590,7 +590,7 @@ def players_place_bets(table, rules):
                 break
 
         else:
-            raise NotImplementedError('Did not account for this betting possibility.')
+            raise NotImplementedError('No implementation for this betting situation.')
 
 
 def deal_hands(table, cards):
@@ -654,7 +654,8 @@ def players_play_hands(table, rules, cards, dealer_hand, dealer_up_card):
 
         # dealer and players check for 21
         if player_total == 21 or dealer_total == 21:
-            p.natural_blackjack()
+            if player_total == 21:
+                p.natural_blackjack()
             p.stand(key=1)
 
         # late surrender option
@@ -857,19 +858,21 @@ def compare_hands(table, stats, key, dealer_hand):
                 stats.player_surrender(key=key, amount=player_bet, initial_amount=player_initial_bet)
 
             elif player_total == 21 and dealer_total == 21:
-                # case where dealer has natural 21 and player has regular 21 is impossible
-                if player_hand_length > 2 and dealer_hand_length > 2:  # push - both dealer/player have 21
+                if p.get_natural_blackjack() and dealer_hand_length == 2:  # push - both dealer/player have natural 21
                     p.set_bankroll(amount=player_bet)
                     stats.push(key=key)
-                elif player_hand_length == 2 and dealer_hand_length == 2:  # push - both dealer/player have natural 21
-                    p.set_bankroll(amount=player_bet)
-                    stats.push(key=key)
-                else:  # player has natural 21 (only possible when > 1 players at the table)
-                    p.set_bankroll(amount=player_bet + (player_bet * r.blackjack_payout))
+                # the following case is only possible with > 1 players at the table
+                elif p.get_natural_blackjack() and dealer_hand_length > 2:  # player has natural 21
+                    p.set_bankroll(amount=(1 + r.blackjack_payout) * player_bet)
                     stats.player_natural_blackjack(key=key, amount=player_bet, initial_amount=player_initial_bet)
+                elif not p.get_natural_blackjack() and dealer_hand_length > 2:  # push - both dealer/player have 21
+                    p.set_bankroll(amount=player_bet)
+                    stats.push(key=key)
+                else:
+                    raise ValueError('Impossible for a dealer to get a natural 21 and a player to get a regular 21.')
 
-            elif player_total == 21 and player_hand_length == 2:  # player has natural 21
-                p.set_bankroll(amount=player_bet + (player_bet * r.blackjack_payout))
+            elif p.get_natural_blackjack() and player_total == 21 and player_hand_length == 2:  # player has natural 21
+                p.set_bankroll(amount=(1 + r.blackjack_payout) * player_bet)
                 stats.player_natural_blackjack(key=key, amount=player_bet, initial_amount=player_initial_bet)
 
             elif dealer_total == 21 and dealer_hand_length == 2:  # dealer has natural 21
@@ -904,7 +907,7 @@ if __name__ == "__main__":
     r = HouseRules(
         min_bet=5,
         max_bet=500,
-        s17=False,
+        s17=True,
         blackjack_payout=1.5
     )
 
@@ -941,7 +944,7 @@ if __name__ == "__main__":
         while not c.cut_card_reached(penetration=0.75) and len(t.get_players()) > 0:
 
             # get true count using Hi-Lo strategy
-            true_count = CountingStrategy(cards=c, strategy='Hi-Lo').true_count(accuracy=0.5)
+            true_count = CountingStrategy(cards=c, strategy='Hi-Lo').true_count(accuracy=0.1)
 
             # create stats dictionary to store results
             s.create_key(key=true_count)
@@ -977,7 +980,7 @@ if __name__ == "__main__":
     # analysis
     true_count = np.array([])
     initial_bet = np.array([])
-    all_bet = np.array([])
+    overall_bet = np.array([])
     net_winnings = np.array([])
     push = np.array([])
     player_surrender = np.array([])
@@ -993,8 +996,8 @@ if __name__ == "__main__":
     for x, y in sorted(s.get_stats_dict().items()):
         true_count = np.append(true_count, x)
         for z in y.items():
-            if z[0] == 'all bet':
-                all_bet = np.append(all_bet, z[1])
+            if z[0] == 'overall bet':
+                overall_bet = np.append(overall_bet, z[1])
             elif z[0] == 'initial bet':
                 initial_bet = np.append(initial_bet, z[1])
             elif z[0] == 'net winnings':
@@ -1018,10 +1021,14 @@ if __name__ == "__main__":
             elif z[0] == 'number of hands':
                 num_hands = np.append(num_hands, z[1])
             else:
-                raise NotImplementedError('Need to add numpy array')
+                raise NotImplementedError('No implementation for array.')
 
+    print('Total hands:', np.sum(num_hands))
+    print('Total amount bet:', np.sum(overall_bet))
+    print('Total initial bet:', np.sum(initial_bet))
+    print('Total net winnings:', np.sum(net_winnings))
     print('House edge:', 100 * (np.sum(net_winnings) / np.sum(initial_bet)))
-    print('Element of risk:', 100 * (np.sum(net_winnings) / np.sum(all_bet)))
+    print('Element of risk:', 100 * (np.sum(net_winnings) / np.sum(overall_bet)))
 
     # TODO Make titles automatic
     # figure 1
