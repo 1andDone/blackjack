@@ -6,8 +6,9 @@ import basic_strategy
 import counting_strategies
 from helper import count_hand, max_count_hand, splittable
 
-random.seed(11)
+random.seed(99)
 
+# TODO add re-splitting aces option
 # TODO make plot size bigger
 # TODO distribution of amounts?
 # TODO clean up classes - Player may be too large, may need Game class
@@ -367,9 +368,9 @@ class Player(object):
     def hit(self, key, new_card):
         self.hands_dict[key]['hand'].append(new_card)
 
-    def double_down(self, key):
+    def double_down(self, key, new_card):
         self.hands_dict[key]['bet'] = 2 * self.hands_dict[key]['bet']
-        self.hit(key=key, new_card=c.deal_card())
+        self.hit(key=key, new_card=new_card)
         self.stand(key=key)
 
     def split(self, amount, key, new_key):
@@ -588,6 +589,9 @@ def players_place_bets(table, rules):
                 t.remove_player(p)
                 break
 
+        else:
+            raise NotImplementedError('Did not account for this betting possibility.')
+
 
 def deal_hands(table, cards):
     """
@@ -694,8 +698,8 @@ def players_play_hands(table, rules, cards, dealer_hand, dealer_up_card):
                             if 'A' in hand:
                                 p.split(amount=bet, key=k, new_key=num_hands + 1)
                                 p.hit(key=k, new_card=cards.deal_card())
-                                p.hit(key=num_hands + 1, new_card=cards.deal_card())
                                 p.stand(key=k)
+                                p.hit(key=num_hands + 1, new_card=cards.deal_card())
                                 p.stand(key=num_hands + 1)
 
                             else:
@@ -709,7 +713,7 @@ def players_play_hands(table, rules, cards, dealer_hand, dealer_up_card):
                         # do not split cards - double down
                         elif rules.double_down and decision == 'Dh' and p.sufficient_funds(amount=bet):
                             p.set_bankroll(amount=-bet)
-                            p.double_down(key=k)
+                            p.double_down(key=k, new_card=cards.deal_card())
 
                         # do not split cards - hit
                         elif decision in ['Ph', 'Dh', 'H']:
@@ -728,7 +732,7 @@ def players_play_hands(table, rules, cards, dealer_hand, dealer_up_card):
                         if rules.double_down and decision in ['Dh', 'Ds'] and hand_length == 2 and \
                                 p.sufficient_funds(amount=bet):
                             p.set_bankroll(amount=-bet)
-                            p.double_down(key=k)
+                            p.double_down(key=k, new_card=cards.deal_card())
 
                         # hit
                         elif decision in ['Rh', 'Dh', 'H']:
@@ -900,7 +904,7 @@ if __name__ == "__main__":
     r = HouseRules(
         min_bet=5,
         max_bet=500,
-        s17=True,
+        s17=False,
         blackjack_payout=1.5
     )
 
@@ -1063,13 +1067,16 @@ if __name__ == "__main__":
 
     # figure 4
     plt.figure()
-    x = [1, 2, 3, 4]
+    x = [1, 2, 3, 4, 5, 6, 7]
     y = [np.sum(player_natural_blackjack + player_showdown_win + dealer_bust)/np.sum(num_hands),
          np.sum(dealer_natural_blackjack + dealer_showdown_win + player_bust + player_surrender)/np.sum(num_hands),
          np.sum(push)/np.sum(num_hands),
-         np.sum(dealer_bust)/np.sum(num_hands)]
+         np.sum(dealer_bust)/np.sum(num_hands),
+         np.sum(player_bust)/np.sum(num_hands),
+         np.sum(player_surrender)/np.sum(num_hands),
+         np.sum(player_natural_blackjack)/np.sum(num_hands)]
     plt.bar(x=x, height=y, width=0.2, color='b')
-    plt.xticks([1, 2, 3, 4], ['Player Win', 'Dealer Win', 'Push', 'Dealer Bust'])
+    plt.xticks([1, 2, 3, 4, 5, 6, 7], ['Player Win', 'Dealer Win', 'Push', 'Dealer Bust', 'Player Bust', 'Surrender', 'Player Natural'])
     plt.ylabel('Percentage')
     plt.title('Overall Winning Percentages for Player vs. Dealer over \n' +
               str(simulations) + ' Shoe Simulations')
