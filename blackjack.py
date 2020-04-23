@@ -6,7 +6,7 @@ import basic_strategy
 import counting_strategies
 from helper import count_hand, max_count_hand, splittable
 
-random.seed(12)
+random.seed(11)
 
 # TODO make plot size bigger
 # TODO distribution of amounts?
@@ -386,7 +386,7 @@ class Player(object):
             return self.play_strategy.splits()[hand[0]][dealer_up_card]
         else:
             soft_total, hard_total = count_hand(hand=hand)
-            if soft_total > hard_total and 13 <= soft_total <= 21:  # must contain an Ace
+            if soft_total > hard_total and 12 <= soft_total <= 21:  # must contain an Ace
                 return self.play_strategy.soft()[soft_total][dealer_up_card]
             elif 2 <= hard_total <= 21:
                 return self.play_strategy.hard()[hard_total][dealer_up_card]
@@ -701,12 +701,10 @@ def players_play_hands(table, rules, cards, dealer_hand, dealer_up_card):
                             else:
                                 p.split(amount=bet, key=k, new_key=num_hands + 1)
 
-                        # split cards and double down
-                        elif rules.double_after_split and decision == 'Ph' and p.sufficient_funds(amount=3 * bet):
-                            p.set_bankroll(amount=-3 * bet)
+                        # split cards if double after split available
+                        elif rules.double_after_split and decision == 'Ph' and p.sufficient_funds(amount=bet):
+                            p.set_bankroll(amount=-bet)
                             p.split(amount=bet, key=k, new_key=num_hands + 1)
-                            p.double_down(key=k)
-                            p.double_down(key=num_hands + 1)
 
                         # do not split cards - double down
                         elif rules.double_down and decision == 'Dh' and p.sufficient_funds(amount=bet):
@@ -844,6 +842,7 @@ def compare_hands(table, stats, key, dealer_hand):
 
         # get player totals
         for k in p.hands_dict.keys():
+
             player_total = max_count_hand(hand=p.get_hand(key=k))
             player_bet = p.get_bet(key=k)
             player_initial_bet = p.get_initial_bet(key=k)
@@ -918,7 +917,7 @@ if __name__ == "__main__":
                 name='P1',
                 rules=r,
                 play_strategy='Basic',
-                bet_strategy='Variable',
+                bet_strategy='Fixed',
                 count_strategy='Hi-Lo',
                 min_bet=10,
                 bet_spread=10,

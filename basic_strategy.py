@@ -12,11 +12,16 @@ import numpy as np
 # Rp : surrender if allowed, otherwise split
 # source: https://wizardofodds.com/games/blackjack/strategy/4-decks/
 
+# extended the above table to include soft 12 (A-A) -- this case is possible if
+# the player does not have sufficient funds to split or has reached the re-split limit
+
+# also included options when 2 and 3 are split and a decision needs to be made with a hard 2 or 3
+
 # arrays of player's hand (y-axis) vs. dealers up card (x-axis)
 
 s17_hard_array = np.array([
-    [" ",	" ",	"H",	"H",	"H",	"H",	" ",	" ",	" ",	" ",	" ",	" ",	" "],
-    [" ",	" ",	"H",	"H",	"H",	"H",	" ",	" ",	" ",	" ",	" ",	" ",	" "],
+    ["H",	"H",	"H",	"H",	"H",	"H",	" ",	" ",	" ",	" ",	" ",	" ",	" "],
+    ["H",	"H",	"H",	"H",	"H",	"H",	" ",	" ",	" ",	" ",	" ",	" ",	" "],
     ["H",	"H",	"H",	"H",	"H",	"H",	"H",	"H",	"H",	"H",	"H",	"H",	"H"],
     ["H",	"H",	"H",	"H",	"H",	"H",	"H",	"H",	"H",	"H",	"H",	"H",	"H"],
     ["H",	"H",	"H",	"H",	"H",	"H",	"H",	"H",	"H",	"H",	"H",	"H",	"H"],
@@ -38,6 +43,7 @@ s17_hard_array = np.array([
 ])
 
 s17_soft_array = np.array([
+    ["H",   "H",    "H",    "H",    "H",    "H",    "H",    "H",    "H",    "H",    "H",    "H",    "H"],
     ["H",	"H",	"H",	"Dh",	"Dh",	"H",	"H",	"H",	"H",	"H",	"H",	"H",	"H"],
     ["H",	"H",	"H",	"Dh",	"Dh",	"H",	"H",	"H",	"H",	"H",	"H",	"H",	"H"],
     ["H",	"H",	"Dh",	"Dh",	"Dh",	"H",	"H",	"H",	"H",	"H",	"H",	"H",	"H"],
@@ -66,8 +72,8 @@ s17_splits_array = np.array([
 ])
 
 h17_hard_array = np.array([
-    [" ",   " ",    "H",    "H",    "H",    "H",    " ",    " ",    " ",    " ",    " ",    " ",    " "],
-    [" ",   " ",    "H",    "H",    "H",    "H",    " ",    " ",    " ",    " ",    " ",    " ",    " "],
+    ["H",   "H",    "H",    "H",    "H",    "H",    " ",    " ",    " ",    " ",    " ",    " ",    " "],
+    ["H",   "H",    "H",    "H",    "H",    "H",    " ",    " ",    " ",    " ",    " ",    " ",    " "],
     ["H",	"H",	"H",	"H",	"H",	"H",	"H",	"H",	"H",	"H",	"H",	"H",	"H"],
     ["H",	"H",	"H",	"H",	"H",	"H",	"H",	"H",	"H",	"H",	"H",	"H",	"H"],
     ["H",	"H",	"H",	"H",	"H",	"H",	"H",	"H",	"H",	"H",	"H",	"H",	"H"],
@@ -89,6 +95,7 @@ h17_hard_array = np.array([
 ])
 
 h17_soft_array = np.array([
+    ["H",   "H",    "H",    "H",    "H",    "H",    "H",    "H",    "H",    "H",    "H",    "H",    "H"],
     ["H",	"H",	"H",	"Dh",	"Dh",	"H",	"H",	"H",	"H",	"H",	"H",	"H",	"H"],
     ["H",	"H",	"H",	"Dh",	"Dh",	"H",	"H",	"H",	"H",	"H",	"H",	"H",	"H"],
     ["H",	"H",	"Dh",	"Dh",	"Dh",	"H",	"H",	"H",	"H",	"H",	"H",	"H",	"H"],
@@ -126,7 +133,7 @@ for row_ix, i in enumerate(range(2, 22)):
         s17_hard[i][j] = s17_hard_array[row_ix][col_ix]
 
 s17_soft = {}
-for row_ix, i in enumerate(range(13, 22)):
+for row_ix, i in enumerate(range(12, 22)):
     s17_soft[i] = {}
     for col_ix, j in enumerate(cards_list):
         s17_soft[i][j] = s17_soft_array[row_ix][col_ix]
@@ -144,7 +151,7 @@ for row_ix, i in enumerate(range(2, 22)):
         h17_hard[i][j] = h17_hard_array[row_ix][col_ix]
 
 h17_soft = {}
-for row_ix, i in enumerate(range(13, 22)):
+for row_ix, i in enumerate(range(12, 22)):
     h17_soft[i] = {}
     for col_ix, j in enumerate(cards_list):
         h17_soft[i][j] = h17_soft_array[row_ix][col_ix]
