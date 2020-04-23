@@ -6,7 +6,7 @@ import numpy as np
 # Dh : double if allowed, otherwise hit
 # Ds : double if allowed, otherwise stand
 # P : split
-# Ph : split if allowed, otherwise hit
+# Ph : split if double after split allowed, otherwise hit
 # Rh : surrender if allowed, otherwise hit
 # Rs : surrender if allowed, otherwise stand
 # Rp : surrender if allowed, otherwise split
@@ -15,6 +15,8 @@ import numpy as np
 # arrays of player's hand (y-axis) vs. dealers up card (x-axis)
 
 s17_hard_array = np.array([
+    [" ",	" ",	"H",	"H",	"H",	"H",	" ",	" ",	" ",	" ",	" ",	" ",	" "],
+    [" ",	" ",	"H",	"H",	"H",	"H",	" ",	" ",	" ",	" ",	" ",	" ",	" "],
     ["H",	"H",	"H",	"H",	"H",	"H",	"H",	"H",	"H",	"H",	"H",	"H",	"H"],
     ["H",	"H",	"H",	"H",	"H",	"H",	"H",	"H",	"H",	"H",	"H",	"H",	"H"],
     ["H",	"H",	"H",	"H",	"H",	"H",	"H",	"H",	"H",	"H",	"H",	"H",	"H"],
@@ -41,7 +43,7 @@ s17_soft_array = np.array([
     ["H",	"H",	"Dh",	"Dh",	"Dh",	"H",	"H",	"H",	"H",	"H",	"H",	"H",	"H"],
     ["H",	"H",	"Dh",	"Dh",	"Dh",	"H",	"H",	"H",	"H",	"H",	"H",	"H",	"H"],
     ["H",	"Dh",	"Dh",	"Dh",	"Dh",	"H",	"H",	"H",	"H",	"H",	"H",	"H",	"H"],
-    ["H",	"Ds",	"Ds",	"Ds",	"Ds",	"H",	"H",	"H",	"H",	"H",	"H",	"H",	"H"],
+    ["S",	"Ds",	"Ds",	"Ds",	"Ds",	"S",	"S",	"H",	"H",	"H",	"H",	"H",	"H"],
     ["S",	"S",	"S",	"S",	"S",	"S",	"S",	"S",	"S",	"S",	"S",	"S",	"S"],
     ["S",	"S",	"S",	"S",	"S",	"S",	"S",	"S",	"S",	"S",	"S",	"S",	"S"],
     ["S",	"S",	"S",	"S",	"S",	"S",	"S",	"S",	"S",	"S",	"S",	"S",	"S"]
@@ -64,6 +66,8 @@ s17_splits_array = np.array([
 ])
 
 h17_hard_array = np.array([
+    [" ",   " ",    "H",    "H",    "H",    "H",    " ",    " ",    " ",    " ",    " ",    " ",    " "],
+    [" ",   " ",    "H",    "H",    "H",    "H",    " ",    " ",    " ",    " ",    " ",    " ",    " "],
     ["H",	"H",	"H",	"H",	"H",	"H",	"H",	"H",	"H",	"H",	"H",	"H",	"H"],
     ["H",	"H",	"H",	"H",	"H",	"H",	"H",	"H",	"H",	"H",	"H",	"H",	"H"],
     ["H",	"H",	"H",	"H",	"H",	"H",	"H",	"H",	"H",	"H",	"H",	"H",	"H"],
@@ -90,7 +94,7 @@ h17_soft_array = np.array([
     ["H",	"H",	"Dh",	"Dh",	"Dh",	"H",	"H",	"H",	"H",	"H",	"H",	"H",	"H"],
     ["H",	"H",	"Dh",	"Dh",	"Dh",	"H",	"H",	"H",	"H",	"H",	"H",	"H",	"H"],
     ["H",	"Dh",	"Dh",	"Dh",	"Dh",	"H",	"H",	"H",	"H",	"H",	"H",	"H",	"H"],
-    ["Ds",	"Ds",	"Ds",	"Ds",	"Ds",	"H",	"H",	"H",	"H",	"H",	"H",	"H",	"H"],
+    ["Ds",	"Ds",	"Ds",	"Ds",	"Ds",	"S",	"S",	"H",	"H",	"H",	"H",	"H",	"H"],
     ["S",	"S",	"S",	"S",	"Ds",	"S",	"S",	"S",	"S",	"S",	"S",	"S",	"S"],
     ["S",	"S",	"S",	"S",	"S",	"S",	"S",	"S",	"S",	"S",	"S",	"S",	"S"],
     ["S",	"S",	"S",	"S",	"S",	"S",	"S",	"S",	"S",	"S",	"S",	"S",	"S"]
@@ -116,7 +120,7 @@ cards_list = ['2', '3', '4', '5', '6', '7', '8', '9', '10', 'J', 'Q', 'K', 'A']
 
 # Nested Dictionaries
 s17_hard = {}
-for row_ix, i in enumerate(range(4, 22)):
+for row_ix, i in enumerate(range(2, 22)):
     s17_hard[i] = {}
     for col_ix, j in enumerate(cards_list):
         s17_hard[i][j] = s17_hard_array[row_ix][col_ix]
@@ -134,7 +138,7 @@ for row_ix, i in enumerate(cards_list):
         s17_splits[i][j] = s17_splits_array[row_ix][col_ix]
 
 h17_hard = {}
-for row_ix, i in enumerate(range(4, 22)):
+for row_ix, i in enumerate(range(2, 22)):
     h17_hard[i] = {}
     for col_ix, j in enumerate(cards_list):
         h17_hard[i][j] = h17_hard_array[row_ix][col_ix]
