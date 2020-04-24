@@ -6,9 +6,8 @@ import basic_strategy
 import counting_strategies
 from helper import count_hand, max_count_hand, splittable
 
-random.seed(111)
+random.seed(123)
 
-# TODO add re-splitting aces option
 # TODO dealer shows card as option
 # TODO make plot size bigger -- figsize
 # TODO plot distribution of end bankroll amounts
@@ -748,7 +747,12 @@ def players_play_hands(table, rules, cards, dealer_hand, dealer_up_card):
 
                         # hit
                         elif decision in ['Rh', 'Dh', 'H']:
-                            p.hit(key=k, new_card=cards.deal_card())
+                            if hand_length == 1 and 'A' in hand:  # when aces are split, only allowed 1 card
+                                p.hit(key=k, new_card=cards.deal_card())
+                                if p.get_hand(key=k)[1] != 'A':  # check if split aces can be re-split again
+                                    p.stand(key=k)
+                            else:
+                                p.hit(key=k, new_card=cards.deal_card())
 
                         # stand
                         elif decision in ['Rs', 'Ds', 'S']:
@@ -941,7 +945,7 @@ if __name__ == "__main__":
         s17=True,
         late_surrender=True,
         double_after_split=True,
-        resplit_aces=False,
+        resplit_aces=True,
         blackjack_payout=1.5
     )
 
