@@ -6,11 +6,12 @@ import basic_strategy
 import counting_strategies
 from helper import count_hand, max_count_hand, splittable
 
-random.seed(2)
+random.seed(1)
 
 # TODO add re-splitting aces option
+# TODO dealer shows card as option
 # TODO make plot size bigger -- figsize
-# TODO distribution of end bankroll amounts
+# TODO plot distribution of end bankroll amounts
 # TODO clean up classes - Player may be too large, may need Game class
 # TODO Kelly Criterion?
 # TODO run simulations and make plots for more than one player -- may need to include player in dict
@@ -33,11 +34,8 @@ class HouseRules(object):
         Maximum bet allowed at the table
     s17 : boolean
         True if dealer stands on a soft 17, false otherwise
-    resplit_pairs : boolean
-        True if split pairs can be re-split, false otherwise
-    resplit_limit : int
-        Number of times a split pair can be re-split. The maximum number of hands that a player
-        can play is the re-split limit + 2.
+    max_hands : int
+        The maximum number of hands that a player can play
     blackjack_payout : float
         The payout for a player receiving a natural blackjack (2 cards)
     double_down : boolean
@@ -51,21 +49,20 @@ class HouseRules(object):
 
     """
     def __init__(
-            self, min_bet, max_bet, s17=True, resplit_pairs=True, resplit_limit=2, blackjack_payout=1.5,
+            self, min_bet, max_bet, s17=True, max_hands=4, blackjack_payout=1.5,
             double_down=True, double_after_split=True, insurance=True, late_surrender=True
     ):
         if max_bet < min_bet:
             raise ValueError('Maximum bet at table must be greater than minimum bet.')
-        if resplit_pairs and resplit_limit <= 0:
-            raise ValueError('Re-splitting pairs is allowed. Thus, re-split limit must be a positive integer.')
+        if max_hands not in [2, 3, 4]:
+            raise ValueError('Maximum number of hands must be 2, 3, or 4.')
         if blackjack_payout <= 1:
             raise ValueError('Blackjack payout must be greater than 1.')
         self.min_bet = int(min_bet)
         self.max_bet = int(max_bet)
         self.s17 = s17
-        self.resplit_pairs = resplit_pairs
-        self.resplit_limit = int(resplit_limit)
-        self.blackjack_payout = blackjack_payout
+        self.max_hands = int(max_hands)
+        self.blackjack_payout = float(blackjack_payout)
         self.double_down = double_down
         self.double_after_split = double_after_split
         self.insurance = insurance
@@ -86,7 +83,7 @@ class Cards(object):
         if shoe_size not in [4, 6, 8]:
             raise ValueError('Shoe size must be 4, 6, or 8.')
         self.shoe_size = int(shoe_size)
-        self.deck = ['2', '3', '4', '5', '6', '7', '8', '9', '10', 'J', 'Q', 'K', 'A'] * int(shoe_size) * 4
+        self.deck = ['2', '3', '4', '5', '6', '7', '8', '9', '10', 'J', 'Q', 'K', 'A'] * 4 * int(shoe_size)
         self.visible_cards = []
 
     def burn_card(self):
@@ -386,7 +383,7 @@ class Player(object):
     def decision(self, hand, dealer_up_card, num_hands, amount):
         if len(hand) == 1:  # if card is split, first action is always to hit
             return 'H'
-        elif splittable(hand=hand) and num_hands < (r.resplit_limit + 2) and self.sufficient_funds(amount=amount):
+        elif splittable(hand=hand) and num_hands < r.max_hands and self.sufficient_funds(amount=amount):
             return self.play_strategy.splits()[hand[0]][dealer_up_card]
         else:
             soft_total, hard_total = count_hand(hand=hand)
@@ -561,7 +558,7 @@ def players_place_bets(table, rules):
         else:
             raise NotImplementedError('No implementation for running counts')
 
-        # rules once you have the amount
+        # amount is within the allowed range of the table
         if p.sufficient_funds(amount=amount) and rules.min_bet <= amount <= rules.max_bet:
             p.initial_bet(amount=amount)
 
@@ -649,8 +646,9 @@ def players_play_hands(table, rules, cards, dealer_hand, dealer_up_card):
 
         player_total = max_count_hand(p.get_hand(key=1))
 
-        # insurance option - basic strategy advises against it
-        # however, may be favorable to use at large counts
+        # insurance option
+        # basic strategy advises against it
+        # however, may be favorable to take at large counts
         if rules.insurance and dealer_up_card == 'A':
             pass
 
@@ -661,7 +659,8 @@ def players_play_hands(table, rules, cards, dealer_hand, dealer_up_card):
             p.stand(key=1)
 
         # late surrender option
-        if rules.late_surrender:
+        # only available if dealer doesn't have natural 21
+        if rules.late_surrender and dealer_total != 21:
             hand = p.get_hand(key=1)
             bet = p.get_bet(key=1)
             if p.decision(hand=hand, dealer_up_card=dealer_up_card, num_hands=1, amount=bet) in ['Rh', 'Rs', 'Rp']:
@@ -690,8 +689,7 @@ def players_play_hands(table, rules, cards, dealer_hand, dealer_up_card):
 
                     # check if hand is splittable
                     # determine if re-splitting limit has been reached
-                    # i.e. if the re-split limit is 2, a maximum of 4 hands can be played by the player
-                    if splittable(hand=hand) and num_hands < (rules.resplit_limit + 2):
+                    if splittable(hand=hand) and num_hands < rules.max_hands:
 
                         # split cards
                         if decision in ['P', 'Rp'] and p.sufficient_funds(amount=bet):
@@ -849,6 +847,7 @@ def compare_hands(table, stats, key, dealer_hand):
 
     """
     dealer_total = max_count_hand(hand=dealer_hand)
+
     dealer_hand_length = len(dealer_hand)
 
     for p in table.get_players():
@@ -927,6 +926,8 @@ if __name__ == "__main__":
         min_bet=5,
         max_bet=500,
         s17=True,
+        late_surrender=True,
+        double_after_split=True,
         blackjack_payout=1.5
     )
 
@@ -938,7 +939,7 @@ if __name__ == "__main__":
         # set up table
         t = Table()
 
-        # set up players each simulation in case no funds remain
+        # player created in each iteration
         p1 = Player(
                 name='P1',
                 rules=r,
@@ -974,7 +975,7 @@ if __name__ == "__main__":
             # only deal hands if there are players
             if len(t.get_players()) > 0:
 
-                # deal hand to all players and dealer
+                # deal hands to all players and dealer
                 dealer_hand = deal_hands(table=t, cards=c)
 
                 # dealers cards
@@ -984,7 +985,7 @@ if __name__ == "__main__":
                 # players play out each of their hands
                 players_play_hands(table=t, rules=r, cards=c, dealer_hand=dealer_hand, dealer_up_card=dealer_up_card)
 
-                # only show dealer cards if one or more players do not have a natural 21 and do not bust or surrender
+                # dealer only has to act if one or more players do not have a natural 21 and do not bust or surrender
                 if dealer_turn(table=t):
                     dealer_hand = dealer_plays_hand(
                                                 rules=r,
@@ -1093,16 +1094,18 @@ if __name__ == "__main__":
 
     # figure 4
     plt.figure()
-    x = [1, 2, 3, 4, 5, 6, 7]
+    x = [1, 2, 3, 4, 5, 6, 7, 8]
     y = [np.sum(player_natural_blackjack + player_showdown_win + dealer_bust)/np.sum(num_hands),
          np.sum(dealer_natural_blackjack + dealer_showdown_win + player_bust + player_surrender)/np.sum(num_hands),
          np.sum(push)/np.sum(num_hands),
          np.sum(dealer_bust)/np.sum(num_hands),
          np.sum(player_bust)/np.sum(num_hands),
          np.sum(player_surrender)/np.sum(num_hands),
+         np.sum(dealer_natural_blackjack)/np.sum(num_hands),
          np.sum(player_natural_blackjack)/np.sum(num_hands)]
     plt.bar(x=x, height=y, width=0.2, color='b')
-    plt.xticks([1, 2, 3, 4, 5, 6, 7], ['Player Win', 'Dealer Win', 'Push', 'Dealer Bust', 'Player Bust', 'Surrender', 'Player Natural'])
+    plt.xticks([1, 2, 3, 4, 5, 6, 7, 8], ['Player Win', 'Dealer Win', 'Push', 'Dealer Bust', 'Player Bust', 'Surrender',
+                                          'Dealer Natural', 'Player Natural'])
     plt.ylabel('Percentage')
     plt.title('Overall Winning Percentages for Player vs. Dealer over \n' +
               str(simulations) + ' Shoe Simulations')

@@ -13,7 +13,7 @@ import numpy as np
 # source: https://wizardofodds.com/games/blackjack/strategy/4-decks/
 
 # extended the above table to include soft 12 (A-A)
-# this case is possible if the player does not have sufficient funds to split A-A
+# this case is possible if the player does not have sufficient funds to split A-A and is forced to play the hand
 
 # arrays of player's hand (y-axis) vs. dealers up card (x-axis)
 
