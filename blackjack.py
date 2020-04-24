@@ -6,9 +6,8 @@ import basic_strategy
 import counting_strategies
 from helper import count_hand, max_count_hand, splittable
 
-random.seed(123)
+random.seed(1)
 
-# TODO dealer shows card as option
 # TODO make plot size bigger -- figsize
 # TODO plot distribution of end bankroll amounts
 # TODO clean up classes - Player may be too large, may need Game class
@@ -47,11 +46,15 @@ class HouseRules(object):
         True if insurance bet is allowed, false otherwise
     late_surrender : boolean
         True if late surrender is allowed, false otherwise
+    dealer_shows_hole_card : boolean
+        True if the dealer shows his hole card even if all players bust, surrender, or
+        have natural 21, false otherwise
 
     """
     def __init__(
             self, min_bet, max_bet, s17=True, max_hands=4, blackjack_payout=1.5, double_down=True,
-            double_after_split=True, resplit_aces=False, insurance=True, late_surrender=True
+            double_after_split=True, resplit_aces=False, insurance=True, late_surrender=True,
+            dealer_shows_hole_card=False
     ):
         if max_bet < min_bet:
             raise ValueError('Maximum bet at table must be greater than minimum bet.')
@@ -69,6 +72,7 @@ class HouseRules(object):
         self.resplit_aces = resplit_aces
         self.insurance = insurance
         self.late_surrender = late_surrender
+        self.dealer_shows_hole_card = dealer_shows_hole_card
 
 
 class Cards(object):
@@ -945,8 +949,9 @@ if __name__ == "__main__":
         s17=True,
         late_surrender=True,
         double_after_split=True,
-        resplit_aces=True,
-        blackjack_payout=1.5
+        resplit_aces=False,
+        blackjack_payout=1.5,
+        dealer_shows_hole_card=False
     )
 
     # keeps track of statistics during simulations
@@ -1002,6 +1007,10 @@ if __name__ == "__main__":
 
                 # players play out each of their hands
                 players_play_hands(table=t, rules=r, cards=c, dealer_hand=dealer_hand, dealer_up_card=dealer_up_card)
+
+                # dealer shows hole card when all players bust, surrender, or have natural 21
+                if not dealer_turn(table=t) and r.dealer_shows_hole_card:
+                    c.add_to_visible_cards(dealer_hole_card)
 
                 # dealer only has to act if one or more players do not have a natural 21 and do not bust or surrender
                 if dealer_turn(table=t):
