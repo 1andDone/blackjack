@@ -6,7 +6,7 @@ import basic_strategy
 import counting_strategies
 from helper import count_hand, max_count_hand, splittable
 
-random.seed(1)
+random.seed(111)
 
 # TODO add re-splitting aces option
 # TODO dealer shows card as option
@@ -41,7 +41,9 @@ class HouseRules(object):
     double_down : boolean
         True if doubling is allowed on any first two cards, false otherwise
     double_after_split : boolean
-        True if doubling after splits are allowed, false otherwise
+        True if doubling after splits is allowed, false otherwise
+    resplit_aces : boolean
+        True if re-splitting aces is allowed, false otherwise
     insurance : boolean
         True if insurance bet is allowed, false otherwise
     late_surrender : boolean
@@ -49,8 +51,8 @@ class HouseRules(object):
 
     """
     def __init__(
-            self, min_bet, max_bet, s17=True, max_hands=4, blackjack_payout=1.5,
-            double_down=True, double_after_split=True, insurance=True, late_surrender=True
+            self, min_bet, max_bet, s17=True, max_hands=4, blackjack_payout=1.5, double_down=True,
+            double_after_split=True, resplit_aces=False, insurance=True, late_surrender=True
     ):
         if max_bet < min_bet:
             raise ValueError('Maximum bet at table must be greater than minimum bet.')
@@ -65,6 +67,7 @@ class HouseRules(object):
         self.blackjack_payout = float(blackjack_payout)
         self.double_down = double_down
         self.double_after_split = double_after_split
+        self.resplit_aces = resplit_aces
         self.insurance = insurance
         self.late_surrender = late_surrender
 
@@ -383,7 +386,7 @@ class Player(object):
     def decision(self, hand, dealer_up_card, num_hands, amount):
         if len(hand) == 1:  # if card is split, first action is always to hit
             return 'H'
-        elif splittable(hand=hand) and num_hands < r.max_hands and self.sufficient_funds(amount=amount):
+        elif splittable(hand=hand) and num_hands < self.rules.max_hands and self.sufficient_funds(amount=amount):
             return self.play_strategy.splits()[hand[0]][dealer_up_card]
         else:
             soft_total, hard_total = count_hand(hand=hand)
@@ -522,7 +525,7 @@ class SimulationStats(object):
         self.stats_dict[key]['net winnings'] += self.rules.blackjack_payout * amount
 
 
-def players_place_bets(table, rules):
+def players_place_bets(table, rules, cards):
     """
     Players at table place bets. If they're unable to bet the desired
     amount, they place a bet closest to that amount, while staying within
@@ -535,11 +538,13 @@ def players_place_bets(table, rules):
         Table class instance
     rules : class
         HouseRules class instance
+    cards : class
+        Cards class instance
 
     """
     for p in table.get_players():
 
-        cs = CountingStrategy(cards=c, strategy=p.get_count_strategy())
+        cs = CountingStrategy(cards=cards, strategy=p.get_count_strategy())
 
         if p.get_count_strategy() is None:
             amount = p.bet_strategy.initial_bet(
@@ -567,7 +572,7 @@ def players_place_bets(table, rules):
             if p.sufficient_funds(amount=rules.min_bet):
                 p.initial_bet(amount=rules.min_bet)
             else:
-                t.remove_player(p)
+                table.remove_player(p)
                 break
 
         # amount exceeded maximum bet
@@ -577,7 +582,7 @@ def players_place_bets(table, rules):
             elif rules.min_bet <= p.get_bankroll() <= rules.max_bet:
                 p.initial_bet(amount=p.get_bankroll())
             else:
-                t.remove_player(p)
+                table.remove_player(p)
                 break
 
         # player does not have sufficient funds
@@ -585,7 +590,7 @@ def players_place_bets(table, rules):
             if rules.min_bet <= p.get_bankroll() <= rules.max_bet:
                 p.initial_bet(amount=p.get_bankroll())
             else:
-                t.remove_player(p)
+                table.remove_player(p)
                 break
 
         else:
@@ -695,8 +700,8 @@ def players_play_hands(table, rules, cards, dealer_hand, dealer_up_card):
                         if decision in ['P', 'Rp'] and p.sufficient_funds(amount=bet):
                             p.set_bankroll(amount=-bet)
 
-                            # if splitting aces, player only gets 1 card
-                            if 'A' in hand:
+                            # if unable to re-split aces, player only gets 1 card on each split pair
+                            if not rules.resplit_aces and 'A' in hand:
                                 p.split(amount=bet, key=k, new_key=num_hands + 1)
                                 p.hit(key=k, new_card=cards.deal_card())
                                 p.stand(key=k)
@@ -773,16 +778,23 @@ def dealer_turn(table):
 
     """
     num_natural_blackjack, num_surrender, num_busted, num_stand = 0, 0, 0, 0
+
     for p in table.get_players():
+
         if p.get_natural_blackjack():
             num_natural_blackjack += 1
+
         if p.get_surrender():
             num_surrender += 1
+
         for k in p.hands_dict.keys():
+
             if p.get_busted(key=k):
                 num_busted += 1
+
             if p.get_stand(key=k):
                 num_stand += 1
+
     return num_natural_blackjack + num_surrender + num_busted < num_stand
 
 
@@ -830,7 +842,7 @@ def dealer_plays_hand(rules, cards, dealer_hole_card, dealer_hand):
                 dealer_hand.append(cards.deal_card())
 
 
-def compare_hands(table, stats, key, dealer_hand):
+def compare_hands(table, rules, stats, key, dealer_hand):
     """
     Players compare their hands against the dealer.
 
@@ -838,6 +850,8 @@ def compare_hands(table, stats, key, dealer_hand):
     ----------
     table : class
         Table class instance
+    rules : class
+        HouseRules class instance
     stats : class
         SimulationStats class instance
     key : int
@@ -852,13 +866,13 @@ def compare_hands(table, stats, key, dealer_hand):
 
     for p in table.get_players():
 
-        # get player totals
         for k in p.hands_dict.keys():
 
             player_total = max_count_hand(hand=p.get_hand(key=k))
             player_hand_length = len(p.get_hand(key=k))
             player_bet = p.get_bet(key=k)
 
+            # only want the initial bet for the first hand
             if k == 1:
                 player_initial_bet = p.get_initial_bet(key=k)
             else:
@@ -876,11 +890,10 @@ def compare_hands(table, stats, key, dealer_hand):
 
                 elif p.get_natural_blackjack() and dealer_hand_length > 2:  # player has natural 21
                     if len(table.get_players()) > 1:
-                        p.set_bankroll(amount=(1 + r.blackjack_payout) * player_bet)
+                        p.set_bankroll(amount=(1 + rules.blackjack_payout) * player_bet)
                         stats.player_natural_blackjack(key=key, amount=player_bet, initial_amount=player_initial_bet)
                     else:
-                        raise ValueError('Impossible for a player to get a natural 21 and dealer to have 3+ cards when '
-                                         'playing heads up.')
+                        raise ValueError('Impossible scenario when playing heads up against dealer.')
 
                 elif not p.get_natural_blackjack() and dealer_hand_length > 2:  # push - both dealer/player have 21
                     p.set_bankroll(amount=player_bet)
@@ -890,7 +903,7 @@ def compare_hands(table, stats, key, dealer_hand):
                     raise ValueError('Impossible for a dealer to get a natural 21 and a player to have 3+ cards.')
 
             elif p.get_natural_blackjack() and player_total == 21 and player_hand_length == 2:  # player has natural 21
-                p.set_bankroll(amount=(1 + r.blackjack_payout) * player_bet)
+                p.set_bankroll(amount=(1 + rules.blackjack_payout) * player_bet)
                 stats.player_natural_blackjack(key=key, amount=player_bet, initial_amount=player_initial_bet)
 
             elif dealer_total == 21 and dealer_hand_length == 2:  # dealer has natural 21
@@ -928,6 +941,7 @@ if __name__ == "__main__":
         s17=True,
         late_surrender=True,
         double_after_split=True,
+        resplit_aces=False,
         blackjack_payout=1.5
     )
 
@@ -970,7 +984,7 @@ if __name__ == "__main__":
             s.create_key(key=true_count)
 
             # players place initial bets and an empty hand is created
-            players_place_bets(table=t, rules=r)
+            players_place_bets(table=t, rules=r, cards=c)
 
             # only deal hands if there are players
             if len(t.get_players()) > 0:
@@ -995,7 +1009,7 @@ if __name__ == "__main__":
                     )
 
                 # compare players hands to dealer and pay out to winning players
-                compare_hands(table=t, stats=s, key=true_count, dealer_hand=dealer_hand)
+                compare_hands(table=t, rules=r, stats=s, key=true_count, dealer_hand=dealer_hand)
 
     # analysis
     true_count = np.array([])
