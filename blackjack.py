@@ -6,7 +6,7 @@ import basic_strategy
 import counting_strategies
 from helper import count_hand, max_count_hand, splittable
 
-random.seed(1100)
+random.seed(2)
 
 # TODO add re-splitting aces option
 # TODO make plot size bigger -- figsize
@@ -317,6 +317,7 @@ class Player(object):
         self.hands_dict[1]['natural blackjack'] = False
         self.hands_dict[1]['surrender'] = False
         self.hands_dict[1]['busted'] = False
+        self.hands_dict[1]['split'] = False
         self.hands_dict[1]['stand'] = False
 
     def initial_bet(self, amount):
@@ -358,6 +359,9 @@ class Player(object):
     def get_busted(self, key):
         return self.hands_dict[key]['busted']
 
+    def get_split(self, key):
+        return self.hands_dict[key]['split']
+
     def get_stand(self, key):
         return self.hands_dict[key]['stand']
 
@@ -371,14 +375,18 @@ class Player(object):
 
     def split(self, amount, key, new_key):
         if splittable(hand=self.hands_dict[key]['hand']):
+            self.hands_dict[key]['split'] = True
             self.hands_dict[new_key] = {}
             self.hands_dict[new_key]['hand'] = [self.get_hand(key=key).pop()]
             self.hands_dict[new_key]['bet'] = amount
             self.hands_dict[new_key]['busted'] = False
+            self.hands_dict[new_key]['split'] = True
             self.hands_dict[new_key]['stand'] = False
 
     def decision(self, hand, dealer_up_card, num_hands, amount):
-        if splittable(hand=hand) and num_hands < (r.resplit_limit + 2) and self.sufficient_funds(amount=amount):
+        if len(hand) == 1:  # if card is split, first action is always to hit
+            return 'H'
+        elif splittable(hand=hand) and num_hands < (r.resplit_limit + 2) and self.sufficient_funds(amount=amount):
             return self.play_strategy.splits()[hand[0]][dealer_up_card]
         else:
             soft_total, hard_total = count_hand(hand=hand)
@@ -590,7 +598,7 @@ def players_place_bets(table, rules):
 def deal_hands(table, cards):
     """
     Deal first and second cards to each player seated at the table
-    and the dealer
+    and the dealer.
 
     Parameters
     ----------
@@ -619,7 +627,7 @@ def deal_hands(table, cards):
 
 def players_play_hands(table, rules, cards, dealer_hand, dealer_up_card):
     """
-    Players at the table play their individual hands
+    Players at the table play their individual hands.
 
     Parameters
     ----------
@@ -646,7 +654,7 @@ def players_play_hands(table, rules, cards, dealer_hand, dealer_up_card):
         if rules.insurance and dealer_up_card == 'A':
             pass
 
-        # dealer and players check for 21
+        # dealer and players check for natural 21
         if player_total == 21 or dealer_total == 21:
             if player_total == 21:
                 p.natural_blackjack()
@@ -725,7 +733,13 @@ def players_play_hands(table, rules, cards, dealer_hand, dealer_up_card):
 
                         # double down
                         if rules.double_down and decision in ['Dh', 'Ds'] and hand_length == 2 and \
-                                p.sufficient_funds(amount=bet):
+                                not p.get_split(key=k) and p.sufficient_funds(amount=bet):
+                            p.set_bankroll(amount=-bet)
+                            p.double_down(key=k, new_card=cards.deal_card())
+
+                        # double after split
+                        elif rules.double_after_split and decision in ['Dh', 'Ds'] and hand_length == 2 and \
+                                p.get_split(key=k) and p.sufficient_funds(amount=bet):
                             p.set_bankroll(amount=-bet)
                             p.double_down(key=k, new_card=cards.deal_card())
 
@@ -820,7 +834,7 @@ def dealer_plays_hand(rules, cards, dealer_hole_card, dealer_hand):
 
 def compare_hands(table, stats, key, dealer_hand):
     """
-    Players compare their hands against the dealer
+    Players compare their hands against the dealer.
 
     Parameters
     ----------
@@ -970,7 +984,7 @@ if __name__ == "__main__":
                 # players play out each of their hands
                 players_play_hands(table=t, rules=r, cards=c, dealer_hand=dealer_hand, dealer_up_card=dealer_up_card)
 
-                # only show dealer cards if one or more players do not bust or surrender
+                # only show dealer cards if one or more players do not have a natural 21 and do not bust or surrender
                 if dealer_turn(table=t):
                     dealer_hand = dealer_plays_hand(
                                                 rules=r,

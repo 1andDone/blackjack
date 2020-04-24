@@ -15,14 +15,9 @@ import numpy as np
 # extended the above table to include soft 12 (A-A)
 # this case is possible if the player does not have sufficient funds to split A-A
 
-# also included options when 2, 2 and 3, 3 are split against a dealer up card 2-7 and decision needs to be
-# made on a hard 2 or 3
-
 # arrays of player's hand (y-axis) vs. dealers up card (x-axis)
 
 s17_hard_array = np.array([
-    ["H",	"H",	"H",	"H",	"H",	"H",	" ",	" ",	" ",	" ",	" ",	" ",	" "],
-    ["H",	"H",	"H",	"H",	"H",	"H",	" ",	" ",	" ",	" ",	" ",	" ",	" "],
     ["H",	"H",	"H",	"H",	"H",	"H",	"H",	"H",	"H",	"H",	"H",	"H",	"H"],
     ["H",	"H",	"H",	"H",	"H",	"H",	"H",	"H",	"H",	"H",	"H",	"H",	"H"],
     ["H",	"H",	"H",	"H",	"H",	"H",	"H",	"H",	"H",	"H",	"H",	"H",	"H"],
@@ -73,8 +68,6 @@ s17_splits_array = np.array([
 ])
 
 h17_hard_array = np.array([
-    ["H",   "H",    "H",    "H",    "H",    "H",    " ",    " ",    " ",    " ",    " ",    " ",    " "],
-    ["H",   "H",    "H",    "H",    "H",    "H",    " ",    " ",    " ",    " ",    " ",    " ",    " "],
     ["H",	"H",	"H",	"H",	"H",	"H",	"H",	"H",	"H",	"H",	"H",	"H",	"H"],
     ["H",	"H",	"H",	"H",	"H",	"H",	"H",	"H",	"H",	"H",	"H",	"H",	"H"],
     ["H",	"H",	"H",	"H",	"H",	"H",	"H",	"H",	"H",	"H",	"H",	"H",	"H"],
@@ -128,7 +121,7 @@ cards_list = ['2', '3', '4', '5', '6', '7', '8', '9', '10', 'J', 'Q', 'K', 'A']
 
 # Nested Dictionaries
 s17_hard = {}
-for row_ix, i in enumerate(range(2, 22)):
+for row_ix, i in enumerate(range(4, 22)):
     s17_hard[i] = {}
     for col_ix, j in enumerate(cards_list):
         s17_hard[i][j] = s17_hard_array[row_ix][col_ix]
@@ -146,7 +139,7 @@ for row_ix, i in enumerate(cards_list):
         s17_splits[i][j] = s17_splits_array[row_ix][col_ix]
 
 h17_hard = {}
-for row_ix, i in enumerate(range(2, 22)):
+for row_ix, i in enumerate(range(4, 22)):
     h17_hard[i] = {}
     for col_ix, j in enumerate(cards_list):
         h17_hard[i][j] = h17_hard_array[row_ix][col_ix]
