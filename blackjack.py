@@ -6,7 +6,7 @@ import basic_strategy
 import counting_strategies
 from helper import count_hand, max_count_hand, splittable
 
-random.seed(1)
+random.seed(78)
 
 # TODO make plot size bigger -- figsize
 # TODO plot distribution of end bankroll amounts
@@ -24,38 +24,40 @@ class HouseRules(object):
     """
     HouseRules is an object where all of the table rules are set.
 
-    Parameters
-    ----------
-    min_bet : int
-        Minimum bet allowed at the table
-    max_bet : int
-        Maximum bet allowed at the table
-    s17 : boolean
-        True if dealer stands on a soft 17, false otherwise
-    max_hands : int
-        The maximum number of hands that a player can play
-    blackjack_payout : float
-        The payout for a player receiving a natural blackjack (2 cards)
-    double_down : boolean
-        True if doubling is allowed on any first two cards, false otherwise
-    double_after_split : boolean
-        True if doubling after splits is allowed, false otherwise
-    resplit_aces : boolean
-        True if re-splitting aces is allowed, false otherwise
-    insurance : boolean
-        True if insurance bet is allowed, false otherwise
-    late_surrender : boolean
-        True if late surrender is allowed, false otherwise
-    dealer_shows_hole_card : boolean
-        True if the dealer shows his hole card even if all players bust, surrender, or
-        have natural 21, false otherwise
-
     """
     def __init__(
-            self, min_bet, max_bet, s17=True, max_hands=4, blackjack_payout=1.5, double_down=True,
+            self, min_bet, max_bet, s17, blackjack_payout=1.5, max_hands=4, double_down=True,
             double_after_split=True, resplit_aces=False, insurance=True, late_surrender=True,
             dealer_shows_hole_card=False
     ):
+        """
+        Parameters
+        ----------
+        min_bet : int
+            Minimum bet allowed at the table
+        max_bet : int
+            Maximum bet allowed at the table
+        s17 : bool
+            True if dealer stands on a soft 17, false otherwise
+        blackjack_payout : float
+            The payout for a player receiving a natural blackjack (default is 1.5, which implies
+            a 3:2 payout)
+        max_hands : int, optional
+            The maximum number of hands that a player can play (default is 4)
+        double_down : bool, optional
+            True if doubling is allowed on any first two cards, false otherwise (default is True)
+        double_after_split : bool, optional
+            True if doubling after splits is allowed, false otherwise (default is True)
+        resplit_aces : bool, optional
+            True if re-splitting aces is allowed, false otherwise (default is False)
+        insurance : bool, optional
+            True if insurance bet is allowed, false otherwise (default is True)
+        late_surrender : bool, optional
+            True if late surrender is allowed, false otherwise (default is True)
+        dealer_shows_hole_card : bool, optional
+            True if the dealer shows his hole card even if all players bust, surrender, or
+            have natural 21, false otherwise (default is False)
+        """
         if max_bet < min_bet:
             raise ValueError('Maximum bet at table must be greater than minimum bet.')
         if max_hands not in [2, 3, 4]:
@@ -65,8 +67,8 @@ class HouseRules(object):
         self.min_bet = int(min_bet)
         self.max_bet = int(max_bet)
         self.s17 = s17
-        self.max_hands = int(max_hands)
         self.blackjack_payout = float(blackjack_payout)
+        self.max_hands = int(max_hands)
         self.double_down = double_down
         self.double_after_split = double_after_split
         self.resplit_aces = resplit_aces
@@ -79,13 +81,14 @@ class Cards(object):
     """
     Cards is an object that deals with a shoe at a table.
 
-    Parameters
-    ----------
-    shoe_size : int
-        Number of decks used during a blackjack game
-
     """
-    def __init__(self, shoe_size=4):
+    def __init__(self, shoe_size):
+        """
+        Parameters
+        ----------
+        shoe_size: int
+            Number of decks used during a blackjack game
+        """
         if shoe_size not in [4, 6, 8]:
             raise ValueError('Shoe size must be 4, 6, or 8.')
         self.shoe_size = int(shoe_size)
@@ -124,13 +127,14 @@ class BettingStrategy(object):
     BettingStrategy is a class that determines the betting strategy used by
     a player at the table.
 
-    Parameters
-    ----------
-    strategy : str
-        Name of the betting strategy used by a player at the table
-
     """
     def __init__(self, strategy):
+        """
+        Parameters
+        ----------
+        strategy : str
+            Name of the betting strategy used by a player at the table
+        """
         if strategy not in ['Fixed', 'Variable']:
             raise ValueError('Betting strategy must be either "Fixed" or "Variable".')
         self.strategy = strategy
@@ -162,15 +166,16 @@ class CountingStrategy(object):
     CountingStrategy is an object that represents the card counting strategy used by
     a player at the table in order to make informed betting decisions.
 
-    Parameters
-    ----------
-    cards : class
-        Cards class instance
-    strategy : str
-        Name of the card counting strategy used by a player at the table
-
     """
     def __init__(self, cards, strategy):
+        """
+        Parameters
+        ----------
+        cards : Cards
+            Cards class instance
+        strategy : str
+            Name of the card counting strategy used by a player at the table
+        """
         if strategy not in ['Hi-Lo', 'Hi-Opt I', 'Hi-Opt II', 'Omega II', 'Halves', 'Zen Count']:
             raise ValueError('Strategy must be "Hi-Lo", "Hi-Opt I", "Hi-Opt II", "Omega II", "Halves", or "Zen Count".')
         self.cards = cards
@@ -202,15 +207,16 @@ class PlayingStrategy(object):
     faced with a split situation or a certain soft/hard count. Decisions are typically based
     on whether or not a dealer stands or hits on a soft 17.
 
-    Parameters
-    ----------
-    rules : class
-        HouseRules class instance
-    strategy : str
-        Name of the playing strategy used by a player at the table
-
     """
     def __init__(self, rules, strategy):
+        """
+        Parameters
+        ----------
+        rules : HouseRules
+            HouseRules class instance
+        strategy : str
+            Name of the playing strategy used by a player at the table
+        """
         if strategy not in ['Basic']:
             raise ValueError('Strategy must be "Basic".')
         self.rules = rules
@@ -239,28 +245,32 @@ class Player(object):
     """
     Player is an object that represents an individual player at the table.
 
-    Parameters
-    ----------
-    name : str
-        Name of the player
-    rules : class
-        HouseRules class instance
-    bankroll : float
-        Amount of money a player starts out with when sitting down at a table
-    min_bet : float
-        Minimum amount of money a player is willing to wager when playing a hand
-    bet_spread : float
-        Ratio of maximum bet to minimum bet
-    play_strategy : str
-        Name of the play strategy used by the player
-    bet_strategy : str
-        Name of the bet strategy used by the player
-    count_strategy : str
-        Name of the card counting strategy used by the player
-
     """
     def __init__(self, name, rules, bankroll, min_bet, bet_spread=1, play_strategy='Basic',
                  bet_strategy='Fixed', count_strategy=None):
+        """
+        Parameters
+        ----------
+        name : str
+            Name of the player
+        rules : HouseRules
+            HouseRules class instance
+        bankroll : float
+            Amount of money a player starts out with when sitting down at a table
+        min_bet : float
+            Minimum amount of money a player is willing to wager when playing a hand
+        bet_spread : float, optional
+            Ratio of maximum bet to minimum bet (default is 1)
+        play_strategy : str, optional
+            Name of the play strategy used by the player (default is 'Basic', which implies
+            the player plays optimally)
+        bet_strategy : str, optional
+            Name of the bet strategy used by the player (default is 'Fixed', which implies
+            the player bets the same amount every hand)
+        count_strategy : str, optional
+            Name of the card counting strategy used by the player (default is None, which implies
+            the player does not count cards)
+        """
         if bankroll <= rules.min_bet:
             raise ValueError('Initial bankroll must be greater than minimum bet.')
         if bet_strategy == 'Variable' and bet_spread < 1:
@@ -405,13 +415,15 @@ class Table(object):
     """
     Table is an object that represents an area where one or many players can play.
 
-    Parameters
-    ----------
-    size_limit : int
-        Number of players that can play at a table at any given time
-
     """
     def __init__(self, size_limit=7):
+        """
+        Parameters
+        ----------
+        size_limit : int, optional
+            Number of players that can play at a table at any given time (default
+            is 7)
+        """
         if size_limit > 7:
             raise ValueError('Table cannot have more than 7 seats.')
         self.size_limit = int(size_limit)
@@ -443,13 +455,14 @@ class SimulationStats(object):
     SimulationStats is an object that stores results from simulating
     games of blackjack.
 
-    Parameters
-    ----------
-    rules : class
-        HouseRules class instance
-
     """
     def __init__(self, rules):
+        """
+        Parameters
+        ----------
+        rules : HouseRules
+            HouseRules class instance
+        """
         self.rules = rules
         self.stats_dict = {}
 
@@ -537,11 +550,11 @@ def players_place_bets(table, rules, cards):
 
     Parameters
     ----------
-    table : class
+    table : Table
         Table class instance
-    rules : class
+    rules : HouseRules
         HouseRules class instance
-    cards : class
+    cards : Cards
         Cards class instance
 
     """
@@ -607,14 +620,15 @@ def deal_hands(table, cards):
 
     Parameters
     ----------
-    table : class
+    table : Table
         Table class instance
-    cards : class
+    cards : Cards
         Cards class instance
 
     Returns
     -------
-    return : list
+    list of str
+        List of string card elements representing the dealer's initial hand
 
     """
     for p in table.get_players():
@@ -636,13 +650,13 @@ def players_play_hands(table, rules, cards, dealer_hand, dealer_up_card):
 
     Parameters
     ----------
-    table : class
+    table : Table
         Table class instance
-    rules : class
+    rules : HouseRules
         HouseRules class instance
-    cards : class
+    cards : Cards
         Cards class instance
-    dealer_hand : list
+    dealer_hand : list of str
         List of string card elements representing the dealer's hand
     dealer_up_card : str
         Dealer's card that is face up after each player receives two cards
@@ -777,12 +791,14 @@ def dealer_turn(table):
 
     Parameters
     ----------
-    table : class
+    table : Table
         Table class instance
 
     Return
     ------
-    return : boolean
+    bool
+        True if any player at the table does not have a natural blackjack and does not
+        surrender their hand or bust, false otherwise
 
     """
     num_natural_blackjack, num_surrender, num_busted, num_stand = 0, 0, 0, 0
@@ -814,18 +830,19 @@ def dealer_plays_hand(rules, cards, dealer_hole_card, dealer_hand):
 
     Parameters
     ----------
-    rules : class
+    rules : HouseRules
         HouseRules class instance
-    cards : class
+    cards : Cards
         Cards class instance
     dealer_hole_card : str
         Dealer's card that is face down after each player receives two cards
-    dealer_hand : list
+    dealer_hand : list of str
         List of string card elements representing the dealer's hand
 
     Return
     ------
-    return : list
+    list of str
+        List of string card elements representing the dealer's final hand
 
     """
     while True:
@@ -852,24 +869,27 @@ def dealer_plays_hand(rules, cards, dealer_hole_card, dealer_hand):
 
 def compare_hands(table, rules, stats, key, dealer_hand):
     """
-    Players compare their hands against the dealer.
+    Players compare their hands against the dealer. If a player surrenders
+    their hand, the player receives half of their initial wager back. If a
+    player has a natural blackjack, the player is paid according to the blackjack
+    payout for the table. All other instances where the player beats the dealer
+    are paid out 1:1. Pushes allow the player to re-coup their initial wager.
 
     Parameters
     ----------
-    table : class
+    table : Table
         Table class instance
-    rules : class
+    rules : HouseRules
         HouseRules class instance
-    stats : class
+    stats : SimulationStats
         SimulationStats class instance
     key : int
         Key to SimulationStats dictionary
-    dealer_hand : list
+    dealer_hand : list of str
         List of string card elements representing the dealer's hand
 
     """
     dealer_total = max_count_hand(hand=dealer_hand)
-
     dealer_hand_length = len(dealer_hand)
 
     for p in table.get_players():
@@ -967,7 +987,7 @@ if __name__ == "__main__":
                 name='P1',
                 rules=r,
                 play_strategy='Basic',
-                bet_strategy='Fixed',
+                bet_strategy='Variable',
                 count_strategy='Hi-Lo',
                 min_bet=10,
                 bet_spread=10,

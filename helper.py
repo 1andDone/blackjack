@@ -1,17 +1,19 @@
 import card_values as cv
 
+
 def count_hand(hand):
     """
-    Returns the soft and hard totals for a given hand
+    Returns the soft and hard totals for a given hand.
 
     Parameters
     ----------
-    hand : list
+    hand : list of str
         List of string card elements
 
     Returns
     -------
-    return : tuple
+    tuple of int
+        Soft and hard totals for a given hand
 
     """
     non_aces = [card for card in hand if card != 'A']
@@ -26,6 +28,7 @@ def count_hand(hand):
     num_aces = len(aces)
 
     soft_total = hard_total
+
     # if there are multiple aces, only one can be valued at 11
     if num_aces > 0:
         soft_total += 11 + ((num_aces - 1) * 1)
@@ -36,16 +39,19 @@ def count_hand(hand):
 
 def max_count_hand(hand):
     """
-    Determines the maximum count of a hand
+    Determines the maximum count of a hand, while trying not to
+    exceed 21. If both the soft and hard totals exceed 21, the hard
+    total is reported.
 
     Parameters
     ----------
-    hand : list
+    hand : list of str
         List of string card elements
 
     Returns
     -------
-    return : integer
+    int
+        Maximum count of a hand, while trying not exceed 21
 
     """
     soft_total, hard_total = count_hand(hand)
@@ -62,17 +68,17 @@ def max_count_hand(hand):
 
 def splittable(hand):
     """
-    Determines if a hand is splittable or not. ['A', 'A'] would be
-    considered a splittable hand while ['7', '8'] would not.
+    Determines if a hand is splittable or not.
 
     Parameters
     ----------
-    hand : list
+    hand : list of str
         List of string card elements
 
     Returns
     -------
-    return : boolean
+    bool
+        True if hand is splittable, false otherwise
 
     """
     if len(hand) == 2 and hand[0] == hand[1]:
