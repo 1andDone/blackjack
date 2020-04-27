@@ -31,8 +31,8 @@ def count_hand(hand):
 
     # if there are multiple aces, only one can be valued at 11
     if num_aces > 0:
-        soft_total += 11 + ((num_aces - 1) * 1)
-        hard_total += num_aces * 1
+        soft_total += 11 + (num_aces - 1)
+        hard_total += num_aces
 
     return soft_total, hard_total
 
@@ -57,13 +57,11 @@ def max_count_hand(hand):
     soft_total, hard_total = count_hand(hand)
 
     if soft_total <= 21 and hard_total <= 21:
-        total = max(soft_total, hard_total)
+        return max(soft_total, hard_total)
     elif soft_total <= 21:
-        total = soft_total
+        return soft_total
     else:
-        total = hard_total
-
-    return total
+        return hard_total
 
 
 def splittable(hand):
@@ -81,8 +79,4 @@ def splittable(hand):
         True if hand is splittable, false otherwise
 
     """
-    if len(hand) == 2 and hand[0] == hand[1]:
-        return True
-    return False
-
-
+    return len(hand) == 2 and hand[0] == hand[1]
