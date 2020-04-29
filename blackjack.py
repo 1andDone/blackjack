@@ -5,23 +5,17 @@ import basic_strategy
 import counting_strategies
 from helper import count_hand, max_count_hand, splittable
 
-# TODO make plot size bigger -- figsize
-# TODO plot distribution of end bankroll amounts
-# TODO clean up classes - Player may be too large, may need Game class
+
+# TODO clean up classes - classes in individual files?
 # TODO Kelly Criterion?
-# TODO run simulations and make plots for more than one player -- may need to include player in dict
 # TODO use actual chip amounts -- only allow bets using chip increments?
 # TODO tests -- test out every type of hand, multiple ways to get blackjack, bust, etc.
 # TODO add additional counting systems from https://en.wikipedia.org/wiki/Card_counting
 # TODO some counting systems require the type of card (spade, diamond, etc.)
 # TODO composition dependent strategy https://wizardofodds.com/gambling/glossary/
 # TODO make github documentation
-# TODO add player to stats key?
 # TODO simulate wonging, big players vs. counters, etc.
-# TODO Make titles automatic
 # TODO Example code
-# TODO create graphics for every player
-# TODO put figure code in different file
 
 
 class HouseRules(object):
@@ -299,7 +293,7 @@ class Player(object):
         if bet_spread > float(rules.max_bet/min_bet):
             raise ValueError('Bet spread is too large.')
         if bet_strategy == 'Variable' and count_strategy is None:
-            raise ValueError('Count strategy cannot be None with a Variable betting strategy.')
+            raise ValueError('Count strategy cannot be None with a "Variable" betting strategy.')
         if play_strategy not in ['Basic']:
             raise ValueError('Playing strategy must be "Basic".')
         if bet_strategy not in ['Flat', 'Variable']:
@@ -308,6 +302,8 @@ class Player(object):
             if count_strategy not in ['Hi-Lo', 'Hi-Opt I', 'Hi-Opt II', 'Omega II', 'Halves', 'Zen Count']:
                 raise ValueError('Count Strategy must be "Hi-Lo", "Hi-Opt I", "Hi-Opt II", "Omega II", '
                                  '"Halves", or "Zen Count".')
+        if back_counting and count_strategy is None:
+            raise ValueError('Back counting requires a counting strategy.')
         if back_counting and back_counting_enter < 0:
             raise ValueError('Back counting entry point must be zero or greater.')
         if back_counting and back_counting_enter <= back_counting_exit:
@@ -323,10 +319,17 @@ class Player(object):
         self.back_counting = back_counting
         self.back_counting_enter = back_counting_enter
         self.back_counting_exit = back_counting_exit
+        self.count = 0
         self.hands_dict = {}
 
     def get_name(self):
         return self.name
+
+    def set_count(self, count):
+        self.count = count
+
+    def get_count(self):
+        return self.count
 
     def get_bankroll(self):
         return self.bankroll
@@ -853,7 +856,7 @@ def dealer_plays_hand(rules, cards, dealer_hole_card, dealer_hand):
                 dealer_hand.append(cards.deal_card())
 
 
-def compare_hands(table, rules, stats, count_key, dealer_hand):
+def compare_hands(table, rules, stats, dealer_hand):
     """
     Players compare their hands against the dealer. If a player surrenders
     their hand, the player receives half of their initial wager back. If a
@@ -869,9 +872,6 @@ def compare_hands(table, rules, stats, count_key, dealer_hand):
         HouseRules class instance
     stats : SimulationStats
         SimulationStats class instance
-    count_key : float
-        SimulationStats dictionary key indicating the current running or true count
-        based on the player's counting strategy
     dealer_hand : list of str
         List of string card elements representing the dealer's hand
 
@@ -896,7 +896,7 @@ def compare_hands(table, rules, stats, count_key, dealer_hand):
                 p.set_bankroll(amount=0.5 * player_bet)
                 stats.player_surrender(
                     player_key=p.get_name(),
-                    count_key=count_key,
+                    count_key=p.get_count(),
                     amount=player_bet,
                     initial_amount=player_initial_bet
                 )
@@ -907,7 +907,7 @@ def compare_hands(table, rules, stats, count_key, dealer_hand):
                     p.set_bankroll(amount=player_bet)
                     stats.push(
                         player_key=p.get_name(),
-                        count_key=count_key,
+                        count_key=p.get_count(),
                         amount=player_bet,
                         initial_amount=player_initial_bet
                     )
@@ -917,7 +917,7 @@ def compare_hands(table, rules, stats, count_key, dealer_hand):
                         p.set_bankroll(amount=(1 + rules.blackjack_payout) * player_bet)
                         stats.player_natural_blackjack(
                             player_key=p.get_name(),
-                            count_key=count_key,
+                            count_key=p.get_count(),
                             amount=player_bet,
                             initial_amount=player_initial_bet
                         )
@@ -928,7 +928,7 @@ def compare_hands(table, rules, stats, count_key, dealer_hand):
                     p.set_bankroll(amount=player_bet)
                     stats.push(
                         player_key=p.get_name(),
-                        count_key=count_key,
+                        count_key=p.get_count(),
                         amount=player_bet,
                         initial_amount=player_initial_bet
                     )
@@ -940,7 +940,7 @@ def compare_hands(table, rules, stats, count_key, dealer_hand):
                 p.set_bankroll(amount=(1 + rules.blackjack_payout) * player_bet)
                 stats.player_natural_blackjack(
                     player_key=p.get_name(),
-                    count_key=count_key,
+                    count_key=p.get_count(),
                     amount=player_bet,
                     initial_amount=player_initial_bet
                 )
@@ -948,7 +948,7 @@ def compare_hands(table, rules, stats, count_key, dealer_hand):
             elif dealer_total == 21 and dealer_hand_length == 2:  # dealer has natural 21
                 stats.dealer_natural_blackjack(
                     player_key=p.get_name(),
-                    count_key=count_key,
+                    count_key=p.get_count(),
                     amount=player_bet,
                     initial_amount=player_initial_bet
                 )
@@ -956,7 +956,7 @@ def compare_hands(table, rules, stats, count_key, dealer_hand):
             elif player_total > 21:  # player busts
                 stats.player_bust(
                     player_key=p.get_name(),
-                    count_key=count_key,
+                    count_key=p.get_count(),
                     amount=player_bet,
                     initial_amount=player_initial_bet
                 )
@@ -965,7 +965,7 @@ def compare_hands(table, rules, stats, count_key, dealer_hand):
                 p.set_bankroll(amount=2 * player_bet)
                 stats.dealer_bust(
                     player_key=p.get_name(),
-                    count_key=count_key,
+                    count_key=p.get_count(),
                     amount=player_bet,
                     initial_amount=player_initial_bet
                 )
@@ -974,7 +974,7 @@ def compare_hands(table, rules, stats, count_key, dealer_hand):
                 p.set_bankroll(amount=player_bet)
                 stats.push(
                     player_key=p.get_name(),
-                    count_key=count_key,
+                    count_key=p.get_count(),
                     amount=player_bet,
                     initial_amount=player_initial_bet
                 )
@@ -983,7 +983,7 @@ def compare_hands(table, rules, stats, count_key, dealer_hand):
                 p.set_bankroll(amount=2 * player_bet)
                 stats.player_showdown_win(
                     player_key=p.get_name(),
-                    count_key=count_key,
+                    count_key=p.get_count(),
                     amount=player_bet,
                     initial_amount=player_initial_bet
                 )
@@ -991,7 +991,7 @@ def compare_hands(table, rules, stats, count_key, dealer_hand):
             else:  # dealer beats player
                 stats.dealer_showdown_win(
                     player_key=p.get_name(),
-                    count_key=count_key,
+                    count_key=p.get_count(),
                     amount=player_bet,
                     initial_amount=player_initial_bet
                 )
@@ -1058,29 +1058,29 @@ class PlayShoe(object):
 
             while not c.cut_card_reached(penetration=self.penetration) and len(t.get_players()) > 0:
 
+                for p in t.get_players():
+
+                    # get true/running count if counting strategy used
+                    if p.get_count_strategy() in ['Hi-Lo', 'Omega II', 'Halves', 'Zen Count']:
+                        p.set_count(count=cs.true_count(strategy=p.get_count_strategy(), accuracy=0.1))
+
+                    elif p.get_count_strategy() in ['Hi-Opt I', 'Hi-Opt II']:
+                        p.set_count(count=cs.running_count(strategy=p.get_count_strategy()))
+
+                    else:
+                        p.set_count(count=0)
+
+                    # create player key in stats dictionary
+                    self.stats.create_player_key(player_key=p.get_name())
+
+                    # create count key in stats dictionary
+                    self.stats.create_count_key(player_key=p.get_name(), count_key=p.get_count())
+
                 # players place initial bets and an empty hand is created
                 players_place_bets(table=t, rules=self.rules, counting_strategy=cs)
 
                 # only deal hands if there are players
                 if len(t.get_players()) > 0:
-
-                    for p in t.get_players():
-
-                        # get true/running count if counting strategy used
-                        if p.get_count_strategy() in ['Hi-Lo', 'Omega II', 'Halves', 'Zen Count']:
-                            count = cs.true_count(strategy=p.get_count_strategy(), accuracy=0.1)
-
-                        elif p.get_count_strategy() in ['Hi-Opt I', 'Hi-Opt II']:
-                            count = cs.running_count(strategy=p.get_count_strategy())
-
-                        else:
-                            count = 0
-
-                        # create player key in stats dictionary
-                        self.stats.create_player_key(player_key=p.get_name())
-
-                        # create count key in stats dictionary
-                        self.stats.create_count_key(player_key=p.get_name(), count_key=count)
 
                     # deal hands to all players and dealer
                     dealer_hand = deal_hands(table=t, cards=c)
@@ -1116,7 +1116,6 @@ class PlayShoe(object):
                         table=t,
                         rules=self.rules,
                         stats=self.stats,
-                        count_key=count,
                         dealer_hand=dealer_hand
                     )
 
@@ -1198,7 +1197,7 @@ if __name__ == "__main__":
     p = [
             Player(
                 name='P1',
-                rules=rules,
+                rules=r,
                 play_strategy='Basic',
                 bet_strategy='Variable',
                 count_strategy='Hi-Lo',
@@ -1207,12 +1206,25 @@ if __name__ == "__main__":
                 bankroll=10000),
             Player(
                 name='P2',
-                rules=rules,
+                rules=r,
                 play_strategy='Basic',
                 bet_strategy='Flat',
                 count_strategy=None,
                 min_bet=10,
                 bankroll=10000
+            ),
+            Player(
+                name='P3',
+                rules=r,
+                play_strategy='Basic',
+                bet_strategy='Variable',
+                count_strategy='Hi-Lo',
+                min_bet=10,
+                bet_spread=10,
+                bankroll=10000,
+                back_counting=True,
+                back_counting_enter=2,
+                back_counting_exit=0
             )
     ]
 

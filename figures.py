@@ -1,5 +1,10 @@
 import matplotlib.pyplot as plt
 
+# TODO make plot size bigger -- figsize
+# TODO plot distribution of end bankroll amounts
+# TODO run simulations and make plots for more than one player
+# TODO Make titles automatic
+# TODO create graphics for every player
 
 # figure 1
 plt.figure()
