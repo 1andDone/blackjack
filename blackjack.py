@@ -253,7 +253,7 @@ class Player(object):
     """
     def __init__(self, name, rules, bankroll, min_bet, bet_spread=1, play_strategy='Basic',
                  bet_strategy='Flat', count_strategy=None, back_counting=False,
-                 back_counting_enter=0, back_counting_exit=0):
+                 back_counting_entry=0, back_counting_exit=0):
         """
         Parameters
         ----------
@@ -268,20 +268,21 @@ class Player(object):
         bet_spread : float, optional
             Ratio of maximum bet to minimum bet (default is 1)
         play_strategy : str, optional
-            Name of the play strategy used by the player (default is 'Basic', which implies
+            Name of the play strategy used by the player (default is "Basic", which implies
             the player plays optimally)
         bet_strategy : str, optional
-            Name of the bet strategy used by the player (default is 'Flat', which implies
+            Name of the bet strategy used by the player (default is "Flat", which implies
             the player bets the same amount every hand)
         count_strategy : str, optional
             Name of the card counting strategy used by the player (default is None, which implies
             the player does not count cards)
         back_counting : bool, optional
-            True if player is back counting the shoe (i.e. wonging), false otherwise
-        back_counting_enter : int, optional
-            Count at which the back counter will start playing hands at the table
+            True if player is back counting the shoe (i.e. wonging), false otherwise (default is
+            False)
+        back_counting_entry : int, optional
+            Count at which the back counter will start playing hands at the table (default is 0)
         back_counting_exit : int, optional
-            Count at which the back counter will stop playing hands at the table
+            Count at which the back counter will stop playing hands at the table (default is 0)
 
         """
         if bankroll <= rules.min_bet:
@@ -304,9 +305,9 @@ class Player(object):
                                  '"Halves", or "Zen Count".')
         if back_counting and count_strategy is None:
             raise ValueError('Back counting requires a counting strategy.')
-        if back_counting and back_counting_enter < 0:
+        if back_counting and back_counting_entry < 0:
             raise ValueError('Back counting entry point must be zero or greater.')
-        if back_counting and back_counting_enter <= back_counting_exit:
+        if back_counting and back_counting_entry <= back_counting_exit:
             raise ValueError('Back counting exit point must be less than back counting entry point.')
         self.name = str(name)
         self.rules = rules
@@ -317,13 +318,22 @@ class Player(object):
         self.bet_strategy = BettingStrategy(strategy=bet_strategy)
         self.count_strategy = count_strategy
         self.back_counting = back_counting
-        self.back_counting_enter = back_counting_enter
+        self.back_counting_entry = back_counting_entry
         self.back_counting_exit = back_counting_exit
         self.count = 0
         self.hands_dict = {}
 
     def get_name(self):
         return self.name
+
+    def get_back_counting(self):
+        return self.back_counting
+
+    def get_back_counting_entry(self):
+        return self.back_counting_entry
+
+    def get_back_counting_exit(self):
+        return self.back_counting_exit
 
     def set_count(self, count):
         self.count = count
@@ -340,8 +350,11 @@ class Player(object):
     def get_bet_spread(self):
         return self.bet_spread
 
-    def set_bankroll(self, amount):
+    def increment_bankroll(self, amount):
         self.bankroll = self.bankroll + amount
+
+    def set_bankroll(self, amount):
+        self.bankroll = amount
 
     def sufficient_funds(self, amount):
         return self.bankroll - amount >= 0
@@ -368,7 +381,7 @@ class Player(object):
             raise ValueError('Initial bet must exceed table minimum.')
         if amount > self.rules.max_bet:
             raise ValueError('Initial bet must not exceed table maximum.')
-        self.set_bankroll(amount=-amount)
+        self.increment_bankroll(amount=-amount)
         self.create_hand(amount=amount)
 
     def natural_blackjack(self):
@@ -466,13 +479,12 @@ class Table(object):
         if isinstance(player, Player):
             if len(self.players) + len([player]) > self.size_limit:
                 raise ValueError('Table is at maximum capacity.')
+            for p in self.players:
+                if p.get_name() == player.get_name():
+                    raise ValueError('Already a player with that name at table.')
             self.players.append(player)
-        elif isinstance(player, list):
-            if len(self.players) + len(player) > self.size_limit:
-                raise ValueError('Table is at maximum capacity.')
-            self.players.extend(player)
         else:
-            raise AttributeError('Expected a list or "Player" class object.')
+            raise AttributeError('Expected a Player class object.')
 
     def remove_player(self, player):
         if player in self.players:
@@ -722,7 +734,7 @@ def players_play_hands(table, rules, cards, dealer_hand, dealer_up_card):
 
                     # split cards
                     if decision in ['P', 'Rp'] and p.sufficient_funds(amount=bet):
-                        p.set_bankroll(amount=-bet)
+                        p.increment_bankroll(amount=-bet)
 
                         # if unable to re-split aces, player only gets 1 card on each split pair
                         if not rules.resplit_aces and 'A' in hand:
@@ -737,19 +749,19 @@ def players_play_hands(table, rules, cards, dealer_hand, dealer_up_card):
 
                     # split cards if double after split available
                     elif rules.double_after_split and decision == 'Ph' and p.sufficient_funds(amount=bet):
-                        p.set_bankroll(amount=-bet)
+                        p.increment_bankroll(amount=-bet)
                         p.split(amount=bet, key=k, new_key=num_hands + 1)
 
                     # double down
                     elif rules.double_down and decision in ['Dh', 'Ds'] and hand_length == 2 and \
                             not p.get_split(key=k) and p.sufficient_funds(amount=bet):
-                        p.set_bankroll(amount=-bet)
+                        p.increment_bankroll(amount=-bet)
                         p.double_down(key=k, new_card=cards.deal_card())
 
                     # double after split
                     elif rules.double_after_split and decision in ['Dh', 'Ds'] and hand_length == 2 and \
                             p.get_split(key=k) and p.sufficient_funds(amount=bet):
-                        p.set_bankroll(amount=-bet)
+                        p.increment_bankroll(amount=-bet)
                         p.double_down(key=k, new_card=cards.deal_card())
 
                     # hit
@@ -893,7 +905,7 @@ def compare_hands(table, rules, stats, dealer_hand):
                 player_initial_bet = 0
 
             if p.get_surrender():  # player surrenders
-                p.set_bankroll(amount=0.5 * player_bet)
+                p.increment_bankroll(amount=0.5 * player_bet)
                 stats.player_surrender(
                     player_key=p.get_name(),
                     count_key=p.get_count(),
@@ -904,7 +916,7 @@ def compare_hands(table, rules, stats, dealer_hand):
             elif player_total == 21 and dealer_total == 21:
 
                 if p.get_natural_blackjack() and dealer_hand_length == 2:  # push - both dealer/player have natural 21
-                    p.set_bankroll(amount=player_bet)
+                    p.increment_bankroll(amount=player_bet)
                     stats.push(
                         player_key=p.get_name(),
                         count_key=p.get_count(),
@@ -914,7 +926,7 @@ def compare_hands(table, rules, stats, dealer_hand):
 
                 elif p.get_natural_blackjack() and dealer_hand_length > 2:  # player has natural 21
                     if len(table.get_players()) > 1:
-                        p.set_bankroll(amount=(1 + rules.blackjack_payout) * player_bet)
+                        p.increment_bankroll(amount=(1 + rules.blackjack_payout) * player_bet)
                         stats.player_natural_blackjack(
                             player_key=p.get_name(),
                             count_key=p.get_count(),
@@ -925,7 +937,7 @@ def compare_hands(table, rules, stats, dealer_hand):
                         raise ValueError('Impossible scenario when playing heads up against dealer.')
 
                 elif not p.get_natural_blackjack() and dealer_hand_length > 2:  # push - both dealer/player have 21
-                    p.set_bankroll(amount=player_bet)
+                    p.increment_bankroll(amount=player_bet)
                     stats.push(
                         player_key=p.get_name(),
                         count_key=p.get_count(),
@@ -937,7 +949,7 @@ def compare_hands(table, rules, stats, dealer_hand):
                     raise ValueError('Impossible for a dealer to get a natural 21 and a player to have 3+ cards.')
 
             elif p.get_natural_blackjack():  # player has natural 21
-                p.set_bankroll(amount=(1 + rules.blackjack_payout) * player_bet)
+                p.increment_bankroll(amount=(1 + rules.blackjack_payout) * player_bet)
                 stats.player_natural_blackjack(
                     player_key=p.get_name(),
                     count_key=p.get_count(),
@@ -962,7 +974,7 @@ def compare_hands(table, rules, stats, dealer_hand):
                 )
 
             elif dealer_total > 21:  # dealer busts
-                p.set_bankroll(amount=2 * player_bet)
+                p.increment_bankroll(amount=2 * player_bet)
                 stats.dealer_bust(
                     player_key=p.get_name(),
                     count_key=p.get_count(),
@@ -971,7 +983,7 @@ def compare_hands(table, rules, stats, dealer_hand):
                 )
 
             elif dealer_total == player_total:  # push
-                p.set_bankroll(amount=player_bet)
+                p.increment_bankroll(amount=player_bet)
                 stats.push(
                     player_key=p.get_name(),
                     count_key=p.get_count(),
@@ -980,7 +992,7 @@ def compare_hands(table, rules, stats, dealer_hand):
                 )
 
             elif player_total > dealer_total:  # player beats dealer
-                p.set_bankroll(amount=2 * player_bet)
+                p.increment_bankroll(amount=2 * player_bet)
                 stats.player_showdown_win(
                     player_key=p.get_name(),
                     count_key=p.get_count(),
@@ -1018,34 +1030,53 @@ class PlayShoe(object):
         self.figures = figures
         self.stats = SimulationStats(rules=rules)
 
+    def _set_up_table(self):
+        table = Table()  # set up table
+
+        # add players to table
+        for p in self.players:
+            if not p.back_counting:
+                table.add_player(player=p)
+
+        return table
+
+    def _bankroll(self):
+        bankroll = {}  # dictionary used to store bankrolls after each hand
+
+        for p in self.players:
+            bankroll[p.get_name()] = p.get_bankroll()
+
+        return bankroll
+
     def main(self):
 
+        # set seed to replicate results
         if self.seed:
             random.seed(self.seed_number)
 
+        # compute initial bankroll
+        initial_bankroll = self._bankroll()
+
         # option to add players before simulations begin
         # simulates a player buying in once and playing every shoe
+        # player continues until the shoe simulations are finished or the player has exhausted their bankroll
         if self.add_players_before_simulations:
-
-            # set up table
-            t = Table()
-
-            # add players to table
-            for p in self.players:
-                t.add_player(player=p)
+            t = self._set_up_table()
+            current_bankroll = initial_bankroll.copy()
 
         for _ in range(0, self.simulations):
 
             # option to add players after simulations begin
             # simulates a player buying in for the same amount every shoe
+            # player continues until the shoe is finished or the player has exhausted their bankroll
             if not self.add_players_before_simulations:
+                t = self._set_up_table()
 
-                # set up table
-                t = Table()
+                # reset bankroll to initial amount
+                current_bankroll = initial_bankroll.copy()
 
-                # add players to table
                 for p in self.players:
-                    t.add_player(player=p)
+                    p.set_bankroll(amount=current_bankroll[p.get_name()])
 
             # set up cards
             c = Cards(shoe_size=self.shoe_size)
@@ -1058,12 +1089,40 @@ class PlayShoe(object):
 
             while not c.cut_card_reached(penetration=self.penetration) and len(t.get_players()) > 0:
 
+                # add back counters to the table if the count is favorable
+                for p in self.players:
+                    if p.get_back_counting() and p not in t.get_players():
+                        if current_bankroll[p.get_name()] >= self.rules.min_bet:
+                            if p.get_count_strategy() in ['Hi-Lo', 'Omega II', 'Halves', 'Zen Count']:
+                                if cs.true_count(strategy=p.get_count_strategy(), accuracy=0.1) >= \
+                                        p.get_back_counting_entry():
+                                    t.add_player(player=p)
+                                    if not self.add_players_before_simulations:
+                                        p.set_bankroll(amount=current_bankroll[p.get_name()])
+                            else:
+                                if cs.running_count(strategy=p.get_count_strategy()) >= p.get_back_counting_entry():
+                                    t.add_player(player=p)
+                                    if not self.add_players_before_simulations:
+                                        p.set_bankroll(amount=current_bankroll[p.get_name()])
+
+                # remove back counters from the table if the count is not favorable
+                for p in self.players:
+                    if p.get_back_counting() and p in t.get_players():
+                        if p.get_count_strategy() in ['Hi-Lo', 'Omega II', 'Halves', 'Zen Count']:
+                            if cs.true_count(strategy=p.get_count_strategy(), accuracy=0.1) <= \
+                                    p.get_back_counting_exit():
+                                t.remove_player(player=p)
+                        else:
+                            if cs.running_count(strategy=p.get_count_strategy()) <= p.get_back_counting_exit():
+                                t.remove_player(player=p)
+
                 for p in t.get_players():
 
-                    # get true/running count if counting strategy used
+                    # get true count
                     if p.get_count_strategy() in ['Hi-Lo', 'Omega II', 'Halves', 'Zen Count']:
                         p.set_count(count=cs.true_count(strategy=p.get_count_strategy(), accuracy=0.1))
 
+                    # get running count
                     elif p.get_count_strategy() in ['Hi-Opt I', 'Hi-Opt II']:
                         p.set_count(count=cs.running_count(strategy=p.get_count_strategy()))
 
@@ -1102,7 +1161,7 @@ class PlayShoe(object):
                     if not dealer_turn(table=t) and self.rules.dealer_shows_hole_card:
                         c.update_visible_cards(dealer_hole_card)
 
-                    # dealer only has to act if a single player does not have a natural 21, surrender, or bust
+                    # dealer acts if one or more players do not bust, surrender, or have natural 21
                     if dealer_turn(table=t):
                         dealer_hand = dealer_plays_hand(
                             rules=self.rules,
@@ -1122,6 +1181,10 @@ class PlayShoe(object):
                     # update count and reset visible cards
                     cs.update_running_count()
                     c.set_visible_cards()
+
+                    # update current bankroll for each player
+                    for p in t.get_players():
+                        current_bankroll[p.get_name()] = p.get_bankroll()
 
         # unpack nested dictionary
         for player_key, player_values in self.stats.get_stats_dict().items():
@@ -1223,7 +1286,7 @@ if __name__ == "__main__":
                 bet_spread=10,
                 bankroll=10000,
                 back_counting=True,
-                back_counting_enter=2,
+                back_counting_entry=2,
                 back_counting_exit=0
             )
     ]
@@ -1234,7 +1297,7 @@ if __name__ == "__main__":
             players=p,
             seed=True,
             seed_number=80,
-            add_players_before_simulations=True,
+            add_players_before_simulations=False,
             simulations=20000,
             shoe_size=6,
             penetration=0.75
