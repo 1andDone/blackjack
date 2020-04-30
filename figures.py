@@ -1,70 +1,158 @@
+import numpy as np
 import matplotlib.pyplot as plt
 
-# TODO make plot size bigger -- figsize
-# TODO plot distribution of end bankroll amounts
-# TODO run simulations and make plots for more than one player
-# TODO Make titles automatic
-# TODO create graphics for every player
+def format_title(player_name, plot_name, shoe_size, count_strategy, play_strategy, blackjack_payout,
+                 penetration, initial_bankroll, bet_strategy, min_bet, bet_spread, simulations):
+    """
+    """
+    title = ('{player_name} {plot_name}\n' +
+             '{shoe_size} Decks, {penetration}% Deck Penetration, {blackjack_payout} Blackjack Payout,\n' +
+             '{count_strategy}{play_strategy} Play Strategy,\n' +
+             '{initial_bankroll} Initial Bankroll,\n' +
+             '{bet_strategy}{min_bet} Minimum Bet{bet_spread}\n' +
+             '{simulations} Shoe Simulations').format(
+        player_name=player_name,
+        plot_name=plot_name,
+        shoe_size=shoe_size,
+        count_strategy=count_strategy + ' Count Strategy, ' if count_strategy is not None else '',
+        play_strategy=play_strategy,
+        blackjack_payout=blackjack_payout,
+        penetration=int(penetration * 100) if (penetration * 100) - int(penetration * 100) == 0 else penetration * 100,
+        initial_bankroll='$' + str(int(initial_bankroll)) if initial_bankroll - int(initial_bankroll) == 0
+                                else str(initial_bankroll),
+        bet_strategy=bet_strategy + ' Bet Strategy, ' if bet_strategy == 'Flat' else '',
+        min_bet='$' + str(int(min_bet)) if min_bet - int(min_bet) == 0 else str(min_bet),
+        bet_spread=', 1-' + str(int(bet_spread) if bet_spread - int(bet_spread) == 0
+                                else bet_spread) + ' Bet Spread,' if bet_strategy == 'Variable' else '',
+        simulations=simulations)
 
-# figure 1
-plt.figure()
-plt.bar(x=true_count[net_winnings > 0], height=net_winnings[net_winnings > 0]/simulations, color='b', width=0.2)
-plt.bar(x=true_count[net_winnings < 0], height=net_winnings[net_winnings < 0]/simulations, color='r', width=0.2)
-plt.xlabel('Hi-Lo True count')
-plt.ylabel('Net Winnings per Shoe (Dollars)')
-plt.title('Player vs. Dealer Bar Plot: \n'
-          'Shoe Size 6, 75% Deck Penetration, \n'
-          'Variable $10, ' + str(r.blackjack_payout) + ' Blackjack Payout, \n' +
-          str(simulations) + ' Shoe Simulations')
-plt.grid()
-plt.show()
+    return title
 
-# figure 2
-plt.figure()
-plt.plot(true_count, np.cumsum(net_winnings)/simulations)
-plt.xlabel('Hi-Lo True Count')
-plt.ylabel('Net Winnings per Shoe (Dollars)')
-plt.title('Player vs. Dealer Cumulative Sum: \n'
-          'Shoe Size 6, 75% Deck Penetration, \n'
-          'Variable $10, ' + str(r.blackjack_payout) + ' Blackjack Payout, \n' +
-          str(simulations) + ' Shoe Simulations')
-plt.grid()
-plt.show()
 
-# figure 3
-plt.figure()
-plt.plot(true_count[num_hands > 10000],
-         (player_natural_blackjack[num_hands > 10000] +
-          player_showdown_win[num_hands > 10000] +
-          dealer_bust[num_hands > 10000]) /
-         (num_hands[num_hands > 10000] - push[num_hands > 10000]))
-plt.xlabel('Hi-Lo True Count')
-plt.ylabel('Player Win Percentage')
-plt.title('Player vs. Dealer Win Percentage: \n'
-          'Shoe Size 6, 75% Deck Penetration, \n'
-          'Variable $10, ' + str(r.blackjack_payout) + ' Blackjack Payout, \n' +
-          str(simulations) + ' Shoe Simulations')
-plt.grid(axis='y')
-plt.show()
+def net_winnings_per_shoe(count, count_accuracy, net_winnings, count_strategy, play_strategy, player_name,
+                          shoe_size, blackjack_payout, penetration, initial_bankroll, bet_strategy,
+                          min_bet, bet_spread, simulations):
+    """
+    """
+    # format width to be 80% of count accuracy
+    if count_accuracy == 0.1:
+        width = 0.08
+    elif count_accuracy == 0.5:
+        width = 0.4
+    else:
+        width = 0.8
 
-# figure 4
-plt.figure()
-x = [1, 2, 3, 4, 5, 6, 7, 8]
-y = [np.sum(player_natural_blackjack + player_showdown_win + dealer_bust)/np.sum(num_hands),
-     np.sum(dealer_natural_blackjack + dealer_showdown_win + player_bust + player_surrender)/np.sum(num_hands),
-     np.sum(push)/np.sum(num_hands),
-     np.sum(dealer_bust)/np.sum(num_hands),
-     np.sum(player_bust)/np.sum(num_hands),
-     np.sum(player_surrender)/np.sum(num_hands),
-     np.sum(dealer_natural_blackjack)/np.sum(num_hands),
-     np.sum(player_natural_blackjack)/np.sum(num_hands)]
-plt.bar(x=x, height=y, width=0.2, color='b')
-plt.xticks([1, 2, 3, 4, 5, 6, 7, 8], ['Player Win', 'Dealer Win', 'Push', 'Dealer Bust', 'Player Bust', 'Surrender',
-                                      'Dealer Natural', 'Player Natural'])
-plt.ylabel('Percentage')
-plt.title('Overall Winning Percentages for Player vs. Dealer over \n' +
-          str(simulations) + ' Shoe Simulations')
-for i in range(len(y)):
-    plt.annotate('{:.2%}'.format(y[i]), xy=(x[i] - 0.1, y[i] + 0.005))
-plt.grid(axis='y')
-plt.show()
+    plt.figure(figsize=(16, 12))
+    plt.bar(x=count[net_winnings > 0], height=net_winnings[net_winnings > 0] / simulations, color='b', width=width)
+    plt.bar(x=count[net_winnings < 0], height=net_winnings[net_winnings < 0] / simulations, color='r', width=width)
+    plt.xlabel(str(count_strategy) + ' count')
+    plt.ylabel('Net Winnings per Shoe ($)')
+    plt.title(
+        format_title(
+            player_name=player_name,
+            plot_name='Net Winnings per Shoe',
+            shoe_size=shoe_size,
+            count_strategy=count_strategy,
+            play_strategy=play_strategy,
+            blackjack_payout=blackjack_payout,
+            penetration=penetration,
+            initial_bankroll=initial_bankroll,
+            bet_strategy=bet_strategy,
+            min_bet=min_bet,
+            bet_spread=bet_spread,
+            simulations=simulations,
+        )
+    )
+    plt.grid()
+    plt.show()
+
+
+def cumulative_net_winnings_per_shoe(count, net_winnings, count_strategy, play_strategy, player_name, shoe_size,
+                                     blackjack_payout, penetration, initial_bankroll, bet_strategy, min_bet,
+                                     bet_spread, simulations):
+    """
+    """
+    plt.figure(figsize=(16, 12))
+    plt.plot(count, np.cumsum(net_winnings) / simulations)
+    plt.xlabel(str(count_strategy) + ' count')
+    plt.ylabel('Net Winnings per Shoe ($)')
+    plt.title(
+        format_title(
+                player_name=player_name,
+                plot_name='Cumulative Net Winnings per Shoe',
+                shoe_size=shoe_size,
+                count_strategy=count_strategy,
+                play_strategy=play_strategy,
+                blackjack_payout=blackjack_payout,
+                penetration=penetration,
+                initial_bankroll=initial_bankroll,
+                bet_strategy=bet_strategy,
+                min_bet=min_bet,
+                bet_spread=bet_spread,
+                simulations=simulations,
+        )
+    )
+    plt.grid()
+    plt.show()
+
+
+def bankroll_growth(ending_bankroll, shoe, count_strategy, play_strategy,
+                    player_name, shoe_size, blackjack_payout, penetration, initial_bankroll,
+                    bet_strategy, min_bet, bet_spread, simulations):
+    """
+    """
+    plt.figure(figsize=(16, 12))
+    plt.plot(shoe, ending_bankroll)
+    plt.xlabel('Number of Shoes Played')
+    plt.ylabel('Bankroll ($)')
+    plt.xlim(0, max(shoe) + 0.01 * max(shoe))
+    plt.ylim(0, max(ending_bankroll) + 0.01 * max(ending_bankroll))
+    plt.title(
+        format_title(
+            player_name=player_name,
+            plot_name='Bankroll Growth',
+            shoe_size=shoe_size,
+            count_strategy=count_strategy,
+            play_strategy=play_strategy,
+            blackjack_payout=blackjack_payout,
+            penetration=penetration,
+            initial_bankroll=initial_bankroll,
+            bet_strategy=bet_strategy,
+            min_bet=min_bet,
+            bet_spread=bet_spread,
+            simulations=simulations,
+        )
+    )
+    plt.grid()
+    plt.show()
+
+
+def bankroll_end_of_shoe(ending_bankroll, ending_bankroll_count, count_strategy, play_strategy,
+                         player_name, shoe_size, blackjack_payout, penetration, initial_bankroll,
+                         bet_strategy, min_bet, bet_spread, simulations):
+    """
+    """
+    plt.figure(figsize=(16, 12))
+    plt.plot(ending_bankroll, ending_bankroll_count)
+    plt.xlabel('Bankroll ($)')
+    plt.ylabel('Number of Occurrences')
+    plt.ylim(0, max(ending_bankroll_count) + 0.01 * max(ending_bankroll_count))
+    plt.title(
+        format_title(
+            player_name=player_name,
+            plot_name='Ending Bankroll for Each Shoe Played',
+            shoe_size=shoe_size,
+            count_strategy=count_strategy,
+            play_strategy=play_strategy,
+            blackjack_payout=blackjack_payout,
+            penetration=penetration,
+            initial_bankroll=initial_bankroll,
+            bet_strategy=bet_strategy,
+            min_bet=min_bet,
+            bet_spread=bet_spread,
+            simulations=simulations,
+        )
+    )
+    plt.grid()
+    plt.show()
+
