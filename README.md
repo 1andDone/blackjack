@@ -13,7 +13,7 @@ This simulation allows the user to fully customize the house rules. By default, 
 - Players can double down on any two cards `double_down`
 - Unlike 10-value cards may be split (i.e. 10-J) `split_unlike_tens`
 - Players can double down after splitting `double_after_split`
-- Aces can be split only once and players can only take one card to split Aces`resplit_aces`
+- Aces can be split only once and players can only take one card to split Aces `resplit_aces`
 - Players are allowed to surrender after dealer checks for blackjack and forfeit half their original wager `late_surrender`
 - Insurance on a dealer Ace pays 2-1 `insurance`
 - 21 on a split Ace does not count as Blackjack
@@ -148,12 +148,12 @@ Setting `figures=True` in the shoe simulation set up creates a few plots that he
 ![Sarah Spotter Figure 1](/documentation/sarah_spotter_fig1.png?raw=true)
 ![Benny Big Money Figure 1](/documentation/benny_big_money_fig1.png?raw=true)
 
-The two plots above show the net winnings per shoe for each hand played at a given Hi-Lo count. 
+The two plots above are only created for players that are counting cards and show the net winnings per shoe for each hand played at a given true or running count. 
 
 ![Sarah Spotter Figure 2](/documentation/sarah_spotter_fig2.png?raw=true)
 ![Benny Big Money Figure 2](/documentation/benny_big_money_fig2.png?raw=true)
 
-The two plots above show the net cumulative net winnings per shoe for each hand played at a given Hi-Lo count.
+The two plots above are only created for players that are counting cards and show the net cumulative net winnings per shoe for each hand played at a given true or running count. 
 
 ![Sarah Spotter Figure 3](/documentation/sarah_spotter_fig3.png?raw=true)
 ![Joe Average Figure 3](/documentation/joe_average_fig3.png?raw=true)
