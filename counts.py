@@ -100,6 +100,6 @@ zen_count = {'Zen Count': {
 
 # create a nested dictionary
 count_dict = {}
-for dict in [hi_lo, hi_opt_1, hi_opt_2, omega_2, halves, zen_count]:
-    for k, v in dict.items():
+for d in [hi_lo, hi_opt_1, hi_opt_2, omega_2, halves, zen_count]:
+    for k, v in d.items():
         count_dict[k] = v
