@@ -1,4 +1,4 @@
-from helper import count_hand, max_count_hand, splittable
+from helper import count_hand, max_count_hand
 
 
 def players_place_bets(table, rules, counting_strategy):

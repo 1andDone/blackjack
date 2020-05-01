@@ -4,9 +4,9 @@ class HouseRules(object):
 
     """
     def __init__(
-            self, min_bet, max_bet, s17, blackjack_payout=1.5, max_hands=4, double_down=True,
-            double_after_split=True, resplit_aces=False, insurance=True, late_surrender=True,
-            dealer_shows_hole_card=False
+            self, min_bet, max_bet, s17=True, blackjack_payout=1.5, max_hands=4, double_down=True,
+            split_unlike_tens=True, double_after_split=True, resplit_aces=False, insurance=True,
+            late_surrender=True, dealer_shows_hole_card=False
     ):
         """
         Parameters
@@ -15,15 +15,17 @@ class HouseRules(object):
             Minimum bet allowed at the table
         max_bet : int
             Maximum bet allowed at the table
-        s17 : bool
-            True if dealer stands on a soft 17, false otherwise
-        blackjack_payout : float
+        s17 : bool, optional
+            True if dealer stands on a soft 17, false otherwise (default is True)
+        blackjack_payout : float, optional
             Payout for a player receiving a natural blackjack (default is 1.5, which implies
             a 3:2 payout)
         max_hands : int, optional
             Maximum number of hands that a player can play (default is 4)
         double_down : bool, optional
             True if doubling is allowed on any first two cards, false otherwise (default is True)
+        split_unlike_tens : bool, optional
+            True if able to split unlike 10's (i.e. 'J' and 'Q'), false otherwise (default is True)
         double_after_split : bool, optional
             True if doubling after splits is allowed, false otherwise (default is True)
         resplit_aces : bool, optional
@@ -50,6 +52,7 @@ class HouseRules(object):
         self.blackjack_payout = float(blackjack_payout)
         self.max_hands = int(max_hands)
         self.double_down = double_down
+        self.split_unlike_tens = split_unlike_tens
         self.double_after_split = double_after_split
         self.resplit_aces = resplit_aces
         self.insurance = insurance

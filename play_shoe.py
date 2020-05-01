@@ -16,7 +16,7 @@ class PlayShoe(object):
     players and dealer.
 
     """
-    def __init__(self, rules, players, seed=False, seed_number=0, shoe_size=6,
+    def __init__(self, rules, players, seed_number=None, shoe_size=6,
                  penetration=0.75, simulations=10000, figures=False):
         """
         Parameters
@@ -25,10 +25,8 @@ class PlayShoe(object):
             HouseRules class instance
         players : list of Player
             List of Player class instances
-        seed : bool, optional
-            True if seed is used to replicate results, false otherwise (default is False)
         seed_number : int, optional
-            Seed number used to replicate results (default is 0)
+            Seed number used to replicate results (default is None)
         shoe_size : int, optional
             Number of decks used during a blackjack game (default is 6)
         penetration : float, optional
@@ -40,7 +38,6 @@ class PlayShoe(object):
         """
         self.rules = rules
         self.players = players
-        self.seed = seed
         self.seed_number = seed_number
         self.shoe_size = shoe_size
         self.penetration = penetration
@@ -51,7 +48,7 @@ class PlayShoe(object):
     def main(self):
 
         # set seed to replicate results
-        if self.seed:
+        if self.seed_number is not None:
             random.seed(self.seed_number)
 
         # set up table

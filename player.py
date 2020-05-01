@@ -193,7 +193,7 @@ class Player(object):
         self.stand(key=key)
 
     def split(self, amount, key, new_key):
-        if splittable(hand=self.hands_dict[key]['hand']):
+        if splittable(rules=self.rules, hand=self.hands_dict[key]['hand']):
             self.hands_dict[key]['split'] = True
             self.hands_dict[new_key] = {}
             self.hands_dict[new_key]['hand'] = [self.get_hand(key=key).pop()]
@@ -205,7 +205,8 @@ class Player(object):
     def decision(self, hand, dealer_up_card, num_hands, amount):
         if len(hand) == 1:  # if card is split, first action is always to hit
             return 'H'
-        elif splittable(hand=hand) and num_hands < self.rules.max_hands and self.sufficient_funds(amount=amount):
+        elif splittable(rules=self.rules, hand=hand) and num_hands < self.rules.max_hands \
+                and self.sufficient_funds(amount=amount):
             return self.play_strategy.splits()[hand[0]][dealer_up_card]
         else:
             soft_total, hard_total = count_hand(hand=hand)

@@ -7,12 +7,13 @@ if __name__ == "__main__":
 
     # set table rules
     r = HouseRules(
-                min_bet=5,
+                min_bet=10,
                 max_bet=500,
                 s17=True,
                 blackjack_payout=1.5,
                 max_hands=4,
                 double_down=True,
+                split_unlike_tens=True,
                 double_after_split=True,
                 resplit_aces=False,
                 insurance=True,
@@ -23,7 +24,7 @@ if __name__ == "__main__":
     # players that will be added to table
     p = [
             Player(
-                name='Spotter',
+                name='Sarah Spotter',
                 rules=r,
                 bankroll=12000,
                 min_bet=10,
@@ -31,16 +32,16 @@ if __name__ == "__main__":
                 bet_strategy='Flat',
                 count_strategy='Hi-Lo'),
             Player(
-                name='Normal',
+                name='Joe Average',
                 rules=r,
-                bankroll=755.75,
-                min_bet=10,
+                bankroll=750,
+                min_bet=15,
                 play_strategy='Basic',
                 bet_strategy='Flat',
                 count_strategy=None,
             ),
             Player(
-                name='Big Money',
+                name='Benny Big Money',
                 rules=r,
                 bankroll=50000,
                 min_bet=25,
@@ -51,7 +52,7 @@ if __name__ == "__main__":
                 count_accuracy=0.1,
                 back_counting=True,
                 back_counting_entry=5,
-                back_counting_exit=1
+                back_counting_exit=0
             )
     ]
 
@@ -59,9 +60,8 @@ if __name__ == "__main__":
     ps = PlayShoe(
             rules=r,
             players=p,
-            seed=True,
             seed_number=78,
-            simulations=15000,
+            simulations=10000,
             shoe_size=6,
             penetration=0.75,
             figures=True
