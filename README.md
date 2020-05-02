@@ -25,7 +25,7 @@ Additional parameters allows the user to specify the following:
 - Maximum bet allowed at the table `max_bet`
 - Dealer reveals hole card even when all players surrender, bust, or have natural blackjack `dealer_shows_hole_card`
 
-An example of the 'Vegas Strip' configuration is seen below:
+An example of the *Vegas Strip* configuration is seen below:
 ```
 r = HouseRules(
             min_bet=10,
@@ -47,19 +47,19 @@ r = HouseRules(
 
 This simulations also allows the user to customize individual players and have as many as 7 playing at a table at once. Individual players can have the following properties:
 
-- Word or set of words a player is referred to as `name`
+- Unique word or set of words a player is referred to as `name`
 - Amount of money a player starts out with when sitting down at a table `bankroll`
 - Minimum amount of money a player is willing to wager when playing a hand `min_bet`
 - Ratio of maximum bet to minimum bet `bet_spread`
-- Name of the playing strategy used by the player `play_strategy`
-    - All players adhere to Basic strategy for playing decisions
-- Name of the betting strategy used by the player `bet_strategy`
+- Playing strategy used by the player `play_strategy`
+    - All players adhere to *Basic* strategy for playing decisions
+- Betting strategy used by the player `bet_strategy`
     - Options include *Flat* or *Variable*
-- Name of the card counting strategy used by the player, if any `count_strategy`
-    - Options include strategies that rely on true counts (*Hi-Lo*, *Omega II*, *Halves*, or *Zen Count*) as well as running counts (*Hi-Opt I*, *Hi-Opt II*)
+- Card counting strategy used by the player, if any `count_strategy`
+    - Options include strategies that rely on running counts (*Hi-Opt I*, *Hi-Opt II*) as well as true counts (*Hi-Lo*, *Omega II*, *Halves*, or *Zen Count*)
 - Accuracy of the running or true count `count_accuracy`
-   - Indicates that a player can compute the true or running count to the nearest *0.1*, *0.5*, or *1* 
-- Player sits out but remains counting cards `back_counting` 
+   - Indicates that a player can compute the running or true count to the nearest *0.1*, *0.5*, or *1* 
+- Strategy in which a player continues to count cards but does not play a hand `back_counting` 
 - Count at which the back counter will start playing hands at the table `back_counting_entry`
 - Count at which the back counter will stop playing hands at the table `back_counting_exit`
 
