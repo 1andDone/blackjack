@@ -19,7 +19,7 @@ This simulation allows the user to fully customize the house rules. By default, 
 - Players are allowed to surrender after dealer checks for blackjack and forfeit half their original wager `late_surrender`
 - 21 on a split Ace does not count as Blackjack `default`
 
-Additional parameters allows the user to specify:
+Additional parameters allows the user to specify the following:
 
 - Minimum bet allowed at the table `min_bet`
 - Maximum bet allowed at the table `max_bet`
