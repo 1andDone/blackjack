@@ -45,7 +45,9 @@ class Player(object):
 
         """
         if bankroll <= rules.min_bet:
-            raise ValueError('Initial bankroll must be greater than minimum bet.')
+            raise ValueError('Initial bankroll must be greater than table minimum bet.')
+        if bankroll <= min_bet:
+            raise ValueError('Initial bankroll must be greater than player minimum bet.')
         if bet_strategy == 'Variable' and bet_spread < 1:
             raise ValueError('Bet spread must be greater than 1.')
         if min_bet < rules.min_bet or min_bet > rules.max_bet:
