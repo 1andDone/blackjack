@@ -56,7 +56,7 @@ This simulations also allows the user to customize individual players and have a
 - Betting strategy used by the player `bet_strategy`
     - Options include *Flat* or *Variable*
 - Card counting strategy used by the player, if any `count_strategy`
-    - Options include strategies that rely on running counts (*Hi-Opt I*, *Hi-Opt II*) as well as true counts (*Hi-Lo*, *Omega II*, *Halves*, or *Zen Count*)
+    - Options include balanced counting systems such as *Hi-Lo*, *Hi-Opt I*, *Hi-Opt II*, *Omega II*, *Halves*, and *Zen Count*
 - Accuracy of the running or true count `count_accuracy`
    - Indicates that a player can compute the running or true count to the nearest *0.1*, *0.5*, or *1* 
 - Strategy in which a player continues to count cards but does not play a hand `back_counting` 
