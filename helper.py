@@ -57,7 +57,7 @@ def max_count_hand(hand):
     soft_total, hard_total = count_hand(hand)
 
     if soft_total <= 21 and hard_total <= 21:
-        return max(soft_total, hard_total)
+        return soft_total
     return hard_total
 
 

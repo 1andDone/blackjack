@@ -1,7 +1,7 @@
 import pytest
 
-from helper import count_hand, max_count_hand, splittable
 from house_rules import HouseRules
+from helper import count_hand, max_count_hand, splittable
 
 
 def test_count_hand():

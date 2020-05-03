@@ -5,7 +5,6 @@ from cards import Cards
 from counting_strategy import CountingStrategy
 from table import Table
 from simulation_stats import SimulationStats
-
 from gameplay import players_place_bets, deal_hands, players_play_hands, dealer_turn, dealer_plays_hand, compare_hands
 from figures import net_winnings_per_shoe, cumulative_net_winnings_per_shoe, bankroll_growth
 

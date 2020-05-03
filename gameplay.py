@@ -349,7 +349,7 @@ def compare_hands(table, rules, stats, dealer_hand):
                             initial_amount=player_initial_bet
                         )
                     else:
-                        raise ValueError('Impossible scenario when playing heads up against dealer.')
+                        raise ValueError('Impossible when playing heads up against dealer.')
 
                 elif not p.get_natural_blackjack() and dealer_hand_length > 2:  # push - both dealer/player have 21
                     p.increment_bankroll(amount=player_bet)
@@ -361,7 +361,7 @@ def compare_hands(table, rules, stats, dealer_hand):
                     )
 
                 else:
-                    raise ValueError('Impossible for a dealer to get a natural 21 and a player to have 3+ cards.')
+                    raise ValueError('Impossible for a dealer to have a natural 21 and a player to have 3+ cards.')
 
             elif p.get_natural_blackjack():  # player has natural 21
                 p.increment_bankroll(amount=(1 + rules.blackjack_payout) * player_bet)

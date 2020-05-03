@@ -1,11 +1,12 @@
 import pytest
-from gameplay import players_place_bets, deal_hands, players_play_hands, dealer_turn, dealer_plays_hand, compare_hands
+
 from table import Table
 from house_rules import HouseRules
 from player import Player
 from cards import Cards
 from counting_strategy import CountingStrategy
 from simulation_stats import SimulationStats
+from gameplay import players_place_bets, deal_hands, players_play_hands, dealer_turn, dealer_plays_hand, compare_hands
 
 
 def test_players_place_bets():
