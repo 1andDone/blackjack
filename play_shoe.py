@@ -16,8 +16,10 @@ class PlayShoe(object):
     players and dealer.
 
     """
-    def __init__(self, rules, players, seed_number=None, shoe_size=6,
-                 penetration=0.75, simulations=10000, figures=False):
+    def __init__(
+            self, rules, players, seed_number=None, shoe_size=6,
+            penetration=0.75, simulations=10000, figures=False
+    ):
         """
         Parameters
         ----------
@@ -87,42 +89,26 @@ class PlayShoe(object):
                 # add back counters to the table if the count is favorable
                 for p in self.players:
                     if p.get_back_counting() and p not in t.get_players() and current_bankroll[p.get_name()] >= \
-                            self.rules.min_bet:
-                        if p.get_count_strategy() in ['Hi-Lo', 'Omega II', 'Halves', 'Zen Count']:
-                            if cs.true_count(strategy=p.get_count_strategy(), accuracy=p.get_count_accuracy()) >= \
-                                    p.get_back_counting_entry():
-                                t.add_player(player=p)
-                        else:
-                            if cs.running_count(strategy=p.get_count_strategy()) >= p.get_back_counting_entry():
-                                t.add_player(player=p)
+                            self.rules.min_bet and p.get_count_strategy() is not None:
+                        if cs.true_count(strategy=p.get_count_strategy(), accuracy=p.get_count_accuracy()) >= \
+                                p.get_back_counting_entry():
+                            t.add_player(player=p)
 
                 # remove back counters from the table if the count is not favorable
                 for p in self.players:
-                    if p.get_back_counting() and p in t.get_players():
-                        if p.get_count_strategy() in ['Hi-Lo', 'Omega II', 'Halves', 'Zen Count']:
-                            if cs.true_count(strategy=p.get_count_strategy(), accuracy=p.get_count_accuracy()) <= \
-                                    p.get_back_counting_exit():
-                                t.remove_player(player=p)
-                        else:
-                            if cs.running_count(strategy=p.get_count_strategy()) <= p.get_back_counting_exit():
-                                t.remove_player(player=p)
+                    if p.get_back_counting() and p in t.get_players() and p.get_count_strategy() is not None:
+                        if cs.true_count(strategy=p.get_count_strategy(), accuracy=p.get_count_accuracy()) <= \
+                                p.get_back_counting_exit():
+                            t.remove_player(player=p)
 
                 for p in t.get_players():
 
                     # get true count
-                    if p.get_count_strategy() in ['Hi-Lo', 'Omega II', 'Halves', 'Zen Count']:
+                    if p.get_count_strategy() is not None:
                         p.set_count(
                             count=cs.true_count(
                                     strategy=p.get_count_strategy(),
                                     accuracy=p.get_count_accuracy()
-                            )
-                        )
-
-                    # get running count
-                    elif p.get_count_strategy() in ['Hi-Opt I', 'Hi-Opt II']:
-                        p.set_count(
-                            count=cs.running_count(
-                                strategy=p.get_count_strategy()
                             )
                         )
 

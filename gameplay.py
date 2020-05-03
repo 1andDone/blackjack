@@ -21,16 +21,13 @@ def players_place_bets(table, rules, counting_strategy):
     # need to use copy because players can be removed mid-iteration
     for p in table.get_players().copy():
 
-        if p.get_count_strategy() in ['Hi-Lo', 'Omega II', 'Halves', 'Zen Count']:
+        if p.get_count_strategy() in ['Hi-Lo', 'Hi-Opt I', 'Hi-Opt II', 'Omega II', 'Halves', 'Zen Count']:
             amount = p.bet_strategy.initial_bet(
                                         min_bet=p.get_min_bet(),
                                         bet_spread=p.get_bet_spread(),
                                         count=counting_strategy.true_count(strategy=p.get_count_strategy()),
                                         count_strategy=p.get_count_strategy()
             )
-
-        elif p.get_count_strategy() in ['Hi-Opt I', 'Hi-Opt II']:
-            raise NotImplementedError('No implementation for running counts')
 
         else:
             amount = p.bet_strategy.initial_bet(
@@ -318,7 +315,7 @@ def compare_hands(table, rules, stats, dealer_hand):
 
             # only want the initial bet for the first hand
             if k == 1:
-                player_initial_bet = p.get_initial_bet(key=k)
+                player_initial_bet = p.get_initial_bet()
             else:
                 player_initial_bet = 0
 

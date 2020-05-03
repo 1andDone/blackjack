@@ -1,5 +1,6 @@
 import card_values as cv
 
+
 def count_hand(hand):
     """
     Returns the soft and hard totals for a given hand.
@@ -57,10 +58,7 @@ def max_count_hand(hand):
 
     if soft_total <= 21 and hard_total <= 21:
         return max(soft_total, hard_total)
-    elif soft_total <= 21:
-        return soft_total
-    else:
-        return hard_total
+    return hard_total
 
 
 def splittable(rules, hand):

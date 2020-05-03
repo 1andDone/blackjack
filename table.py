@@ -1,5 +1,6 @@
 from player import Player
 
+
 class Table(object):
     """
     Table is an object that represents an area where one or many players can play.

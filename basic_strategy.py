@@ -61,9 +61,6 @@ s17_splits_array = np.array([
     ["P",	"P",	"P",	"P",	"P",	"P",	"P",	"P",	"P",	"P",	"P",	"P",	"P"],
     ["P",	"P",	"P",	"P",	"P",	"S",	"P",	"P",	"S",	"S",	"S",	"S",	"S"],
     ["S",	"S",	"S",	"S",	"S",	"S",	"S",	"S",	"S",	"S",	"S",	"S",	"S"],
-    ["S",	"S",	"S",	"S",	"S",	"S",	"S",	"S",	"S",	"S",	"S",	"S",	"S"],
-    ["S",	"S",	"S",	"S",	"S",	"S",	"S",	"S",	"S",	"S",	"S",	"S",	"S"],
-    ["S",	"S",	"S",	"S",	"S",	"S",	"S",	"S",	"S",	"S",	"S",	"S",	"S"],
     ["P",	"P",	"P",	"P",	"P",	"P",	"P",	"P",	"P",	"P",	"P",	"P",	"P"]
 ])
 
@@ -111,13 +108,11 @@ h17_splits_array = np.array([
     ["P",	"P",	"P",	"P",	"P",	"P",	"P",	"P",	"P",	"P",	"P",	"P",	"Rp"],
     ["P",	"P",	"P",	"P",	"P",	"S",	"P",	"P",	"S",	"S",	"S",	"S",	"S"],
     ["S",	"S",	"S",	"S",	"S",	"S",	"S",	"S",	"S",	"S",	"S",	"S",	"S"],
-    ["S",	"S",	"S",	"S",	"S",	"S",	"S",	"S",	"S",	"S",	"S",	"S",	"S"],
-    ["S",	"S",	"S",	"S",	"S",	"S",	"S",	"S",	"S",	"S",	"S",	"S",	"S"],
-    ["S",	"S",	"S",	"S",	"S",	"S",	"S",	"S",	"S",	"S",	"S",	"S",	"S"],
     ["P",	"P",	"P",	"P",	"P",	"P",	"P",	"P",	"P",	"P",	"P",	"P",	"P"]
 ])
 
 cards_list = ['2', '3', '4', '5', '6', '7', '8', '9', '10', 'J', 'Q', 'K', 'A']
+splits_list = ['2', '3', '4', '5', '6', '7', '8', '9', '10', 'A']
 
 # Nested Dictionaries
 s17_hard = {}
@@ -133,7 +128,7 @@ for row_ix, i in enumerate(range(12, 22)):
         s17_soft[i][j] = s17_soft_array[row_ix][col_ix]
 
 s17_splits = {}
-for row_ix, i in enumerate(cards_list):
+for row_ix, i in enumerate(splits_list):
     s17_splits[i] = {}
     for col_ix, j in enumerate(cards_list):
         s17_splits[i][j] = s17_splits_array[row_ix][col_ix]
@@ -151,7 +146,7 @@ for row_ix, i in enumerate(range(12, 22)):
         h17_soft[i][j] = h17_soft_array[row_ix][col_ix]
 
 h17_splits = {}
-for row_ix, i in enumerate(cards_list):
+for row_ix, i in enumerate(splits_list):
     h17_splits[i] = {}
     for col_ix, j in enumerate(cards_list):
         h17_splits[i][j] = h17_splits_array[row_ix][col_ix]

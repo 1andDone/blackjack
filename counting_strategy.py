@@ -31,8 +31,8 @@ class CountingStrategy(object):
         return self.running_count_dict[strategy]
 
     def true_count(self, strategy, accuracy=0.5):
-        if strategy not in ['Hi-Lo', 'Omega II', 'Halves', 'Zen Count']:
-            raise ValueError('Strategy must be "Hi-Lo", "Omega II", "Halves", or "Zen Count".')
+        if strategy not in ['Hi-Lo', 'Hi-Opt I', 'Hi-Opt II', 'Omega II', 'Halves', 'Zen Count']:
+            raise ValueError('Strategy must be "Hi-Lo", "Hi-Opt I", "Hi-Opt II", "Omega II", "Halves", or "Zen Count".')
         if accuracy not in [0.1, 0.5, 1]:
             raise ValueError('Accuracy of true count must be to the nearest 0.1, 0.5, or 1.')
         if accuracy == 0.1:

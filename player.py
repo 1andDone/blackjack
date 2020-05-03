@@ -1,3 +1,4 @@
+import card_values as cv
 from helper import count_hand, splittable
 from playing_strategy import PlayingStrategy
 from betting_strategy import BettingStrategy
@@ -8,9 +9,11 @@ class Player(object):
     Player is an object that represents an individual player at the table.
 
     """
-    def __init__(self, name, rules, bankroll, min_bet, bet_spread=1, play_strategy='Basic',
-                 bet_strategy='Flat', count_strategy=None, count_accuracy=0.5, back_counting=False,
-                 back_counting_entry=0, back_counting_exit=0):
+    def __init__(
+            self, name, rules, bankroll, min_bet, bet_spread=1, play_strategy='Basic',
+            bet_strategy='Flat', count_strategy=None, count_accuracy=0.5, back_counting=False,
+            back_counting_entry=0, back_counting_exit=0
+    ):
         """
         Parameters
         ----------
@@ -44,10 +47,10 @@ class Player(object):
             Count at which the back counter will stop playing hands at the table (default is 0)
 
         """
-        if bankroll <= rules.min_bet:
-            raise ValueError('Initial bankroll must be greater than table minimum bet.')
-        if bankroll <= min_bet:
-            raise ValueError('Initial bankroll must be greater than player minimum bet.')
+        if bankroll < rules.min_bet:
+            raise ValueError('Initial bankroll must be greater than or equal to table minimum bet.')
+        if bankroll < min_bet:
+            raise ValueError('Initial bankroll must be greater than or equal to player minimum bet.')
         if bet_strategy == 'Variable' and bet_spread < 1:
             raise ValueError('Bet spread must be greater than 1.')
         if min_bet < rules.min_bet or min_bet > rules.max_bet:
@@ -165,8 +168,8 @@ class Player(object):
     def get_hand(self, key):
         return self.hands_dict[key]['hand']
 
-    def get_initial_bet(self, key):
-        return self.hands_dict[key]['initial bet']
+    def get_initial_bet(self):
+        return self.hands_dict[1]['initial bet']
 
     def get_bet(self, key):
         return self.hands_dict[key]['bet']
@@ -209,6 +212,10 @@ class Player(object):
             return 'H'
         elif splittable(rules=self.rules, hand=hand) and num_hands < self.rules.max_hands \
                 and self.sufficient_funds(amount=amount):
+            if hand[0] == 'A':
+                return self.play_strategy.splits()[hand[0]][dealer_up_card]
+            elif cv.card_values[hand[0]] == 10:
+                return self.play_strategy.splits()['10'][dealer_up_card]
             return self.play_strategy.splits()[hand[0]][dealer_up_card]
         else:
             soft_total, hard_total = count_hand(hand=hand)

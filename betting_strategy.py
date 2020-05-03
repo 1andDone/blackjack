@@ -22,7 +22,7 @@ class BettingStrategy(object):
         if self.strategy == 'Flat':
             return min_bet
         elif self.strategy == 'Variable':
-            if count_strategy in ['Hi-Lo', 'Omega II', 'Halves', 'Zen Count']:
+            if count_strategy in ['Hi-Lo', 'Hi-Opt I', 'Hi-Opt II', 'Omega II', 'Halves', 'Zen Count']:
                 if count < 1:
                     return min_bet
                 elif count < 3:
@@ -34,4 +34,4 @@ class BettingStrategy(object):
                 else:
                     return min_bet * bet_spread
             else:
-                raise NotImplementedError('No implementation for running counts.')
+                raise NotImplementedError('No implementation for this card counting strategy.')

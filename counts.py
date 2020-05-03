@@ -1,6 +1,4 @@
-# only balanced counting strategies used (as of now)
-# true count strategies: Hi-Lo, Zen card, Omega II, Halves
-# running count strategies: Hi-Opt I, Hi-Opt II
+# only balanced counting strategies used
 
 hi_lo = {'Hi-Lo': {
     '2': 1,

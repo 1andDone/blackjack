@@ -57,8 +57,8 @@ This simulations also allows the user to customize individual players and have a
     - Options include *Flat* or *Variable*
 - Card counting strategy used by the player, if any `count_strategy`
     - Options include strategies that rely on running counts (*Hi-Opt I*, *Hi-Opt II*) as well as true counts (*Hi-Lo*, *Omega II*, *Halves*, or *Zen Count*)
-- Accuracy of the running or true count `count_accuracy`
-   - Indicates that a player can compute the running or true count to the nearest *0.1*, *0.5*, or *1* 
+- Accuracy of the true count `count_accuracy`
+   - Indicates that a player can compute the true count to the nearest *0.1*, *0.5*, or *1* 
 - Strategy in which a player continues to count cards but does not play a hand `back_counting` 
 - Count at which the back counter will start playing hands at the table `back_counting_entry`
 - Count at which the back counter will stop playing hands at the table `back_counting_exit`
@@ -181,12 +181,12 @@ Setting `figures=True` in the shoe simulation set up creates a few plots that he
 ![Sarah Spotter Figure 1](/documentation/sarah_spotter_fig1.png?raw=true)
 ![Benny Big Money Figure 1](/documentation/benny_big_money_fig1.png?raw=true)
 
-The two plots above are only created for players that are counting cards and show the net winnings per shoe for each hand played at a given true or running count. 
+The two plots above are only created for players that are counting cards and show the net winnings per shoe for each hand played at a given true count. 
 
 ![Sarah Spotter Figure 2](/documentation/sarah_spotter_fig2.png?raw=true)
 ![Benny Big Money Figure 2](/documentation/benny_big_money_fig2.png?raw=true)
 
-The two plots above are only created for players that are counting cards and show the net cumulative net winnings per shoe for each hand played at a given true or running count. 
+The two plots above are only created for players that are counting cards and show the net cumulative net winnings per shoe for each hand played at a given true count. 
 
 ![Sarah Spotter Figure 3](/documentation/sarah_spotter_fig3.png?raw=true)
 ![Joe Average Figure 3](/documentation/joe_average_fig3.png?raw=true)

@@ -1,5 +1,6 @@
 import random
 
+
 class Cards(object):
     """
     Cards is an object that deals with a shoe at a table.
