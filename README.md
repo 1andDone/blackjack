@@ -54,7 +54,7 @@ This simulations also allows the user to customize individual players and have a
 - Playing strategy used by the player `play_strategy`
     - All players adhere to *Basic* strategy for playing decisions
 - Betting strategy used by the player `bet_strategy`
-    - Options include *Flat* or *Variable*
+    - Options include *Flat* or *Spread*
 - Card counting strategy used by the player, if any `count_strategy`
     - Options include balanced counting systems such as *Hi-Lo*, *Hi-Opt I*, *Hi-Opt II*, *Omega II*, *Halves*, and *Zen Count*
 - Accuracy of the true count `count_accuracy`
@@ -91,7 +91,7 @@ p = [
             min_bet=25,
             bet_spread=12,
             play_strategy='Basic',
-            bet_strategy='Variable',
+            bet_strategy='Spread',
             count_strategy='Hi-Lo',
             count_accuracy=0.1,
             back_counting=True,

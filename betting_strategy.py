@@ -11,27 +11,21 @@ class BettingStrategy(object):
         strategy : str
             Name of the betting strategy used by a player at the table
         """
-        if strategy not in ['Flat', 'Variable']:
-            raise ValueError('Betting strategy must be either "Flat" or "Variable".')
+        if strategy not in ['Flat', 'Spread']:
+            raise ValueError('Betting strategy must be either "Flat" or "Spread".')
         self.strategy = strategy
 
     def get_strategy(self):
         return self.strategy
 
-    def initial_bet(self, min_bet, bet_spread, count=None, count_strategy=None):
+    def initial_bet(self, min_bet, bet_spread, bet_scale=None, count=None, count_strategy=None):
         if self.strategy == 'Flat':
             return min_bet
-        elif self.strategy == 'Variable':
+        else:
             if count_strategy in ['Hi-Lo', 'Hi-Opt I', 'Hi-Opt II', 'Omega II', 'Halves', 'Zen Count']:
-                if count < 1:
-                    return min_bet
-                elif count < 3:
-                    return min_bet * (1 + (0.25 * (bet_spread - 1)))
-                elif count < 5:
-                    return min_bet * (1 + (0.5 * (bet_spread - 1)))
-                elif count < 10:
-                    return min_bet * (1 + (0.75 * (bet_spread - 1)))
-                else:
-                    return min_bet * bet_spread
-            else:
-                raise NotImplementedError('No implementation for this card counting strategy.')
+                amount = bet_spread * min_bet
+                for key, value in bet_scale.items():
+                    if count < key:
+                        amount = value
+                        break
+                return amount

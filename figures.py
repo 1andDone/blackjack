@@ -57,7 +57,7 @@ def format_title(
         play_strategy='Basic Strategy' if play_strategy == 'Basic' else play_strategy,
         bet_strategy=', ' + bet_strategy + ' Bet' if bet_strategy == 'Flat' else '',
         bet_spread=', 1-' + str(int(bet_spread) if bet_spread - int(bet_spread) == 0
-                   else bet_spread) + ' Bet Spread' if bet_strategy == 'Variable' else '',
+                   else bet_spread) + ' Bet Spread' if bet_strategy == 'Spread' else '',
         initial_bankroll='\${:.2f}'.format(int(initial_bankroll)) if initial_bankroll - int(initial_bankroll) == 0
                           else '\${:.2f}'.format(initial_bankroll),
         min_bet='\${:.2f}'.format(int(min_bet)) if min_bet - int(min_bet) == 0 else '\${:.2f}'.format(min_bet),

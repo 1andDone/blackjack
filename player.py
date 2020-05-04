@@ -10,9 +10,9 @@ class Player(object):
 
     """
     def __init__(
-            self, name, rules, bankroll, min_bet, bet_spread=1, play_strategy='Basic',
-            bet_strategy='Flat', count_strategy=None, count_accuracy=0.5, back_counting=False,
-            back_counting_entry=0, back_counting_exit=0
+            self, name, rules, bankroll, min_bet, bet_spread=1, bet_count=None,
+            bet_count_amount=None, play_strategy='Basic', bet_strategy='Flat', count_strategy=None,
+            count_accuracy=0.5, back_counting=False, back_counting_entry=0, back_counting_exit=0
     ):
         """
         Parameters
@@ -27,6 +27,12 @@ class Player(object):
             Minimum amount of money a player is willing to wager when playing a hand
         bet_spread : float, optional
             Ratio of maximum bet to minimum bet (default is 1)
+        bet_count : list, optional
+            List of counts in ascending order, used to create an evenly spaced bet scale
+            (default is None)
+        bet_count_amount : list of tuples, optional
+            List of tuples indicating the count and the amount wagered at that count, used to
+            create a customized bet scale (default is None)
         play_strategy : str, optional
             Name of the play strategy used by the player (default is "Basic", which implies
             the player plays optimally)
@@ -51,18 +57,33 @@ class Player(object):
             raise ValueError('Initial bankroll must be greater than or equal to table minimum bet.')
         if bankroll < min_bet:
             raise ValueError('Initial bankroll must be greater than or equal to player minimum bet.')
-        if bet_strategy == 'Variable' and bet_spread < 1:
+        if bet_strategy == 'Spread' and bet_spread < 1:
             raise ValueError('Bet spread must be greater than 1.')
         if min_bet < rules.min_bet or min_bet > rules.max_bet:
             raise ValueError('Minimum bet is not allowed according to the table rules.')
         if bet_spread > float(rules.max_bet/min_bet):
             raise ValueError('Bet spread is too large.')
-        if bet_strategy == 'Variable' and count_strategy is None:
-            raise ValueError('Count strategy cannot be None with a "Variable" betting strategy.')
+        if bet_strategy == 'Spread' and count_strategy is None:
+            raise ValueError('Count strategy cannot be None with a "Spread" betting strategy.')
+        if bet_strategy == 'Spread' and bet_count is None and bet_count_amount is None:
+            raise ValueError('Bet count interval and Bet Scale cannot be None with a "Spread" betting strategy.')
+        if bet_count is not None and bet_count_amount is not None:
+            raise ValueError('Bet count interval and Bet scale cannot both be not None.')
+        if bet_count is not None and sorted(bet_count) != bet_count:
+            raise ValueError('Bet count interval must be sorted from least to greatest counts.')
+        if bet_count_amount is not None and sorted(bet_count_amount, key=lambda x: x[0]) != bet_count_amount:
+            raise ValueError('Bet count amount must be sorted from least to greatest counts.')
+        if bet_count_amount is not None and sorted(bet_count_amount, key=lambda x: x[1]) != bet_count_amount:
+            raise ValueError('Bet count amount must be sorted from least to greatest amounts.')
+        if bet_count_amount is not None and bet_count_amount[0][1] != min_bet:
+            raise ValueError('First amount in bet count amount must be the minimum bet.')
+        if bet_count_amount is not None and bet_count_amount[len(bet_count_amount) - 1][1] >= min_bet * bet_spread:
+            raise ValueError('Last amount in bet count amount must be less than the maximum bet as determined by the '
+                             'bet spread.')
         if play_strategy not in ['Basic']:
             raise ValueError('Playing strategy must be "Basic".')
-        if bet_strategy not in ['Flat', 'Variable']:
-            raise ValueError('Betting strategy must be either "Flat" or "Variable".')
+        if bet_strategy not in ['Flat', 'Spread']:
+            raise ValueError('Betting strategy must be either "Flat" or "Spread".')
         if count_strategy is not None:
             if count_strategy not in ['Hi-Lo', 'Hi-Opt I', 'Hi-Opt II', 'Omega II', 'Halves', 'Zen Count']:
                 raise ValueError('Count Strategy must be "Hi-Lo", "Hi-Opt I", "Hi-Opt II", "Omega II", '
@@ -78,6 +99,18 @@ class Player(object):
         self.bankroll = float(bankroll)
         self.min_bet = float(min_bet)
         self.bet_spread = float(bet_spread)
+        if bet_strategy == 'Flat':
+            self.bet_scale = None
+        if bet_strategy == 'Spread' and (bet_count is not None or bet_count_amount is not None):
+            bet_scale = {}
+            if bet_count is not None:
+                for ix, e in enumerate(bet_count):
+                    bet_scale[e] = (1 + (((bet_spread - 1) / len(bet_count)) * ix)) * min_bet
+                self.bet_scale = bet_scale
+            else:
+                for count, amount in bet_count_amount:
+                    bet_scale[count] = amount
+            self.bet_scale = bet_scale
         self.play_strategy = PlayingStrategy(rules=rules, strategy=play_strategy)
         self.bet_strategy = BettingStrategy(strategy=bet_strategy)
         self.count_strategy = count_strategy
@@ -114,6 +147,9 @@ class Player(object):
 
     def get_bet_spread(self):
         return self.bet_spread
+
+    def get_bet_scale(self):
+        return self.bet_scale
 
     def increment_bankroll(self, amount):
         self.bankroll = self.bankroll + amount
