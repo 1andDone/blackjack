@@ -51,14 +51,19 @@ This simulations also allows the user to customize individual players and have a
 - Amount of money a player starts out with when sitting down at a table `bankroll`
 - Minimum amount of money a player is willing to wager when playing a hand `min_bet`
 - Ratio of maximum bet to minimum bet `bet_spread`
+- List of true counts in ascending order, used to create an evenly spaced bet scale `bet_count`
+    - For example, if `min_bet=10`, `bet_strategy='Spread'` and `bet_spread=2`, setting `bet_count=[1, 5]` would create three evenly betting intervals, each incremented by the same amount - one for true counts less than 1 (player bets $10), another for true counts greater than or equal to 1 and less than 5 (player bets $15), and finally, another for true counts greater than or equal to 5 (player bets $20, equivalent to `min_bet * bet_spread`). 
+- List of tuples indicating the true count and the amount wagered at that true count, used to create a customized bet scale `bet_count_amount`
+    - For example, if `min_bet=10`, `bet_strategy='Spread'` and `bet_spread=3`, setting `bet_count_amount=[(1, 10), (3, 17.50)]` would create three betting intervals, each incremented by a custom amount - one for true counts less than 1 (player bets $10), another for true counts greater than or equal to 1 and less than 3 (player bets $17.50), and finally, another for true counts greater than or equal to 3 (player bets $30, equivalent to `min_bet * bet_spread`). 
 - Playing strategy used by the player `play_strategy`
-    - All players adhere to *Basic* strategy for playing decisions
+    - As of now, all players adhere to *Basic* strategy for playing decisions
 - Betting strategy used by the player `bet_strategy`
     - Options include *Flat* or *Spread*
 - Card counting strategy used by the player, if any `count_strategy`
     - Options include balanced counting systems such as *Hi-Lo*, *Hi-Opt I*, *Hi-Opt II*, *Omega II*, *Halves*, and *Zen Count*
 - Accuracy of the true count `count_accuracy`
    - Indicates that a player can compute the true count to the nearest *0.1*, *0.5*, or *1*
+- Minimum true count at which a player will purchase insurance, if available `insurance_count`
 - Strategy in which a player continues to count cards but does not play a hand `back_counting` 
 - Count at which the back counter will start playing hands at the table `back_counting_entry`
 - Count at which the back counter will stop playing hands at the table `back_counting_exit`
@@ -67,14 +72,17 @@ An example table setup is seen below:
 ```
 p = [
         Player(
-            name='Sarah Spotter',
+            name='Chris Counter',
             rules=r,
             bankroll=12000,
             min_bet=10,
+            bet_spread=10,
+            bet_count_amount=[(1, 10), (3, 50), (7, 75)],
             play_strategy='Basic',
-            bet_strategy='Flat',
-            count_strategy='Hi-Lo',
-            count_accuracy=0.5),
+            bet_strategy='Spread',
+            count_strategy='Halves',
+            insurance_count=5
+        ),
         Player(
             name='Joe Average',
             rules=r,
@@ -85,11 +93,12 @@ p = [
             count_strategy=None,
         ),
         Player(
-            name='Benny Big Money',
+            name='Benny Back Counter',
             rules=r,
             bankroll=50000,
             min_bet=25,
             bet_spread=12,
+            bet_count=[1, 3, 5, 10],
             play_strategy='Basic',
             bet_strategy='Spread',
             count_strategy='Hi-Lo',
@@ -100,7 +109,11 @@ p = [
         )
 ]
 ```
-In the example above, Sarah Spotter will be the first to act every game. She sits down at the table with a $12,000 bankroll and will bet the table minimum ($10) each hand. She is counting cards using the Hi-Lo strategy and is able to compute the true count to the nearest 0.5. The next player to act, Joe Average, sits down at the table with $750 and will make $15 bets each hand. He does not bother counting cards, as he's just playing for fun. Finally, the last player, Benny Big Money, is back counting while using the Hi-Lo strategy. He only starts playing at the table when the Hi-Lo true count is 5 or higher and will leave the table if it drops below 0. His brain is a calculator and he's able to compute the current true count to the nearest 0.1. He starts off with $50,000 dollars and will bet a minimum of $25 each hand but is willing to bet up to $300 on any given hand, depending on the Hi-Lo true count.
+In the example above, Chris Counter will be the first to act every game. He sits down at the table with a $12,000 bankroll and will bet the using a custom bet scale, where his minimum bet is $10. He will bet $10 for all true counts less than 1, $50 for all true counts greater than or equal to 1 and less than 5, $75 for all true counts greater than or equal to 5 and less than 7, and finally $100 for all true counts greater than or equal to 7. He is counting cards using the Halves strategy and is able to compute the true count to the nearest 0.5. Additionally, Chris will make the insurance side bet offered at the table when true counts are greater than or equal to 5.  
+
+The next player to act, Joe Average, sits down at the table with $750 and will make $15 bets each hand. He does not bother counting cards, as he's just playing for fun. 
+
+Finally, the last player, Benny Back Counter, is back counting while using the Hi-Lo strategy. He only starts playing at the table when the Hi-Lo true count is 5 or higher and will leave the table if it drops below 0. His brain is a calculator and he's able to compute the current true count to the nearest 0.1. He starts off with $50,000 dollars and will bet a minimum of $25 each hand but is willing to bet up to $300 on any given hand, depending on the Hi-Lo true count. The exact amount he bets is based on an evenly spaced betting scale where he bets $25 dollars for all true counts less than 1, $93.75 for all true counts greater than or equal to 1 but less than 3, $162.50 for all true counts greater than or equal to 3 but less than 5, $231.25 for all true counts greater than or equal to 5 but less than 10, and finally, $300 for all true counts greater than or equal to 10 (notice how all bets are evenly spaced). 
 
 ## Setup Shoe Simulations
 
@@ -143,14 +156,14 @@ By default, basic shoe simulation statistics will be printed off. These include:
 - **Element of risk** - ratio of the total net winnings to the total amount bet
 
 ```
-Player: Sarah Spotter
+Player: Chris Counter
 ---------------------
 Total hands: 431303.0
-Total amount bet: 4750430.0
-Total initial bet: 4195060.0
-Total net winnings: -8515.0
-House edge: -0.20297683465790714
-Element of risk: -0.17924693133042693
+Total amount bet: 11230950.0
+Total initial bet: 9961550.0
+Total net winnings: 41925.0
+House edge: 0.42086823837655785
+Element of risk: 0.37329878594419885
 
 
 Player: Joe Average
@@ -163,8 +176,8 @@ House edge: -0.2809148175472448
 Element of risk: -0.24834437086092717
 
 
-Player: Benny Big Money
------------------------
+Player: Benny Back Counter
+--------------------------
 Total hands: 11567.0
 Total amount bet: 2562887.5
 Total initial bet: 2324962.5
@@ -172,25 +185,25 @@ Total net winnings: 86881.25
 House edge: 3.7368882293800434
 Element of risk: 3.3899751744858095
 ```
-In the example above, over the course of the simulation, Sarah Spotter lost a good portion of her original bankroll while playing every hand of simulation. Joe Average lasted 18,097 hands before having to leave the table after losing all but $7.50 of his initial bankroll. Benny Big Money played the least amount of hands among the players but walked away $86,881.25 richer. 
+In the example above, over the course of the simulation, Chris Counter won $41,925 while playing every hand of simulation. Joe Average lasted 18,097 hands before having to leave the table after losing all but $7.50 of his initial bankroll. Benny Back Counter played the fewest amount of hands among the players at the table but walked away with the most winnings, $86,881.25.
 
 ## Figures
 
 Setting `figures=True` in the shoe simulation set up creates a few plots that help visualize our results.
 
-![Sarah Spotter Figure 1](/documentation/sarah_spotter_fig1.png?raw=true)
-![Benny Big Money Figure 1](/documentation/benny_big_money_fig1.png?raw=true)
+![Chris Counter Figure 1](/documentation/chris_counter_fig1.png?raw=true)
+![Benny Back Counter Figure 1](/documentation/benny_back_counter_fig1.png?raw=true)
 
 The two plots above are only created for players that are counting cards and show the net winnings per shoe for each hand played at a given true count. 
 
-![Sarah Spotter Figure 2](/documentation/sarah_spotter_fig2.png?raw=true)
-![Benny Big Money Figure 2](/documentation/benny_big_money_fig2.png?raw=true)
+![Chris Counter Figure 2](/documentation/chris_counter_fig2.png?raw=true)
+![Benny Back Counter Figure 2](/documentation/benny_back_counter_fig2.png?raw=true)
 
 The two plots above are only created for players that are counting cards and show the net cumulative net winnings per shoe for each hand played at a given true count. 
 
-![Sarah Spotter Figure 3](/documentation/sarah_spotter_fig3.png?raw=true)
+![Chris Counter Figure 3](/documentation/chris_counter_fig3.png?raw=true)
 ![Joe Average Figure 3](/documentation/joe_average_fig3.png?raw=true)
-![Benny Big Money Figure 3](/documentation/benny_big_money_fig3.png?raw=true)
+![Benny Back Counter Figure 3](/documentation/benny_back_counter_fig3.png?raw=true)
 
 The three plots above show the bankroll growth over the course of the shoe simulations. 
 

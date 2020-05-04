@@ -45,7 +45,7 @@ class Player(object):
         count_accuracy : float, optional
             Accuracy of the card counting strategy (default is 0.5)
         insurance_count : float, optional
-            Count at which player purchases insurance, if available (default is None)
+            Minimum count at which a player will purchase insurance, if available (default is None)
         back_counting : bool, optional
             True if player is back counting the shoe (i.e. wonging), false otherwise (default is
             False)
