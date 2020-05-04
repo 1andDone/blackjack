@@ -185,6 +185,8 @@ class PlayShoe(object):
             initial_bet = np.array([])
             overall_bet = np.array([])
             net_winnings = np.array([])
+            player_insurance_win = np.array([])
+            dealer_insurance_win = np.array([])
             push = np.array([])
             player_surrender = np.array([])
             player_bust = np.array([])
@@ -204,6 +206,10 @@ class PlayShoe(object):
                         initial_bet = np.append(initial_bet, i[1])
                     elif i[0] == 'net winnings':
                         net_winnings = np.append(net_winnings, i[1])
+                    elif i[0] == 'player insurance win':
+                        player_insurance_win = np.append(player_insurance_win, i[1])
+                    elif i[0] == 'dealer insurance win':
+                        dealer_insurance_win = np.append(dealer_insurance_win, i[1])
                     elif i[0] == 'player showdown win':
                         player_showdown_win = np.append(player_showdown_win, i[1])
                     elif i[0] == 'dealer showdown win':

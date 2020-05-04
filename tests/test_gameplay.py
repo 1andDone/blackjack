@@ -147,6 +147,54 @@ def setup_table():
     return cards, table, rules, player
 
 
+def test_players_play_hands_buys_insurance(setup_table):
+    """
+    Tests the players_play_hands function when a player buys insurance.
+
+    Parameters
+    ----------
+    setup_table
+        Fixture that sets up a table with a single player
+
+    """
+    cards, table, rules, player = setup_table
+    player.set_count(count=1)
+    player.insurance_count = 0
+    player.hit(key=1, new_card='2')
+    player.hit(key=1, new_card='2')
+
+    players_play_hands(table=table, rules=rules, cards=cards, dealer_hand=['J', 'A'], dealer_up_card='A')
+
+    assert player.get_insurance() is True
+    assert player.get_stand(key=1) is True
+    assert player.get_bankroll() == 85
+    assert player.get_hand(key=1) == ['2', '2']
+
+
+def test_players_play_hands_does_not_buy_insurance(setup_table):
+    """
+    Tests the players_play_hands function when a player does not buy insurance.
+
+    Parameters
+    ----------
+    setup_table
+        Fixture that sets up a table with a single player
+
+    """
+    cards, table, rules, player = setup_table
+    player.set_count(count=0)
+    player.insurance_count = 1
+    player.hit(key=1, new_card='J')
+    player.hit(key=1, new_card='J')
+
+    players_play_hands(table=table, rules=rules, cards=cards, dealer_hand=['J', 'A'], dealer_up_card='A')
+
+    assert player.get_insurance() is False
+    assert player.get_stand(key=1) is True
+    assert player.get_bankroll() == 90
+    assert player.get_hand(key=1) == ['J', 'J']
+
+
 def test_players_play_hands_player_blackjack(setup_table):
     """
     Tests the players_play_hands function when a player has a natural blackjack.
@@ -412,6 +460,33 @@ def test_players_play_hands_double_down_insufficient_funds(setup_table):
     assert player.get_hand(key=1) == ['6', '4', 'A']
 
 
+def test_players_play_hands_no_insurance(setup_table):
+    """
+    Tests the players_play_hands function when a player cannot
+    buy insurance.
+
+    Parameters
+    ----------
+    setup_table
+        Fixture that sets up a table with a single player
+
+    """
+    cards, table, rules, player = setup_table
+    rules.insurance = False
+
+    player.set_count(count=1)
+    player.insurance_count = 0
+
+    player.hit(key=1, new_card='J')
+    player.hit(key=1, new_card='J')
+
+    players_play_hands(table=table, rules=rules, cards=cards, dealer_hand=['K', 'A'], dealer_up_card='A')
+
+    assert player.get_insurance() is False
+    assert player.get_stand(key=1) is True
+    assert player.get_hand(key=1) == ['J', 'J']
+
+
 def test_players_play_hands_no_late_surrender(setup_table):
     """
     Tests the players_play_hands function when a player cannot
@@ -647,6 +722,130 @@ def test_dealer_plays_hand_h17(setup_table):
     assert dealer_plays_hand(rules=rules, cards=cards, dealer_hand=['8', '8'], dealer_hole_card='A') == ['8', '8', 'A']
     assert dealer_plays_hand(rules=rules, cards=cards, dealer_hand=['A', '6'], dealer_hole_card='A') == ['A', '6', 'K']
     assert dealer_plays_hand(rules=rules, cards=cards, dealer_hand=['J', 'J'], dealer_hole_card='A') == ['J', 'J']
+
+
+def test_compare_hands_insurance_dealer_and_player_blackjack(setup_table):
+    """
+    Tests the compare_hands function when a player buys insurance and both
+    the dealer and player have natural blackjack.
+
+    Parameters
+    ----------
+    setup_table
+        Fixture that sets up a table with a single player
+
+    """
+    cards, table, rules, player = setup_table
+    stats = SimulationStats(rules=rules)
+    stats.create_player_key(player_key=player.get_name())
+    stats.create_count_key(player_key=player.get_name(), count_key=0)
+
+    player.set_count(count=0)
+    player.insurance_count = 0
+    player.hit(key=1, new_card='A')
+    player.hit(key=1, new_card='K')
+    player.insurance()
+    player.natural_blackjack()
+    player.increment_bankroll(amount=-0.5 * player.get_initial_bet())
+
+    assert player.get_insurance() is True
+    assert player.get_natural_blackjack() is True
+
+    compare_hands(table=table, rules=rules, stats=stats, dealer_hand=['K', 'A'])
+
+    assert player.get_bankroll() == 110
+
+
+def test_compare_hands_insurance_dealer_blackjack_no_player_blackjack(setup_table):
+    """
+    Tests the compare_hands function when a player buys insurance and the dealer has
+    a natural blackjack but the player does not.
+
+    Parameters
+    ----------
+    setup_table
+        Fixture that sets up a table with a single player
+
+    """
+    cards, table, rules, player = setup_table
+    stats = SimulationStats(rules=rules)
+    stats.create_player_key(player_key=player.get_name())
+    stats.create_count_key(player_key=player.get_name(), count_key=0)
+
+    player.set_count(count=0)
+    player.insurance_count = 0
+    player.hit(key=1, new_card='2')
+    player.hit(key=1, new_card='2')
+    player.insurance()
+    player.increment_bankroll(amount=-0.5 * player.get_initial_bet())
+
+    assert player.get_insurance() is True
+
+    compare_hands(table=table, rules=rules, stats=stats, dealer_hand=['K', 'A'])
+
+    assert player.get_bankroll() == 100
+
+
+def test_compare_hands_insurance_no_dealer_blackjack_player_blackjack(setup_table):
+    """
+    Tests the compare_hands function when a player buys insurance and the player has
+    a natural blackjack but the dealer does not.
+
+    Parameters
+    ----------
+    setup_table
+        Fixture that sets up a table with a single player
+
+    """
+    cards, table, rules, player = setup_table
+    stats = SimulationStats(rules=rules)
+    stats.create_player_key(player_key=player.get_name())
+    stats.create_count_key(player_key=player.get_name(), count_key=0)
+
+    player.set_count(count=0)
+    player.insurance_count = 0
+    player.hit(key=1, new_card='A')
+    player.hit(key=1, new_card='K')
+    player.insurance()
+    player.natural_blackjack()
+    player.increment_bankroll(amount=-0.5 * player.get_initial_bet())
+
+    assert player.get_insurance() is True
+    assert player.get_natural_blackjack() is True
+
+    compare_hands(table=table, rules=rules, stats=stats, dealer_hand=['8', 'A'])
+
+    assert player.get_bankroll() == 110
+
+
+def test_compare_hands_insurance_no_dealer_blackjack_no_player_blackjack(setup_table):
+    """
+    Tests the compare_hands function when a player buys insurance and neither the
+    dealer or player have natural blackjack.
+
+    Parameters
+    ----------
+    setup_table
+        Fixture that sets up a table with a single player
+
+    """
+    cards, table, rules, player = setup_table
+    stats = SimulationStats(rules=rules)
+    stats.create_player_key(player_key=player.get_name())
+    stats.create_count_key(player_key=player.get_name(), count_key=0)
+
+    player.set_count(count=0)
+    player.insurance_count = 0
+    player.hit(key=1, new_card='8')
+    player.hit(key=1, new_card='A')
+    player.insurance()
+    player.increment_bankroll(amount=-0.5 * player.get_initial_bet())
+
+    assert player.get_insurance() is True
+
+    compare_hands(table=table, rules=rules, stats=stats, dealer_hand=['8', 'A'])
+
+    assert player.get_bankroll() == 95
 
 
 def test_compare_hands_surrender(setup_table):

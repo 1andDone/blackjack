@@ -24,7 +24,7 @@ if __name__ == "__main__":
     # players that will be added to table
     p = [
             Player(
-                name='Sarah Spotter',
+                name='Chris Counter',
                 rules=r,
                 bankroll=12000,
                 min_bet=10,
@@ -32,7 +32,8 @@ if __name__ == "__main__":
                 bet_count_amount=[(1, 10), (3, 50), (7, 75)],
                 play_strategy='Basic',
                 bet_strategy='Spread',
-                count_strategy='Hi-Lo'
+                count_strategy='Halves',
+                insurance_count=5
             ),
             Player(
                 name='Joe Average',
@@ -44,7 +45,7 @@ if __name__ == "__main__":
                 count_strategy=None,
             ),
             Player(
-                name='Benny Big Money',
+                name='Benny Back Counter',
                 rules=r,
                 bankroll=50000,
                 min_bet=25,

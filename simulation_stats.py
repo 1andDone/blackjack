@@ -27,6 +27,8 @@ class SimulationStats(object):
             self.stats_dict[player_key][count_key]['initial bet'] = 0
             self.stats_dict[player_key][count_key]['overall bet'] = 0
             self.stats_dict[player_key][count_key]['net winnings'] = 0
+            self.stats_dict[player_key][count_key]['player insurance win'] = 0
+            self.stats_dict[player_key][count_key]['dealer insurance win'] = 0
             self.stats_dict[player_key][count_key]['player showdown win'] = 0
             self.stats_dict[player_key][count_key]['dealer showdown win'] = 0
             self.stats_dict[player_key][count_key]['push'] = 0
@@ -40,6 +42,16 @@ class SimulationStats(object):
     def player_bets(self, player_key, count_key, amount, initial_amount):
         self.stats_dict[player_key][count_key]['initial bet'] += initial_amount
         self.stats_dict[player_key][count_key]['overall bet'] += amount
+
+    def player_insurance_win(self, player_key, count_key, insurance_amount):
+        self.stats_dict[player_key][count_key]['player insurance win'] += 1
+        self.stats_dict[player_key][count_key]['net winnings'] += 2 * insurance_amount
+        self.stats_dict[player_key][count_key]['overall bet'] += insurance_amount
+
+    def dealer_insurance_win(self, player_key, count_key, insurance_amount):
+        self.stats_dict[player_key][count_key]['dealer insurance win'] += 1
+        self.stats_dict[player_key][count_key]['net winnings'] += -insurance_amount
+        self.stats_dict[player_key][count_key]['overall bet'] += insurance_amount
 
     def player_showdown_win(self, player_key, count_key, amount, initial_amount):
         self.stats_dict[player_key][count_key]['player showdown win'] += 1
@@ -87,3 +99,4 @@ class SimulationStats(object):
         self.stats_dict[player_key][count_key]['number of hands'] += 1
         self.stats_dict[player_key][count_key]['net winnings'] += self.rules.blackjack_payout * amount
         self.player_bets(player_key=player_key, count_key=count_key, amount=amount, initial_amount=initial_amount)
+

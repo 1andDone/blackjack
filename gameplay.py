@@ -106,10 +106,12 @@ def players_play_hands(table, rules, cards, dealer_hand, dealer_up_card):
         player_total = max_count_hand(hand=p.get_hand(key=1))
 
         # insurance option
-        # basic strategy advises against it
-        # however, may be favorable to take at large counts
         if rules.insurance and dealer_up_card == 'A':
-            pass
+            if p.get_insurance_count() is not None:
+                initial_bet = p.get_initial_bet()
+                if p.get_count() >= p.get_insurance_count() and p.sufficient_funds(amount=0.5 * initial_bet):
+                    p.increment_bankroll(amount=-0.5 * initial_bet)
+                    p.insurance()
 
         # dealer and players check for natural 21
         if player_total == 21 or dealer_total == 21:
@@ -122,8 +124,9 @@ def players_play_hands(table, rules, cards, dealer_hand, dealer_up_card):
         # only available if dealer doesn't have natural 21
         if rules.late_surrender and dealer_total != 21:
             hand = p.get_hand(key=1)
-            bet = p.get_bet(key=1)
-            if p.decision(hand=hand, dealer_up_card=dealer_up_card, num_hands=1, amount=bet) in ['Rh', 'Rs', 'Rp']:
+            initial_bet = p.get_initial_bet()
+            if p.decision(hand=hand, dealer_up_card=dealer_up_card, num_hands=1, amount=initial_bet) in \
+                    ['Rh', 'Rs', 'Rp']:
                 p.surrender()
                 p.stand(key=1)
                 continue
@@ -319,6 +322,21 @@ def compare_hands(table, rules, stats, dealer_hand):
                 player_initial_bet = p.get_initial_bet()
             else:
                 player_initial_bet = 0
+
+            if p.get_insurance():  # player bought insurance
+                if dealer_total == 21 and dealer_hand_length == 2:  # dealer has natural 21
+                    p.increment_bankroll(amount=3 * p.get_insurance_bet())
+                    stats.player_insurance_win(
+                        player_key=p.get_name(),
+                        count_key=p.get_count(),
+                        insurance_amount=p.get_insurance_bet()
+                    )
+                else:  # dealer does not have natural 21
+                    stats.dealer_insurance_win(
+                        player_key=p.get_name(),
+                        count_key=p.get_count(),
+                        insurance_amount=p.get_insurance_bet()
+                    )
 
             if p.get_surrender():  # player surrenders
                 p.increment_bankroll(amount=0.5 * player_bet)

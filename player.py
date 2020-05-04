@@ -10,9 +10,9 @@ class Player(object):
 
     """
     def __init__(
-            self, name, rules, bankroll, min_bet, bet_spread=1, bet_count=None,
-            bet_count_amount=None, play_strategy='Basic', bet_strategy='Flat', count_strategy=None,
-            count_accuracy=0.5, back_counting=False, back_counting_entry=0, back_counting_exit=0
+            self, name, rules, bankroll, min_bet, bet_spread=1, bet_count=None, bet_count_amount=None,
+            play_strategy='Basic', bet_strategy='Flat', count_strategy=None, count_accuracy=0.5,
+            insurance_count=None, back_counting=False, back_counting_entry=0, back_counting_exit=0
     ):
         """
         Parameters
@@ -44,6 +44,8 @@ class Player(object):
             the player does not count cards)
         count_accuracy : float, optional
             Accuracy of the card counting strategy (default is 0.5)
+        insurance_count : float, optional
+            Count at which player purchases insurance, if available (default is None)
         back_counting : bool, optional
             True if player is back counting the shoe (i.e. wonging), false otherwise (default is
             False)
@@ -115,6 +117,7 @@ class Player(object):
         self.bet_strategy = BettingStrategy(strategy=bet_strategy)
         self.count_strategy = count_strategy
         self.count_accuracy = count_accuracy
+        self.insurance_count = insurance_count
         self.back_counting = back_counting
         self.back_counting_entry = back_counting_entry
         self.back_counting_exit = back_counting_exit
@@ -151,6 +154,9 @@ class Player(object):
     def get_bet_scale(self):
         return self.bet_scale
 
+    def get_insurance_count(self):
+        return self.insurance_count
+
     def increment_bankroll(self, amount):
         self.bankroll = self.bankroll + amount
 
@@ -173,7 +179,9 @@ class Player(object):
         self.hands_dict = {1: {}}
         self.hands_dict[1]['hand'] = []
         self.hands_dict[1]['initial bet'] = amount
+        self.hands_dict[1]['insurance bet'] = 0
         self.hands_dict[1]['bet'] = amount
+        self.hands_dict[1]['insurance'] = False
         self.hands_dict[1]['natural blackjack'] = False
         self.hands_dict[1]['surrender'] = False
         self.hands_dict[1]['busted'] = False
@@ -187,6 +195,13 @@ class Player(object):
             raise ValueError('Initial bet must not exceed table maximum.')
         self.increment_bankroll(amount=-amount)
         self.create_hand(amount=amount)
+
+    def get_insurance_bet(self):
+        return self.hands_dict[1]['insurance bet']
+
+    def insurance(self):
+        self.hands_dict[1]['insurance bet'] = 0.5 * self.get_initial_bet()
+        self.hands_dict[1]['insurance'] = True
 
     def natural_blackjack(self):
         self.hands_dict[1]['natural blackjack'] = True
@@ -209,6 +224,9 @@ class Player(object):
 
     def get_bet(self, key):
         return self.hands_dict[key]['bet']
+
+    def get_insurance(self):
+        return self.hands_dict[1]['insurance']
 
     def get_natural_blackjack(self):
         return self.hands_dict[1]['natural blackjack']
