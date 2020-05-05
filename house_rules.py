@@ -4,17 +4,15 @@ class HouseRules(object):
 
     """
     def __init__(
-            self, min_bet, max_bet, s17=True, blackjack_payout=1.5, max_hands=4,
+            self, bet_limits, s17=True, blackjack_payout=1.5, max_hands=4,
             double_down=True, split_unlike_tens=True, double_after_split=True, resplit_aces=False,
             insurance=True, late_surrender=True, dealer_shows_hole_card=False
     ):
         """
         Parameters
         ----------
-        min_bet : int
-            Minimum bet allowed at the table
-        max_bet : int
-            Maximum bet allowed at the table
+        bet_limits : list
+            List containing the minimum and maximum bet allowed at the table
         s17 : bool, optional
             True if dealer stands on a soft 17, false otherwise (default is True)
         blackjack_payout : float, optional
@@ -38,16 +36,20 @@ class HouseRules(object):
             True if the dealer shows his hole card regardless of whether or not all players bust,
             surrender, or have natural 21, false otherwise (default is False)
         """
-        if min_bet < 0:
+        if len(bet_limits) != 2:
+            raise ValueError('Bet limits should be a list of 2 integers.')
+        if not all(isinstance(x, int) for x in bet_limits):
+            raise ValueError('Bet limits need to be integer values.')
+        if bet_limits[0] < 0:
             raise ValueError('Minimum bet at table must be an integer greater than 0.')
-        if max_bet < min_bet:
+        if bet_limits[1] < bet_limits[0]:
             raise ValueError('Maximum bet at table must be greater than minimum bet.')
         if max_hands not in [2, 3, 4]:
             raise ValueError('Maximum number of hands must be 2, 3, or 4.')
         if blackjack_payout <= 1:
             raise ValueError('Blackjack payout must be greater than 1.')
-        self.min_bet = int(min_bet)
-        self.max_bet = int(max_bet)
+        self.min_bet = int(bet_limits[0])
+        self.max_bet = int(bet_limits[1])
         self.s17 = s17
         self.blackjack_payout = float(blackjack_payout)
         self.max_hands = int(max_hands)

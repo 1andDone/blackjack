@@ -1,4 +1,5 @@
 # blackjack
+
 Blackjack simulation between a dealer and player(s) where the user can change the house rules as well as the betting, playing, and card counting strategies for each player(s).
 
 ![Blackjack](/documentation/blackjack.jpg?raw=true)
@@ -21,16 +22,14 @@ This simulation allows the user to fully customize the house rules. By default, 
 
 Additional parameters allows the user to specify the following:
 
-- Minimum bet allowed at the table `min_bet`
-- Maximum bet allowed at the table `max_bet`
+- Minimum and maximum bet allowed at the table `bet_limits`
 - Dealer reveals hole card even when all players surrender, bust, or have natural blackjack `dealer_shows_hole_card`
     - This setting will only have an impact on players that are counting cards. By default, `dealer_shows_hole_card=False`.
 
 An example of the *Vegas Strip* configuration is seen below:
 ```
 r = HouseRules(
-            min_bet=10,
-            max_bet=500,
+            bet_limits=[10, 500],
             s17=True,
             blackjack_payout=1.5,
             max_hands=4,

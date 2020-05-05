@@ -7,8 +7,7 @@ if __name__ == "__main__":
 
     # set table rules
     r = HouseRules(
-                min_bet=10,
-                max_bet=500,
+                bet_limits=[10, 500],
                 s17=True,
                 blackjack_payout=1.5,
                 max_hands=4,
