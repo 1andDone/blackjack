@@ -4,9 +4,9 @@ class HouseRules(object):
 
     """
     def __init__(
-            self, min_bet, max_bet, s17=True, blackjack_payout=1.5, max_hands=4, double_down=True,
-            split_unlike_tens=True, double_after_split=True, resplit_aces=False, insurance=True,
-            late_surrender=True, dealer_shows_hole_card=False
+            self, min_bet, max_bet, s17=True, blackjack_payout=1.5, max_hands=4,
+            double_down=True, split_unlike_tens=True, double_after_split=True, resplit_aces=False,
+            insurance=True, late_surrender=True, dealer_shows_hole_card=False
     ):
         """
         Parameters
@@ -39,7 +39,7 @@ class HouseRules(object):
             surrender, or have natural 21, false otherwise (default is False)
         """
         if min_bet < 0:
-            raise ValueError('Minimum bet at table must be greater than 0.')
+            raise ValueError('Minimum bet at table must be an integer greater than 0.')
         if max_bet < min_bet:
             raise ValueError('Maximum bet at table must be greater than minimum bet.')
         if max_hands not in [2, 3, 4]:

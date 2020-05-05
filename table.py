@@ -14,8 +14,8 @@ class Table(object):
             Number of players that can play at a table at any given time (default
             is 7)
         """
-        if size_limit > 7:
-            raise ValueError('Table cannot have more than 7 seats.')
+        if size_limit < 1 or size_limit > 7:
+            raise ValueError('Table cannot have less than 1 or more than 7 seats.')
         self.size_limit = int(size_limit)
         self.players = []
 
@@ -36,4 +36,5 @@ class Table(object):
     def remove_player(self, player):
         if player in self.players:
             self.players.remove(player)
-        return 'Player cannot be removed because the player is not at the table.'
+        else:
+            raise ValueError('Player cannot be removed because that player is not at the table.')

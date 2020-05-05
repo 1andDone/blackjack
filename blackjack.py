@@ -50,14 +50,13 @@ if __name__ == "__main__":
                 bankroll=50000,
                 min_bet=25,
                 bet_spread=12,
-                bet_count=[1, 3, 5, 10],
+                bet_count_amount=[(1, 25), (3, 95), (5, 165), (10, 235)],
                 play_strategy='Basic',
                 bet_strategy='Spread',
                 count_strategy='Hi-Lo',
                 count_accuracy=0.1,
                 back_counting=True,
-                back_counting_entry=5,
-                back_counting_exit=0
+                back_counting_entry_exit=[5, 0]
             )
     ]
 

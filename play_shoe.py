@@ -64,7 +64,7 @@ class PlayShoe(object):
         for p in self.players:
 
             # add players to table
-            if not p.back_counting:
+            if not p.get_back_counting():
                 t.add_player(player=p)
 
             # update current bankroll
@@ -90,14 +90,14 @@ class PlayShoe(object):
                     if p.get_back_counting() and p not in t.get_players() and current_bankroll[p.get_name()] >= \
                             self.rules.min_bet and p.get_count_strategy() is not None:
                         if cs.true_count(strategy=p.get_count_strategy(), accuracy=p.get_count_accuracy()) >= \
-                                p.get_back_counting_entry():
+                                p.get_back_counting_entry_exit()[0]:
                             t.add_player(player=p)
 
                 # remove back counters from the table if the count is not favorable
                 for p in self.players:
                     if p.get_back_counting() and p in t.get_players() and p.get_count_strategy() is not None:
-                        if cs.true_count(strategy=p.get_count_strategy(), accuracy=p.get_count_accuracy()) <= \
-                                p.get_back_counting_exit():
+                        if cs.true_count(strategy=p.get_count_strategy(), accuracy=p.get_count_accuracy()) < \
+                                p.get_back_counting_entry_exit()[1]:
                             t.remove_player(player=p)
 
                 for p in t.get_players():

@@ -19,6 +19,12 @@ class Cards(object):
         self.deck = ['2', '3', '4', '5', '6', '7', '8', '9', '10', 'J', 'Q', 'K', 'A'] * 4 * int(shoe_size)
         self.visible_cards = []
 
+    def set_visible_cards(self):
+        self.visible_cards = []
+
+    def get_visible_cards(self):
+        return self.visible_cards
+
     def burn_card(self):
         return self.deck.pop()
 
@@ -31,12 +37,6 @@ class Cards(object):
         if visible:
             self.visible_cards.append(card)
         return card
-
-    def set_visible_cards(self):
-        self.visible_cards = []
-
-    def get_visible_cards(self):
-        return self.visible_cards
 
     def update_visible_cards(self, card):
         self.visible_cards.append(card)

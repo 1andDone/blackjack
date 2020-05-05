@@ -1,4 +1,5 @@
 import basic_strategy
+from house_rules import HouseRules
 
 
 class PlayingStrategy(object):
@@ -17,6 +18,8 @@ class PlayingStrategy(object):
         strategy : str
             Name of the playing strategy used by a player at the table
         """
+        if not isinstance(rules, HouseRules):
+            raise ValueError('Rules must be of type HouseRules.')
         if strategy not in ['Basic']:
             raise ValueError('Strategy must be "Basic".')
         self.rules = rules
