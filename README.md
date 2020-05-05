@@ -105,7 +105,7 @@ p = [
         )
 ]
 ```
-In the example above, Chris Counter sits down at the table with a $12,000 bankroll. He is the first to act every game and will be counting cards using the Halves strategy. According to his bet scale, he will bet $10 (his personal minimum bet) for all true counts less than 1, $50 for all true counts greater than or equal to 1 and less than 5, $75 for all true counts greater than or equal to 5 and less than 7, and finally $100 (his personal maximum bet, according to his bet spread) for all true counts greater than or equal to 7. He is counting cards using the Halves strategy and is able to compute the true count to the nearest 0.5. Additionally, Chris will make the insurance side bet offered at the table only when the true count is greater than or equal to 5.  
+In the example above, Chris Counter is the first to act every game and sits down at the table with a $12,000 bankroll. He will be counting cards using the Halves strategy and is able to compute the true count to the nearest 0.5. According to his bet scale, he will bet $10 (his personal minimum bet) for all true counts less than 1, $50 for all true counts greater than or equal to 1 and less than 5, $75 for all true counts greater than or equal to 5 and less than 7, and finally $100 (his personal maximum bet, according to his bet spread) for all true counts greater than or equal to 7. Additionally, Chris will make the insurance side bet offered at the table only when the true count is greater than or equal to 5.  
 
 The next player to act, Joe Average, sits down at the table with $750 and will make $15 bets each hand. He does not bother counting cards.
 
