@@ -52,7 +52,7 @@ This simulation also allows the user to set betting, playing, and card counting 
 - Amount of money a player begins with when sitting down at the table `bankroll`
 - Minimum amount of money a player is willing to wager when playing a hand `min_bet`
 - Ratio of maximum bet to minimum bet `bet_spread`
-- List of tuples where the first value of the tuple indicates the true count and the second value indicates the amount of money wagered for true counts closest to, but not equaling or exceeding, that particular true count. These values are used to create a bet scale with len(bet_count_amount) + 1 partitions, each incremented by the defined amount `bet_count_amount`
+- List of tuples where the first value of the tuple indicates the true count and the second value indicates the amount of money wagered for true counts closest to, but not equaling or exceeding, that particular true count. These values are used to create a bet scale with `len(bet_count_amount) + 1` partitions, each incremented by a defined amount `bet_count_amount`
     - For example, if `min_bet=10`, `bet_strategy='Spread'` and `bet_spread=3`, setting `bet_count_amount=[(1, 10), (3, 15)]` would create three partitions - one for true counts less than 1 (player bets their personal minimum amount, $10), another for true counts greater than or equal to 1 and less than 3 (player bets $15), and finally, one for true counts greater than or equal to 3 (player bets $30, equivalent to `min_bet * bet_spread`).
 - Playing strategy used by the player `play_strategy`
     - Currently, all players adhere to *Basic* strategy for playing decisions.
@@ -105,11 +105,28 @@ p = [
         )
 ]
 ```
-In the example above, Chris Counter is the first to act every game and sits down at the table with a $12,000 bankroll. He will be counting cards using the Halves strategy and is able to compute the true count to the nearest 0.5. According to his bet scale, he will bet $10 (his personal minimum bet) for all true counts less than 1, $50 for all true counts greater than or equal to 1 and less than 5, $75 for all true counts greater than or equal to 5 and less than 7, and finally $100 (his personal maximum bet, according to his bet spread) for all true counts greater than or equal to 7. Additionally, Chris will make the insurance side bet offered at the table only when the true count is greater than or equal to 5.  
+In the example above, Chris Counter is the first to act every game and sits down at the table with a $12,000 bankroll. He will be counting cards using the *Halves* strategy and is able to compute the true count to the nearest 0.5. He will vary his bets according to his personal bet scale:
+
+| Amount Bet | Halves True Count |
+|:----------:| :----------------:|
+| $10        | <1                |
+| $50        | 1 - <5            |
+| $75        | 5 - <7            |
+| $100       | >=7               |
+
+Additionally, Chris will make the insurance side bet offered at the table only when the true count is greater than or equal to 5.  
 
 The next player to act, Joe Average, sits down at the table with $750 and will make $15 bets each hand. He does not bother counting cards.
 
-Finally, the last player to act, Benny Back Counter, is back counting while using the Hi-Lo strategy. He only starts playing at the table when the true count (which he is able to compute to the nearest 0.1) is 5 or higher and will leave the table if it drops below 0. He starts off with $50,000 dollars and will bet a minimum of $25 each hand but is willing to bet up to $300 on any given hand, depending on the true count. The exact amount he bets is based on his personal betting scale where he bets $25 dollars for all true counts less than 1, $95 for all true counts greater than or equal to 1 but less than 3, $165 for all true counts greater than or equal to 3 but less than 5, $235 for all true counts greater than or equal to 5 but less than 10, and finally, $300 for all true counts greater than or equal to 10. 
+Finally, the last player to act, Benny Back Counter, is back counting while using the Hi-Lo strategy. He only starts playing at the table when the true count (which he is able to compute to the nearest 0.1) is 5 or higher and will leave the table if it drops below 0. He starts off with $50,000 dollars and will bet a minimum of $25 each hand but is willing to bet up to $300 on any given hand, depending on the true count. The exact amount he bets is based on his personal betting scale: 
+
+| Amount Bet | Hi-Lo True Count  |
+|:----------:|:-----------------:|
+| $25        | <1                |
+| $95        | 1 - <3            |
+| $165       | 3 - <5            |
+| $235       | 5 - <10           |
+| $300       | >=10              |
 
 ## Setup Shoe Simulations
 
