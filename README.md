@@ -68,7 +68,7 @@ An example table setup is seen below:
 ```
 p = [
         Player(
-            name='Chris Counter',
+            name='Card Counter',
             rules=r,
             bankroll=12000,
             min_bet=10,
@@ -80,7 +80,7 @@ p = [
             insurance_count=5
         ),
         Player(
-            name='Joe Average',
+            name='Average',
             rules=r,
             bankroll=750,
             min_bet=15,
@@ -89,7 +89,7 @@ p = [
             count_strategy=None,
         ),
         Player(
-            name='Benny Back Counter',
+            name='Back Counter',
             rules=r,
             bankroll=50000,
             min_bet=25,
@@ -104,7 +104,7 @@ p = [
         )
 ]
 ```
-In the example above, Chris Counter is the first to act every game and sits down at the table with a $12,000 bankroll. He will be counting cards using the *Halves* strategy and is able to compute the true count to the nearest 0.5. He will vary his bets according to his personal bet scale:
+In the example above, 'Card Counter' is the first to act every game and sits down at the table with a $12,000 bankroll. 'Card Counter' is counting cards using the *Halves* strategy and is able to compute the true count to the nearest 0.5. 'Card Counter' will vary his bets according to his personal bet scale:
 
 | Amount Bet | Halves True Count |
 |:----------:| :----------------:|
@@ -113,11 +113,11 @@ In the example above, Chris Counter is the first to act every game and sits down
 | $75        | 5 - <7            |
 | $100       | >=7               |
 
-Additionally, Chris will make the insurance side bet offered at the table only when the true count is greater than or equal to 5.  
+Additionally, 'Card Counter' will make the insurance side bet offered at the table only when the true count is greater than or equal to 5.  
 
-The next player to act, Joe Average, sits down at the table with $750 and will make $15 bets each hand. He does not bother counting cards.
+The next player to act, 'Average', sits down at the table with $750 and will make $15 bets each hand. 'Average' does not bother counting cards.
 
-Finally, the last player to act, Benny Back Counter, is back counting while using the Hi-Lo strategy. He only starts playing at the table when the true count (which he is able to compute to the nearest 0.1) is 5 or higher and will leave the table if it drops below 0. He starts off with $50,000 dollars and will bet a minimum of $25 each hand but is willing to bet up to $300 on any given hand, depending on the true count. The exact amount he bets is based on his personal betting scale: 
+Finally, the last player to act, 'Back Counter', is back counting while using the Hi-Lo strategy. 'Back Counter' only starts playing at the table when the true count (computed to the nearest 0.1) is 5 or higher and will leave the table if it drops below 0. 'Back Counter' starts off with $50,000 dollars and will bet a minimum of $25 each hand but is willing to bet up to $300 on any given hand, depending on the true count. The exact amount 'Back Counter' bets is based on his personal betting scale: 
 
 | Amount Bet | Hi-Lo True Count  |
 |:----------:|:-----------------:|
@@ -170,8 +170,8 @@ By default, basic shoe simulation statistics will be printed off. These include:
 - *Element of risk* - ratio of the total net winnings to the total amount bet
 
 ```
-Player: Chris Counter
----------------------
+Player: Card Counter
+--------------------
 Total hands: 425189.0
 Total amount bet: 11051057.5
 Total initial bet: 9799185.0
@@ -180,8 +180,8 @@ House edge: 0.5671645141917415
 Element of risk: 0.5029156711925533
 
 
-Player: Joe Average
--------------------
+Player: Average
+---------------
 Total hands: 19463.0
 Total amount bet: 322050.0
 Total initial bet: 284025.0
@@ -190,8 +190,8 @@ House edge: -0.2640612622128334
 Element of risk: -0.2328830926874709
 
 
-Player: Benny Back Counter
---------------------------
+Player: Back Counter
+--------------------
 Total hands: 22179.0
 Total amount bet: 3355770.0
 Total initial bet: 3026810.0
@@ -205,19 +205,19 @@ In the example above, over the course of the simulation, Chris Counter won $55,5
 
 Setting `figures=True` in the shoe simulation set up creates several plots that help visualize our results.
 
-![Chris Counter Figure 1](/documentation/chris_counter_fig1.png?raw=true)
-![Benny Back Counter Figure 1](/documentation/benny_back_counter_fig1.png?raw=true)
+![Card Counter Figure 1](/documentation/card_counter_fig1.png?raw=true)
+![Back Counter Figure 1](/documentation/back_counter_fig1.png?raw=true)
 
 The two plots above are only created for players that count cards. These plots show the net winnings per shoe for each player for each hand played at a given true count. 
 
-![Chris Counter Figure 2](/documentation/chris_counter_fig2.png?raw=true)
-![Benny Back Counter Figure 2](/documentation/benny_back_counter_fig2.png?raw=true)
+![Card Counter Figure 2](/documentation/card_counter_fig2.png?raw=true)
+![Back Counter Figure 2](/documentation/back_counter_fig2.png?raw=true)
 
 The two plots above are only created for players that count cards. These plots show the net cumulative net winnings per shoe for each player for each hand played at a given true count. 
 
-![Chris Counter Figure 3](/documentation/chris_counter_fig3.png?raw=true)
-![Joe Average Figure 3](/documentation/joe_average_fig3.png?raw=true)
-![Benny Back Counter Figure 3](/documentation/benny_back_counter_fig3.png?raw=true)
+![Card Counter Figure 3](/documentation/card_counter_fig3.png?raw=true)
+![Average Figure 3](/documentation/average_fig3.png?raw=true)
+![Back Counter Figure 3](/documentation/back_counter_fig3.png?raw=true)
 
 The three plots above show the players bankroll growth over the course of the shoe simulations. 
 
