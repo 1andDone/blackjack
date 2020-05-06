@@ -104,7 +104,7 @@ p = [
         )
 ]
 ```
-In the example above, 'Card Counter' is the first to act every game and sits down at the table with a $12,000 bankroll. 'Card Counter' is counting cards using the *Halves* strategy and is able to compute the true count to the nearest 0.5. 'Card Counter' will vary his bets according to his personal bet scale:
+In the example above, *Card Counter* is the first to act every game and sits down at the table with a $12,000 bankroll. *Card Counter* is counting cards using the *Halves* strategy and is able to compute the true count to the nearest 0.5. *Card Counter* will vary his bets according to his personal bet scale:
 
 | Amount Bet | Halves True Count |
 |:----------:| :----------------:|
@@ -113,11 +113,11 @@ In the example above, 'Card Counter' is the first to act every game and sits dow
 | $75        | 5 - <7            |
 | $100       | >=7               |
 
-Additionally, 'Card Counter' will make the insurance side bet offered at the table only when the true count is greater than or equal to 5.  
+Additionally, *Card Counter* will make the insurance side bet offered at the table only when the true count is greater than or equal to 5.  
 
-The next player to act, 'Average', sits down at the table with $750 and will make $15 bets each hand. 'Average' does not bother counting cards.
+The next player to act, *Average*, sits down at the table with $750 and will make $15 bets each hand. *Average* does not bother counting cards.
 
-Finally, the last player to act, 'Back Counter', is back counting while using the Hi-Lo strategy. 'Back Counter' only starts playing at the table when the true count (computed to the nearest 0.1) is 5 or higher and will leave the table if it drops below 0. 'Back Counter' starts off with $50,000 dollars and will bet a minimum of $25 each hand but is willing to bet up to $300 on any given hand, depending on the true count. The exact amount 'Back Counter' bets is based on his personal betting scale: 
+Finally, the last player to act, *Back Counter*, is back counting while using the *Hi-Lo* strategy. *Back Counter* only starts playing at the table when the true count (computed to the nearest 0.1) is 5 or higher and will leave the table if it drops below 0. *Back Counter* starts off with $50,000 dollars and will bet a minimum of $25 each hand but is willing to bet up to $300 on any given hand, depending on the true count. The exact amount *Back Counter* bets is based on their personal betting scale: 
 
 | Amount Bet | Hi-Lo True Count  |
 |:----------:|:-----------------:|
@@ -199,7 +199,7 @@ Total net winnings: 89015.0
 House edge: 2.9408849580911918
 Element of risk: 2.6525953804938958
 ```
-In the example above, over the course of the simulation, Chris Counter won $55,577.50 while playing every hand of the simulation. Joe Average lasted 19,463 hands before having to leave the table after losing all of his initial bankroll. Benny Back Counter played slightly more hands than Joe Average but walked away with the most winnings, $89,015.
+In the example above, over the course of the simulation, *Card Counter* won $55,577.50 while playing every hand of the simulation. *Average* lasted 19,463 hands before having to leave the table after losing all of their initial bankroll. *Back Counter* played slightly more hands than Joe Average but walked away with the most winnings ($89,015).
 
 ## Figures
 
