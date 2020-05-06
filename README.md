@@ -104,7 +104,7 @@ p = [
         )
 ]
 ```
-In the example above, *Card Counter* is the first to act every game and sits down at the table with a $12,000 bankroll. *Card Counter* is counting cards using the *Halves* strategy and is able to compute the true count to the nearest 0.5. *Card Counter* will vary his bets according to his personal bet scale:
+In the example above, *Card Counter* is the first to act every game and sits down at the table with a $12,000 bankroll. *Card Counter* is counting cards using the *Halves* strategy and is able to compute the true count to the nearest 0.5. *Card Counter* will vary their bets according to their personal bet scale:
 
 | Amount Bet | Halves True Count |
 |:----------:| :----------------:|
@@ -199,7 +199,7 @@ Total net winnings: 89015.0
 House edge: 2.9408849580911918
 Element of risk: 2.6525953804938958
 ```
-In the example above, over the course of the simulation, *Card Counter* won $55,577.50 while playing every hand of the simulation. *Average* lasted 19,463 hands before having to leave the table after losing all of their initial bankroll. *Back Counter* played slightly more hands than Joe Average but walked away with the most winnings ($89,015).
+In the example above, over the course of the simulation, *Card Counter* won $55,577.50 while playing every hand of the simulation. *Average* lasted 19,463 hands before having to leave the table after losing all of their initial bankroll. *Back Counter* played slightly more hands than *Average* but walked away with the most winnings ($89,015).
 
 ## Figures
 
