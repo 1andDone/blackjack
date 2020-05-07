@@ -1,3 +1,6 @@
+from house_rules import HouseRules
+
+
 class SimulationStats(object):
     """
     SimulationStats is an object that stores results from simulating
@@ -11,6 +14,8 @@ class SimulationStats(object):
         rules : HouseRules
             HouseRules class instance
         """
+        if not isinstance(rules, HouseRules):
+            raise ValueError('Rules must be of type HouseRules.')
         self.rules = rules
         self.stats_dict = {}
 
@@ -76,16 +81,22 @@ class SimulationStats(object):
         self.stats_dict[player_key][count_key]['net winnings'] += -0.5 * amount
         self.player_bets(player_key=player_key, count_key=count_key, amount=amount, initial_amount=initial_amount)
 
+    def player_bust(self, player_key, count_key, amount, initial_amount):
+        self.stats_dict[player_key][count_key]['player bust'] += 1
+        self.stats_dict[player_key][count_key]['number of hands'] += 1
+        self.stats_dict[player_key][count_key]['net winnings'] += -amount
+        self.player_bets(player_key=player_key, count_key=count_key, amount=amount, initial_amount=initial_amount)
+
     def dealer_bust(self, player_key, count_key, amount, initial_amount):
         self.stats_dict[player_key][count_key]['dealer bust'] += 1
         self.stats_dict[player_key][count_key]['number of hands'] += 1
         self.stats_dict[player_key][count_key]['net winnings'] += amount
         self.player_bets(player_key=player_key, count_key=count_key, amount=amount, initial_amount=initial_amount)
 
-    def player_bust(self, player_key, count_key, amount, initial_amount):
-        self.stats_dict[player_key][count_key]['player bust'] += 1
+    def player_natural_blackjack(self, player_key, count_key, amount, initial_amount):
+        self.stats_dict[player_key][count_key]['player natural blackjack'] += 1
         self.stats_dict[player_key][count_key]['number of hands'] += 1
-        self.stats_dict[player_key][count_key]['net winnings'] += -amount
+        self.stats_dict[player_key][count_key]['net winnings'] += self.rules.blackjack_payout * amount
         self.player_bets(player_key=player_key, count_key=count_key, amount=amount, initial_amount=initial_amount)
 
     def dealer_natural_blackjack(self, player_key, count_key, amount, initial_amount):
@@ -94,9 +105,5 @@ class SimulationStats(object):
         self.stats_dict[player_key][count_key]['net winnings'] += -amount
         self.player_bets(player_key=player_key, count_key=count_key, amount=amount, initial_amount=initial_amount)
 
-    def player_natural_blackjack(self, player_key, count_key, amount, initial_amount):
-        self.stats_dict[player_key][count_key]['player natural blackjack'] += 1
-        self.stats_dict[player_key][count_key]['number of hands'] += 1
-        self.stats_dict[player_key][count_key]['net winnings'] += self.rules.blackjack_payout * amount
-        self.player_bets(player_key=player_key, count_key=count_key, amount=amount, initial_amount=initial_amount)
+
 
