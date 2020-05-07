@@ -42,12 +42,12 @@ class HouseRules(object):
             raise ValueError('Bet limits need to be integer values.')
         if bet_limits[0] < 0:
             raise ValueError('Minimum bet at table must be an integer greater than 0.')
-        if bet_limits[1] < bet_limits[0]:
+        if bet_limits[1] <= bet_limits[0]:
             raise ValueError('Maximum bet at table must be greater than minimum bet.')
-        if max_hands not in [2, 3, 4]:
-            raise ValueError('Maximum number of hands must be 2, 3, or 4.')
         if blackjack_payout <= 1:
             raise ValueError('Blackjack payout must be greater than 1.')
+        if max_hands not in [2, 3, 4]:
+            raise ValueError('Maximum number of hands must be 2, 3, or 4.')
         self.min_bet = int(bet_limits[0])
         self.max_bet = int(bet_limits[1])
         self.s17 = s17

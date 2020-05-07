@@ -1,18 +1,19 @@
+import random
 import pytest
 from cards import Cards
 
 
 class TestCards(object):
 
-    def test_init_no_argument(self):
+    def test_init_no_shoe_size(self):
         with pytest.raises(Exception):
-            c = Cards()
+            Cards()
 
-    def test_init_incorrect_argument(self):
+    def test_init_incorrect_shoe_size(self):
         with pytest.raises(ValueError):
-            c = Cards(shoe_size=17)
+            Cards(shoe_size=17)
 
-    def test_init_correct_argument(self):
+    def test_init_correct_shoe_size(self):
         for shoe_size in [4, 6, 8]:
             c = Cards(shoe_size=shoe_size)
             assert c.shoe_size == shoe_size
@@ -26,9 +27,13 @@ class TestCards(object):
         assert c.burn_card() == 'Q'
 
     def test_shuffle(self):
+        random.seed(1)
         c = Cards(shoe_size=4)
+        assert c.deck[-1] == 'A'
+        assert c.deck[-2] == 'K'
         deck_before_shuffle = c.deck.copy()
         c.shuffle()
+        assert c.deck[-1] == '4'
         assert len(c.deck) == len(deck_before_shuffle) - 1
 
     def test_deal_card_visible(self):

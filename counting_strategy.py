@@ -1,4 +1,5 @@
 from counts import count_dict
+from cards import Cards
 
 
 class CountingStrategy(object):
@@ -14,6 +15,8 @@ class CountingStrategy(object):
         cards : Cards
             Cards class instance
         """
+        if not isinstance(cards, Cards):
+            raise ValueError('cards must be of type Cards.')
         self.cards = cards
         running_count_dict = {}
         for strategy in ['Hi-Lo', 'Hi-Opt I', 'Hi-Opt II', 'Omega II', 'Halves', 'Zen Count']:

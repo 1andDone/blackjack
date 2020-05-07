@@ -29,8 +29,7 @@ def test_splittable():
 
     """
     rules = HouseRules(
-        min_bet=10,
-        max_bet=500
+        bet_limits=[10, 500]
     )
     assert splittable(rules=rules, hand=['A', 'A']) is True
     assert splittable(rules=rules, hand=['2', '2']) is True
@@ -45,8 +44,7 @@ def test_splittable_split_unlike_tens():
 
     """
     rules = HouseRules(
-        min_bet=10,
-        max_bet=500,
+        bet_limits=[10, 500],
         split_unlike_tens=True
     )
     assert splittable(rules=rules, hand=['J', '10']) is True
@@ -61,8 +59,7 @@ def test_splittable_no_split_unlike_tens():
 
     """
     rules = HouseRules(
-        min_bet=10,
-        max_bet=500,
+        bet_limits=[10, 500],
         split_unlike_tens=False
     )
     assert splittable(rules=rules, hand=['J', '10']) is False

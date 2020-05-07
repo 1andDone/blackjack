@@ -17,7 +17,7 @@ def test_players_place_bets():
     cards = Cards(shoe_size=6)
     counting_strategy = CountingStrategy(cards=cards)
     table = Table()
-    rules = HouseRules(min_bet=10, max_bet=500)
+    rules = HouseRules(bet_limits=[10, 500])
     players = [
                 Player(
                     name='Amount bet below table minimum',
@@ -74,7 +74,7 @@ def test_deal_hands():
     """
     cards = Cards(shoe_size=6)  # without shuffling, cards dealt will be 'A', 'K', 'Q', 'J', '10', etc.
     table = Table()
-    rules = HouseRules(min_bet=10, max_bet=500)
+    rules = HouseRules(bet_limits=[10, 500])
     players = [
                 Player(
                     name='First to act',
@@ -122,8 +122,7 @@ def setup_table():
     cards = Cards(shoe_size=6)
     table = Table()
     rules = HouseRules(
-                min_bet=10,
-                max_bet=500,
+                bet_limits=[10, 500],
                 s17=True,
                 blackjack_payout=1.5,
                 max_hands=4,

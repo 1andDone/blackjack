@@ -4,19 +4,17 @@ from betting_strategy import BettingStrategy
 
 class TestBettingStrategy(object):
 
-    def test_init_no_argument(self):
+    def test_init_no_strategy(self):
         with pytest.raises(Exception):
-            bs = BettingStrategy()
+            BettingStrategy()
 
-    def test_init_incorrect_argument(self):
+    def test_init_incorrect_strategy(self):
         with pytest.raises(ValueError):
-            bs = BettingStrategy(strategy='Incorrect argument')
+            BettingStrategy(strategy='Incorrect argument')
 
-    def test_init_correct_argument(self):
-        bs = BettingStrategy(strategy='Flat')
-        assert bs.strategy == 'Flat'
-        bs = BettingStrategy(strategy='Spread')
-        assert bs.strategy == 'Spread'
+    def test_init_correct_strategy(self):
+        assert BettingStrategy(strategy='Flat').strategy == 'Flat'
+        assert BettingStrategy(strategy='Spread').strategy == 'Spread'
 
     def test_initial_bet_flat(self):
         bs = BettingStrategy(strategy='Flat')
