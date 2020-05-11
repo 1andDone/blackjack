@@ -52,7 +52,7 @@ Betting, playing, and card counting strategies for individual players can also b
 - Minimum amount of money the player is willing to wager when playing a hand `min_bet`
 - Ratio of the player's maximum bet to minimum bet `bet_spread`
 - List of tuples where the first value of the tuple indicates the true count and the second value indicates the amount of money wagered for true counts closest to, but not equaling or exceeding, that particular true count. These values are used to create a bet scale with `len(bet_count_amount) + 1` partitions, each incremented by a defined amount `bet_count_amount`
-    - For example, if `min_bet=10`, `bet_strategy='Spread'` and `bet_spread=3`, setting `bet_count_amount=[(1, 10), (4, 15)]` would create three partitions - one for true counts less than 1 (player bets their personal minimum amount, $10), another for true counts greater than or equal to 1 and less than 4 (player bets $15), and finally, one for true counts greater than or equal to 4 (player bets $30, equivalent to `min_bet * bet_spread`).
+    - For example, if `min_bet=10`, `bet_strategy='Spread'` and `bet_spread=3`, setting `bet_count_amount=[(1, 10), (4, 15)]` would create three partitions - one for true counts less than 1 (player bets their `min_bet`, $10), another for true counts greater than or equal to 1 and less than 4 (player bets $15), and finally, one for true counts greater than or equal to 4 (player bets $30, equivalent to `min_bet * bet_spread`).
 - Playing strategy used by the player `play_strategy`
     - Currently, all players adhere to *Basic* strategy for playing decisions.
 - Betting strategy used by the player `bet_strategy`
