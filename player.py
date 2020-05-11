@@ -246,8 +246,6 @@ class Player(object):
         self.hands_dict[key]['hand'].append(new_card)
 
     def split(self, amount, key, new_key):
-        if new_key != key + 1:
-            raise ValueError('New key must be 1 greater than key.')
         if splittable(rules=self.rules, hand=self.hands_dict[key]['hand']):
             self.hands_dict[key]['split'] = True
             self.hands_dict[new_key] = {}

@@ -340,12 +340,7 @@ class TestPlayer(object):
         p.hit(key=1, new_card='7')
         assert p.get_hand(key=1) == ['K', '7']
 
-    @pytest.mark.parametrize('key, new_key, expected',
-                             [
-                                 (1, 2, ['A']),
-                                 (5, 1, ValueError)  # new key is not equal to key + 1
-                             ])
-    def test_split(self, setup_player, key, new_key, expected):
+    def test_split(self, setup_player):
         """
         Tests the split method.
 
@@ -356,15 +351,10 @@ class TestPlayer(object):
         p.hit(key=1, new_card='A')
         assert p.get_hand(key=1) == ['A', 'A']
 
-        if type(expected) == type and issubclass(expected, Exception):
-            with pytest.raises(ValueError):
-                p.split(amount=10, key=key, new_key=new_key)
-
-        else:
-            p.split(amount=10, key=key, new_key=new_key)
-            for key in [1, 2]:
-                assert p.get_hand(key=key) == expected
-                assert p.get_bet(key=key) == 10
+        p.split(amount=10, key=1, new_key=2)
+        for key in [1, 2]:
+            assert p.get_hand(key=key) == ['A']
+            assert p.get_bet(key=key) == 10
 
     def test_double_down(self, setup_player):
         """
