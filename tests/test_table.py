@@ -4,100 +4,111 @@ from player import Player
 from house_rules import HouseRules
 
 
+@pytest.fixture()
+def setup_table():
+    t = Table()
+    r = HouseRules(bet_limits=[10, 500])
+    p = Player(
+            name='Player 1',
+            rules=r,
+            bankroll=100,
+            min_bet=10
+    )
+    return t, p
+
+
 class TestTable(object):
 
-    def test_init_no_size_limit(self):
-        t = Table()
-        assert t.size_limit == 7
+    @pytest.mark.parametrize('size_limit, expected',
+                             [
+                                 (0, ValueError),  # size limit < 1
+                                 (8, ValueError),  # size limit > 7
+                                 (7, 7)
+                             ])
+    def test_size_limit(self, size_limit, expected):
+        """
+        Tests the size_limit parameter of the __init__ method.
 
-    def test_init_incorrect_size_limit(self):
-        with pytest.raises(ValueError):
-            t = Table(size_limit=0)
-        with pytest.raises(ValueError):
-            t = Table(size_limit=8)
+        """
+        if type(expected) == type and issubclass(expected, Exception):
+            with pytest.raises(ValueError):
+                Table(size_limit=size_limit)
 
-    def test_init_correct_size_limit(self):
-        for size_limit in range(1, 8):
+        else:
             t = Table(size_limit=size_limit)
-            assert t.size_limit == size_limit
-            assert t.players == []
+            assert t.size_limit == expected
 
-    def test_add_player(self):
-        t = Table()
-        r = HouseRules(bet_limits=[10, 500])
-        p = Player(
-                name='Player 1',
-                rules=r,
-                bankroll=100,
-                min_bet=10
-        )
+    @pytest.mark.parametrize('size_limit, player, expected',
+                             [
+                                 # players name exists at table
+                                 (2,
+                                  Player(
+                                     name='Player 1',
+                                     rules=HouseRules(bet_limits=[10, 500]),
+                                     bankroll=100,
+                                     min_bet=10),
+                                  ValueError),
+
+                                 # incorrect type
+                                 (2,
+                                  [Player(
+                                     name='Player 1',
+                                     rules=HouseRules(bet_limits=[10, 500]),
+                                     bankroll=100,
+                                     min_bet=10)],
+                                  TypeError),
+
+                                 # table at capacity
+                                 (1,
+                                  Player(
+                                      name='Player 2',
+                                      rules=HouseRules(bet_limits=[10, 500]),
+                                      bankroll=100,
+                                      min_bet=10),
+                                  ValueError)
+                             ])
+    def test_add_player(self, setup_table, size_limit, player, expected):
+        """
+        Tests the add_player method.
+
+        """
+        t, p = setup_table
+        t.size_limit = size_limit
+
         assert len(t.get_players()) == 0
         t.add_player(player=p)
         assert len(t.get_players()) == 1
 
-    def test_add_player_incorrect_instance(self):
-        t = Table()
-        r = HouseRules(bet_limits=[10, 500])
-        p = [Player(
-                name='Player 1',
-                rules=r,
-                bankroll=100,
-                min_bet=10
-        )]
-        assert len(t.get_players()) == 0
-        with pytest.raises(AttributeError):
-            t.add_player(player=p)
+        if type(expected) == type and issubclass(expected, Exception):
+            with pytest.raises(tuple([TypeError, ValueError])):
+                t.add_player(player=player)
 
-    def test_add_player_name_exists(self):
-        t = Table()
-        r = HouseRules(bet_limits=[10, 500])
-        p = Player(
-                name='Player 1',
-                rules=r,
-                bankroll=100,
-                min_bet=10
-        )
-        t.add_player(player=p)
-        with pytest.raises(ValueError):
-            t.add_player(player=p)
+    @pytest.mark.parametrize('player, expected',
+                             [
+                                  # remove player not at table
+                                  (Player(
+                                     name='Player 2',
+                                     rules=HouseRules(bet_limits=[10, 500]),
+                                     bankroll=100,
+                                     min_bet=10),
+                                   ValueError)
+                             ])
+    def test_remove_player(self, setup_table, player, expected):
+        """
+        Tests the remove_player method.
 
-    def test_add_player_table_at_capacity(self):
-        t = Table(size_limit=1)
-        r = HouseRules(bet_limits=[10, 500])
-        p = Player(
-                name='Player 1',
-                rules=r,
-                bankroll=100,
-                min_bet=10
-        )
-        t.add_player(player=p)
-        with pytest.raises(ValueError):
-            t.add_player(player=p)
-
-    def test_remove_player(self):
-        t = Table()
-        r = HouseRules(bet_limits=[10, 500])
-        p = Player(
-                name='Player 1',
-                rules=r,
-                bankroll=100,
-                min_bet=10
-        )
+        """
+        t, p = setup_table
         t.add_player(player=p)
         assert len(t.get_players()) == 1
-        t.remove_player(player=p)
-        assert len(t.get_players()) == 0
 
-    def test_remove_player_player_not_at_table(self):
-        t = Table()
-        r = HouseRules(bet_limits=[10, 500])
-        p = Player(
-                name='Player 1',
-                rules=r,
-                bankroll=100,
-                min_bet=10
-        )
-        assert len(t.get_players()) == 0
-        with pytest.raises(ValueError):
+        if type(expected) == type and issubclass(expected, Exception):
+            with pytest.raises(ValueError):
+                t.remove_player(player=player)
+
+        else:
             t.remove_player(player=p)
+            assert len(t.get_players()) == 0
+
+
 

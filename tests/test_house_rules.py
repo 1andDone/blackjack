@@ -1,60 +1,71 @@
 import pytest
-
 from house_rules import HouseRules
 
 
 class TestHouseRules(object):
 
-    def test_init_no_bet_limits(self):
-        with pytest.raises(Exception):
-            HouseRules()
+    @pytest.mark.parametrize('bet_limits, expected',
+                             [
+                                 ([-5, -1], ValueError),  # negative bet limits
+                                 ([500, 100], ValueError),  # lower limit greater than upper limit
+                                 ([100, 100], ValueError),  # equal bet limits
+                                 ([10.6, 500.7], TypeError),  # non-integer bet limits
+                                 ([10, 500, 20], ValueError),  # 3+ integer bet limits
+                                 ([10, 500], [10, 500])
+                             ])
+    def test_bet_limits(self, bet_limits, expected):
+        """
+        Tests the bet_limits parameter of the __init__ method.
 
-    def test_init_incorrect_bet_limits(self):
-        # bet limits negative
-        with pytest.raises(ValueError):
-            HouseRules(bet_limits=[-5, -1])
+        """
+        if type(expected) == type and issubclass(expected, Exception):
+            with pytest.raises(tuple([TypeError, ValueError])):
+                HouseRules(bet_limits=bet_limits)
 
-        # lower limit greater than upper limit
-        with pytest.raises(ValueError):
-            HouseRules(bet_limits=[500, 10])
+        else:
+            rules = HouseRules(bet_limits=bet_limits)
+            assert rules.min_bet == expected[0]
+            assert rules.max_bet == expected[1]
 
-        # bet limits equal
-        with pytest.raises(ValueError):
-            HouseRules(bet_limits=[100, 100])
+    @pytest.mark.parametrize('blackjack_payout, expected',
+                             [
+                                 (0.5, ValueError),  # blackjack payout less than 1
+                                 (1, ValueError),  # blackjack payout equal to 1
+                                 (1.2, 1.2)
+                             ])
+    def test_blackjack_payout(self, blackjack_payout, expected):
+        """
+        Tests the blackjack_payout parameter of the __init__ method.
 
-        # bet limits not integers
-        with pytest.raises(ValueError):
-            HouseRules(bet_limits=[10.6, 500.7])
+        """
+        if type(expected) == type and issubclass(expected, Exception):
+            with pytest.raises(ValueError):
+                HouseRules(bet_limits=[10, 500], blackjack_payout=blackjack_payout)
 
-        # bet limits with 3+ integers
-        with pytest.raises(ValueError):
-            HouseRules(bet_limits=[10, 500, 20])
+        else:
+            rules = HouseRules(bet_limits=[10, 500], blackjack_payout=blackjack_payout)
+            assert rules.blackjack_payout == expected
 
-    def test_init_incorrect_blackjack_payout(self):
-        # blackjack payout less than 1
-        with pytest.raises(ValueError):
-            HouseRules(bet_limits=[10, 500], blackjack_payout=0.5)
+    @pytest.mark.parametrize('resplit_aces, max_hands, expected',
+                             [
+                                 (False, 1, ValueError),  # max hands < 2
+                                 (False, 5, ValueError),  # max hands > 4
+                                 (True, 2, ValueError),  # re-split aces is allowed, max hands < 3
+                                 (True, 3, 3),
+                                 (False, 2, 2)
+                             ])
+    def test_max_hands(self, resplit_aces, max_hands, expected):
+        """
+        Tests the max_hands parameter of the __init__ method.
 
-        # blackjack payout equal to 1
-        with pytest.raises(ValueError):
-            HouseRules(bet_limits=[10, 500], blackjack_payout=1)
+        """
+        if type(expected) == type and issubclass(expected, Exception):
+            with pytest.raises(ValueError):
+                HouseRules(bet_limits=[10, 500], resplit_aces=resplit_aces, max_hands=max_hands)
 
-    def test_init_incorrect_max_hands(self):
-        # max hands < 2
-        with pytest.raises(ValueError):
-            HouseRules(bet_limits=[10, 500], max_hands=1)
+        else:
+            rules = HouseRules(bet_limits=[10, 500], resplit_aces=resplit_aces, max_hands=max_hands)
+            assert rules.max_hands == expected
 
-        # max hands > 4
-        with pytest.raises(ValueError):
-            HouseRules(bet_limits=[10, 500], max_hands=5)
 
-    def test_init_correct_bet_limits(self):
-        assert HouseRules(bet_limits=[10, 500]).min_bet == 10
-        assert HouseRules(bet_limits=[10, 500]).max_bet == 500
-
-    def test_init_correct_blackjack_payout(self):
-        assert HouseRules(bet_limits=[10, 500], blackjack_payout=1.2).blackjack_payout == 1.2
-
-    def test_init_correct_max_hands(self):
-        assert HouseRules(bet_limits=[10, 500], max_hands=3).max_hands == 3
 

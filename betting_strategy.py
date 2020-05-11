@@ -18,14 +18,13 @@ class BettingStrategy(object):
     def get_strategy(self):
         return self.strategy
 
-    def initial_bet(self, min_bet, bet_spread, bet_scale=None, count=None, count_strategy=None):
+    def initial_bet(self, min_bet, bet_spread, bet_scale=None, count=None):
         if self.strategy == 'Flat':
             return min_bet
         else:
-            if count_strategy in ['Hi-Lo', 'Hi-Opt I', 'Hi-Opt II', 'Omega II', 'Halves', 'Zen Count']:
-                amount = bet_spread * min_bet
-                for key, value in bet_scale.items():
-                    if count < key:
-                        amount = value
-                        break
-                return amount
+            amount = bet_spread * min_bet
+            for key, value in bet_scale.items():
+                if count < key:
+                    amount = value
+                    break
+            return amount

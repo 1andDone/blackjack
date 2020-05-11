@@ -2,6 +2,7 @@ import card_values as cv
 from helper import count_hand, splittable
 from playing_strategy import PlayingStrategy
 from betting_strategy import BettingStrategy
+from house_rules import HouseRules
 
 
 class Player(object):
@@ -10,7 +11,7 @@ class Player(object):
 
     """
     def __init__(
-            self, name, rules, bankroll, min_bet, bet_spread=1, bet_count_amount=None, play_strategy='Basic',
+            self, name, rules, bankroll, min_bet, bet_spread=None, bet_count_amount=None, play_strategy='Basic',
             bet_strategy='Flat', count_strategy=None, count_accuracy=0.5, insurance_count=None,
             back_counting=False, back_counting_entry_exit=None
     ):
@@ -26,7 +27,7 @@ class Player(object):
         min_bet : float
             Minimum amount of money a player is willing to wager when playing a hand
         bet_spread : float, optional
-            Ratio of maximum bet to minimum bet (default is 1)
+            Ratio of maximum bet to minimum bet (default is None)
         bet_count_amount : list of tuples, optional
             List of tuples in ascending order, where the first value of the tuple indicates
             the count and the second value indicates the amount of money wagered at that count.
@@ -51,26 +52,30 @@ class Player(object):
             Count at which the back counter will start and stop playing hands at the table (default
             is None)
         """
-        if bankroll < rules.min_bet:
-            raise ValueError('Initial bankroll must be greater than or equal to table minimum bet.')
-        if bankroll < min_bet:
-            raise ValueError('Initial bankroll must be greater than or equal to player minimum bet.')
-        if bet_strategy == 'Spread' and bet_spread < 1:
-            raise ValueError('Bet spread must be greater than 1.')
+        if not isinstance(name, str):
+            raise TypeError('Name must be of type string.')
+        if not isinstance(rules, HouseRules):
+            raise TypeError('Rules must be of type HouseRules.')
+        if bankroll < rules.min_bet or bankroll < min_bet:
+            raise ValueError('Initial bankroll must be greater than or equal to both player and table minimum bet.')
         if min_bet < rules.min_bet or min_bet > rules.max_bet:
             raise ValueError('Minimum bet is not allowed according to the table rules.')
-        if bet_spread > float(rules.max_bet/min_bet):
+        if bet_strategy == 'Spread' and bet_spread is None:
+            raise ValueError('Bet spread cannot be None with a "Spread" betting strategy.')
+        if bet_strategy == 'Spread' and bet_spread is not None and bet_spread < 1:
+            raise ValueError('Bet spread must be greater than 1.')
+        if bet_spread is not None and bet_spread > float(rules.max_bet/min_bet):
             raise ValueError('Bet spread is too large.')
         if bet_strategy == 'Spread' and count_strategy is None:
             raise ValueError('Count strategy cannot be None with a "Spread" betting strategy.')
         if bet_strategy == 'Spread' and bet_count_amount is None:
             raise ValueError('Bet count amount cannot be None with a "Spread" betting strategy.')
         if bet_count_amount is not None and not all(isinstance(x, tuple) for x in bet_count_amount):
-            raise ValueError('Bet count amount must be made up of a list of tuples.')
+            raise TypeError('Bet count amount must be made up of a list of tuples.')
         if bet_count_amount is not None and not all(isinstance(x[0], (int, float)) for x in bet_count_amount):
-            raise ValueError('Count for bet count amount must be either an integer or floating point.')
+            raise TypeError('Count for bet count amount must be either an integer or floating point.')
         if bet_count_amount is not None and not all(isinstance(x[1], (int, float)) for x in bet_count_amount):
-            raise ValueError('Amount for bet count amount must be either an integer or floating point.')
+            raise TypeError('Amount for bet count amount must be either an integer or floating point.')
         if bet_count_amount is not None and sorted(bet_count_amount, key=lambda x: x[0]) != bet_count_amount:
             raise ValueError('Bet count amount must be sorted from least to greatest counts.')
         if bet_count_amount is not None and sorted(bet_count_amount, key=lambda x: x[1]) != bet_count_amount:
@@ -89,18 +94,22 @@ class Player(object):
                                  '"Halves", or "Zen Count".')
         if back_counting and count_strategy is None:
             raise ValueError('Back counting requires a counting strategy.')
+        if not back_counting and back_counting_entry_exit is not None:
+            raise ValueError('Back counting entry/exit point should be None.')
         if back_counting and back_counting_entry_exit is None:
             raise ValueError('Back counting entry/exit point cannot be None.')
+        if back_counting and not all(isinstance(x, (int, float)) for x in back_counting_entry_exit):
+            raise ValueError('Back counting entry/exit points must be either integers or floating points.')
         if back_counting and len(back_counting_entry_exit) != 2:
             raise ValueError('Back counting entry/exit point must be a list of two values.')
         self.name = str(name)
         self.rules = rules
         self.bankroll = float(bankroll)
         self.min_bet = float(min_bet)
-        self.bet_spread = float(bet_spread)
+        self.bet_spread = bet_spread
         if bet_strategy == 'Flat':
             self.bet_scale = None
-        if bet_strategy == 'Spread':
+        if bet_strategy == 'Spread' and bet_count_amount is not None:
             bet_scale = {}
             for count, amount in bet_count_amount:
                 bet_scale[count] = round(amount, 2)
@@ -118,18 +127,6 @@ class Player(object):
     def get_name(self):
         return self.name
 
-    def get_back_counting(self):
-        return self.back_counting
-
-    def get_back_counting_entry_exit(self):
-        return self.back_counting_entry_exit
-
-    def set_count(self, count):
-        self.count = count
-
-    def get_count(self):
-        return self.count
-
     def get_bankroll(self):
         return self.bankroll
 
@@ -142,26 +139,40 @@ class Player(object):
     def get_bet_scale(self):
         return self.bet_scale
 
-    def get_insurance_count(self):
-        return self.insurance_count
-
-    def increment_bankroll(self, amount):
-        self.bankroll = self.bankroll + amount
-
-    def set_bankroll(self, amount):
-        self.bankroll = amount
-
-    def sufficient_funds(self, amount):
-        return self.bankroll - amount >= 0
+    def get_count_strategy(self):
+        return self.count_strategy
 
     def get_count_accuracy(self):
         return self.count_accuracy
 
-    def get_count_strategy(self):
-        return self.count_strategy
+    def get_insurance_count(self):
+        return self.insurance_count
+
+    def get_back_counting(self):
+        return self.back_counting
+
+    def get_back_counting_entry_exit(self):
+        return self.back_counting_entry_exit
+
+    def get_count(self):
+        return self.count
 
     def get_hands_dict(self):
         return self.hands_dict
+
+    def set_bankroll(self, amount):
+        self.bankroll = amount
+
+    def set_count(self, count):
+        self.count = count
+
+    def increment_bankroll(self, amount):
+        self.bankroll = self.bankroll + amount
+
+    def sufficient_funds(self, amount):
+        if amount < 0:
+            raise ValueError('Amount needs to be a positive value.')
+        return self.bankroll - amount >= 0
 
     def create_hand(self, amount):
         self.hands_dict = {1: {}}
@@ -184,31 +195,14 @@ class Player(object):
         self.increment_bankroll(amount=-amount)
         self.create_hand(amount=amount)
 
-    def get_insurance_bet(self):
-        return self.hands_dict[1]['insurance bet']
-
-    def insurance(self):
-        self.hands_dict[1]['insurance bet'] = 0.5 * self.get_initial_bet()
-        self.hands_dict[1]['insurance'] = True
-
-    def natural_blackjack(self):
-        self.hands_dict[1]['natural blackjack'] = True
-
-    def surrender(self):
-        self.hands_dict[1]['surrender'] = True
-
-    def busted(self, key):
-        self.hands_dict[key]['busted'] = True
-        self.stand(key=key)
-
-    def stand(self, key):
-        self.hands_dict[key]['stand'] = True
-
     def get_hand(self, key):
         return self.hands_dict[key]['hand']
 
     def get_initial_bet(self):
         return self.hands_dict[1]['initial bet']
+
+    def get_insurance_bet(self):
+        return self.hands_dict[1]['insurance bet']
 
     def get_bet(self, key):
         return self.hands_dict[key]['bet']
@@ -231,15 +225,29 @@ class Player(object):
     def get_stand(self, key):
         return self.hands_dict[key]['stand']
 
+    def insurance(self):
+        self.hands_dict[1]['insurance'] = True
+        self.hands_dict[1]['insurance bet'] = 0.5 * self.get_initial_bet()
+
+    def natural_blackjack(self):
+        self.hands_dict[1]['natural blackjack'] = True
+
+    def surrender(self):
+        self.hands_dict[1]['surrender'] = True
+
+    def stand(self, key):
+        self.hands_dict[key]['stand'] = True
+
+    def busted(self, key):
+        self.hands_dict[key]['busted'] = True
+        self.stand(key=key)
+
     def hit(self, key, new_card):
         self.hands_dict[key]['hand'].append(new_card)
 
-    def double_down(self, key, new_card):
-        self.hands_dict[key]['bet'] = 2 * self.hands_dict[key]['bet']
-        self.hit(key=key, new_card=new_card)
-        self.stand(key=key)
-
     def split(self, amount, key, new_key):
+        if new_key != key + 1:
+            raise ValueError('New key must be 1 greater than key.')
         if splittable(rules=self.rules, hand=self.hands_dict[key]['hand']):
             self.hands_dict[key]['split'] = True
             self.hands_dict[new_key] = {}
@@ -248,6 +256,11 @@ class Player(object):
             self.hands_dict[new_key]['busted'] = False
             self.hands_dict[new_key]['split'] = True
             self.hands_dict[new_key]['stand'] = False
+
+    def double_down(self, key, new_card):
+        self.hands_dict[key]['bet'] = 2 * self.hands_dict[key]['bet']
+        self.hit(key=key, new_card=new_card)
+        self.stand(key=key)
 
     def decision(self, hand, dealer_up_card, num_hands, amount):
         if len(hand) == 1:  # if card is split, first action is always to hit

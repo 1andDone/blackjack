@@ -26,8 +26,7 @@ def players_place_bets(table, rules, counting_strategy):
                                         min_bet=p.get_min_bet(),
                                         bet_spread=p.get_bet_spread(),
                                         bet_scale=p.get_bet_scale(),
-                                        count=counting_strategy.true_count(strategy=p.get_count_strategy()),
-                                        count_strategy=p.get_count_strategy()
+                                        count=counting_strategy.true_count(strategy=p.get_count_strategy())
             )
 
         else:

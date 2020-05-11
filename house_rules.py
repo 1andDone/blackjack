@@ -39,7 +39,7 @@ class HouseRules(object):
         if len(bet_limits) != 2:
             raise ValueError('Bet limits should be a list of 2 integers.')
         if not all(isinstance(x, int) for x in bet_limits):
-            raise ValueError('Bet limits need to be integer values.')
+            raise TypeError('Bet limits need to be integer values.')
         if bet_limits[0] < 0:
             raise ValueError('Minimum bet at table must be an integer greater than 0.')
         if bet_limits[1] <= bet_limits[0]:
@@ -48,6 +48,8 @@ class HouseRules(object):
             raise ValueError('Blackjack payout must be greater than 1.')
         if max_hands not in [2, 3, 4]:
             raise ValueError('Maximum number of hands must be 2, 3, or 4.')
+        if resplit_aces and max_hands == 2:
+            raise ValueError('Max hands must be greater than 2 if re-splitting aces is allowed.')
         self.min_bet = int(bet_limits[0])
         self.max_bet = int(bet_limits[1])
         self.s17 = s17

@@ -1,90 +1,84 @@
 import pytest
-
 from counting_strategy import CountingStrategy
 from cards import Cards
 
 
+@pytest.fixture()
+def setup_counting_strategy():
+    c = Cards(shoe_size=4)
+    c.burn_card()
+    c.update_visible_cards(card='A')
+    cs = CountingStrategy(cards=c)
+    return c, cs
+
+
 class TestCountingStrategy(object):
 
-    def test_init_no_cards(self):
-        with pytest.raises(Exception):
-            CountingStrategy()
+    def test_update_running_count(self, setup_counting_strategy):
+        """
+        Tests the update_running_count method.
 
-    def test_init_incorrect_cards(self):
-        with pytest.raises(ValueError):
-            CountingStrategy(cards='Incorrect argument')
-
-    def test_init_correct_cards(self):
-        c = Cards(shoe_size=4)
-        cs = CountingStrategy(cards=c)
-        running_count_dict = {
-            'Halves': 0,
-            'Hi-Lo': 0,
-            'Hi-Opt I': 0,
-            'Hi-Opt II': 0,
-            'Omega II': 0,
-            'Zen Count': 0
-        }
-        assert cs.running_count_dict == running_count_dict
-
-    def test_update_running_count(self):
-        c = Cards(shoe_size=4)
-        cs = CountingStrategy(cards=c)
-        c.update_visible_cards(card='A')
+        """
+        c, cs = setup_counting_strategy
         cs.update_running_count()
-        running_count_dict = {
-            'Halves': -1,
-            'Hi-Lo': -1,
-            'Hi-Opt I': 0,
-            'Hi-Opt II': 0,
-            'Omega II': 0,
-            'Zen Count': -1
-        }
-        assert cs.running_count_dict == running_count_dict
+        assert cs.running_count_dict == {
+                'Halves': -1,
+                'Hi-Lo': -1,
+                'Hi-Opt I': 0,
+                'Hi-Opt II': 0,
+                'Omega II': 0,
+                'Zen Count': -1
+            }
 
-    def test_running_count_incorrect_strategy(self):
-        c = Cards(shoe_size=4)
-        cs = CountingStrategy(cards=c)
-        c.update_visible_cards(card='A')
+    @pytest.mark.parametrize('strategy, expected',
+                             [
+                                 ('No Strategy', ValueError),
+                                 ('Hi-Lo', -1)
+                             ])
+    def test_running_count(self, setup_counting_strategy, strategy, expected):
+        """
+        Tests the running_count method.
+
+        """
+        c, cs = setup_counting_strategy
         cs.update_running_count()
-        with pytest.raises(ValueError):
-            cs.running_count(strategy='Incorrect argument')
 
-    def test_running_count(self):
-        c = Cards(shoe_size=4)
-        cs = CountingStrategy(cards=c)
-        c.update_visible_cards(card='A')
+        if type(expected) == type and issubclass(expected, Exception):
+            with pytest.raises(ValueError):
+                cs.running_count(strategy=strategy)
+
+        else:
+            assert cs.running_count(strategy=strategy) == expected
+
+    @pytest.mark.parametrize('strategy, accuracy, expected',
+                             [
+                                 ('Hi-Lo', 0.1, -17.3),
+                                 ('Hi-Lo', 0.5, -17.5),
+                                 ('Hi-Lo', 1, -17),
+                                 ('Hi-Lo', 0.3, ValueError),
+                                 ('No Strategy', 1, ValueError)
+                             ])
+    def test_true_count(self, setup_counting_strategy, strategy, accuracy, expected):
+        """
+        Tests the true_count method.
+
+        """
+        c, cs = setup_counting_strategy
         cs.update_running_count()
-        assert cs.running_count(strategy='Hi-Lo') == -1
-        assert cs.running_count(strategy='Omega II') == 0
+        c.set_visible_cards()
 
-    def test_true_count_incorrect_strategy(self):
-        c = Cards(shoe_size=4)
-        cs = CountingStrategy(cards=c)
-        c.update_visible_cards(card='A')
-        cs.update_running_count()
-        with pytest.raises(ValueError):
-            cs.true_count(strategy='Incorrect argument')
+        if type(expected) == type and issubclass(expected, Exception):
+            with pytest.raises(ValueError):
+                cs.true_count(strategy=strategy, accuracy=accuracy)
 
-    def test_true_count_incorrect_accuracy(self):
-        c = Cards(shoe_size=4)
-        cs = CountingStrategy(cards=c)
-        c.update_visible_cards(card='A')
-        cs.update_running_count()
-        with pytest.raises(ValueError):
-            cs.true_count(strategy='Hi-Lo', accuracy=0.3)
+        else:
+            # one Ace was already taken out in the setup
+            # 51 additional Ace equivalent cards are added to visible cards
+            # exactly three decks remain
+            for i in range(0, 51):
+                c.burn_card()
+                c.update_visible_cards(card='A')
 
-    def test_true_count(self):
-        c = Cards(shoe_size=4)
-        cs = CountingStrategy(cards=c)
+            cs.update_running_count()
+            assert cs.true_count(strategy=strategy, accuracy=accuracy) == expected
 
-        # equivalent to adding 52 (one deck) Ace equivalent cards to visible cards
-        # exactly three decks remaining
-        for i in range(0, 52):
-            c.burn_card()
-            c.update_visible_cards(card='A')
-
-        cs.update_running_count()
-        assert cs.true_count(strategy='Hi-Lo', accuracy=0.1) == -17.3
-        assert cs.true_count(strategy='Hi-Lo', accuracy=0.5) == -17.5
-        assert cs.true_count(strategy='Hi-Lo', accuracy=1) == -17

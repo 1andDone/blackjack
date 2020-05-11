@@ -31,7 +31,7 @@ class Table(object):
                     raise ValueError('Already a player with that name at table.')
             self.players.append(player)
         else:
-            raise AttributeError('Expected a Player class object.')
+            raise TypeError('Expected a Player class object.')
 
     def remove_player(self, player):
         if player in self.players:

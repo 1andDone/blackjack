@@ -16,7 +16,7 @@ class CountingStrategy(object):
             Cards class instance
         """
         if not isinstance(cards, Cards):
-            raise ValueError('cards must be of type Cards.')
+            raise TypeError('cards must be of type Cards.')
         self.cards = cards
         running_count_dict = {}
         for strategy in ['Hi-Lo', 'Hi-Opt I', 'Hi-Opt II', 'Omega II', 'Halves', 'Zen Count']:

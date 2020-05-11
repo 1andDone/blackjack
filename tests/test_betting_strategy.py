@@ -4,44 +4,46 @@ from betting_strategy import BettingStrategy
 
 class TestBettingStrategy(object):
 
-    def test_init_no_strategy(self):
-        with pytest.raises(Exception):
-            BettingStrategy()
+    @pytest.mark.parametrize('strategy, expected',
+                             [
+                                 ('Flat', 'Flat'),
+                                 ('Spread', 'Spread'),
+                                 ('Other', ValueError)
+                             ])
+    def test_strategy(self, strategy, expected):
+        """
+        Tests the strategy parameter of the __init__ method.
 
-    def test_init_incorrect_strategy(self):
-        with pytest.raises(ValueError):
-            BettingStrategy(strategy='Incorrect argument')
+        """
+        if type(expected) == type and issubclass(expected, Exception):
+            with pytest.raises(ValueError):
+                BettingStrategy(strategy=strategy)
 
-    def test_init_correct_strategy(self):
-        assert BettingStrategy(strategy='Flat').strategy == 'Flat'
-        assert BettingStrategy(strategy='Spread').strategy == 'Spread'
+        else:
+            bs = BettingStrategy(strategy=strategy)
+            assert bs.get_strategy() == expected
 
-    def test_initial_bet_flat(self):
-        bs = BettingStrategy(strategy='Flat')
+    @pytest.mark.parametrize('strategy, min_bet, bet_spread, bet_scale, count, expected',
+                             [
+                                 ('Flat', 10, 1, None, None, 10),
+                                 ('Flat', 20.6, 1, None, None, 20.6),
+                                 ('Spread', 10, 10, {1: 10, 2: 50}, -1, 10),
+                                 ('Spread', 10, 10, {1: 10, 2: 50}, 1, 50),
+                                 ('Spread', 10, 10, {1: 10, 2: 50}, 2.5, 100),
+                             ])
+    def test_initial_bet(self, strategy, min_bet, bet_spread, bet_scale, count, expected):
+        """
+        Tests the initial_bet method.
+
+        """
+        bs = BettingStrategy(strategy=strategy)
         initial_bet = bs.initial_bet(
-                                min_bet=10,
-                                bet_spread=1,
-                                bet_scale=None,
-                                count=None,
-                                count_strategy=None
-        )
-        assert initial_bet == 10
+                                min_bet=min_bet,
+                                bet_spread=bet_spread,
+                                bet_scale=bet_scale,
+                                count=count
+                        )
 
-    def test_initial_bet_spread(self):
-        bs = BettingStrategy(strategy='Spread')
+        assert initial_bet == expected
 
-        for count in [-1, 1, 3, 7]:
-            initial_bet = bs.initial_bet(
-                min_bet=10,
-                bet_spread=10,
-                bet_scale={1: 10, 5: 50},
-                count=count,
-                count_strategy='Hi-Lo'
-            )
 
-            if count < 1:
-                assert initial_bet == 10
-            elif count < 5:
-                assert initial_bet == 50
-            else:
-                assert initial_bet == 100

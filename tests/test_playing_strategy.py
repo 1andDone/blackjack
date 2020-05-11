@@ -4,48 +4,73 @@ from house_rules import HouseRules
 import basic_strategy
 
 
+@pytest.fixture()
+def setup_playing_strategy():
+    r = HouseRules(bet_limits=[10, 500])
+    ps = PlayingStrategy(rules=r, strategy='Basic')
+    return r, ps
+
+
 class TestPlayingStrategy(object):
 
-    def test_init_no_rules(self):
-        with pytest.raises(Exception):
-            PlayingStrategy(strategy='Basic')
+    @pytest.mark.parametrize('strategy, expected',
+                             [
+                                 ('Basic', 'Basic'),
+                                 ('No Strategy', ValueError)
+                             ])
+    def test_strategy(self, strategy, expected):
+        """
+        Tests the strategy parameter of the __init__ method.
 
-    def test_init_no_strategy(self):
-        rules = HouseRules(bet_limits=[10, 500])
-        with pytest.raises(Exception):
-            PlayingStrategy(rules=rules)
+        """
+        r = HouseRules(bet_limits=[10, 500])
 
-    def test_init_incorrect_rules(self):
-        with pytest.raises(ValueError):
-            PlayingStrategy(rules='Incorrect argument', strategy='Basic')
+        if type(expected) == type and issubclass(expected, Exception):
+            with pytest.raises(ValueError):
+                PlayingStrategy(rules=r, strategy=strategy)
 
-    def test_init_incorrect_strategy(self):
-        rules = HouseRules(bet_limits=[10, 500])
-        with pytest.raises(ValueError):
-            PlayingStrategy(rules=rules, strategy='Incorrect argument')
+        else:
+            ps = PlayingStrategy(rules=r, strategy=strategy)
+            assert ps.get_strategy() == strategy
 
-    def test_init_correct_rules_strategy(self):
-        rules = HouseRules(bet_limits=[10, 500])
-        ps = PlayingStrategy(rules=rules, strategy='Basic')
-        assert ps.strategy == 'Basic'
+    @pytest.mark.parametrize('s17, expected',
+                             [
+                                 (True, basic_strategy.s17_splits),
+                                 (False, basic_strategy.h17_splits)
+                             ])
+    def test_splits(self, setup_playing_strategy, s17, expected):
+        """
+        Tests the splits method.
 
-    def test_splits(self):
-        rules = HouseRules(bet_limits=[10, 500], s17=True)
-        ps = PlayingStrategy(rules=rules, strategy='Basic')
-        assert ps.splits() == basic_strategy.s17_splits
-        rules.s17 = False
-        assert ps.splits() == basic_strategy.h17_splits
+        """
+        r, ps = setup_playing_strategy
+        r.s17 = s17
+        assert ps.splits() == expected
 
-    def test_soft(self):
-        rules = HouseRules(bet_limits=[10, 500], s17=True)
-        ps = PlayingStrategy(rules=rules, strategy='Basic')
-        assert ps.soft() == basic_strategy.s17_soft
-        rules.s17 = False
-        assert ps.soft() == basic_strategy.h17_soft
+    @pytest.mark.parametrize('s17, expected',
+                             [
+                                 (True, basic_strategy.s17_soft),
+                                 (False, basic_strategy.h17_soft)
+                             ])
+    def test_soft(self, setup_playing_strategy, s17, expected):
+        """
+        Tests the soft method.
 
-    def test_hard(self):
-        rules = HouseRules(bet_limits=[10, 500], s17=True)
-        ps = PlayingStrategy(rules=rules, strategy='Basic')
-        assert ps.hard() == basic_strategy.s17_hard
-        rules.s17 = False
-        assert ps.hard() == basic_strategy.h17_hard
+        """
+        r, ps = setup_playing_strategy
+        r.s17 = s17
+        assert ps.soft() == expected
+
+    @pytest.mark.parametrize('s17, expected',
+                             [
+                                 (True, basic_strategy.s17_hard),
+                                 (False, basic_strategy.h17_hard)
+                             ])
+    def test_hard(self, setup_playing_strategy, s17, expected):
+        """
+        Tests the hard method.
+
+        """
+        r, ps = setup_playing_strategy
+        r.s17 = s17
+        assert ps.hard() == expected
