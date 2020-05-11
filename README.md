@@ -47,20 +47,20 @@ r = HouseRules(
 
 Betting, playing, and card counting strategies for individual players can also be customized in this simulation. Individual players can have the following parameters:
 
-- Name a player is referred to at the table `name`
-- Amount of money a player begins with when sitting down at the table `bankroll`
-- Minimum amount of money a player is willing to wager when playing a hand `min_bet`
-- Ratio of a player's maximum bet to minimum bet `bet_spread`
+- Name of the player `name`
+- Amount of money the player begins with when sitting down at the table `bankroll`
+- Minimum amount of money the player is willing to wager when playing a hand `min_bet`
+- Ratio of the player's maximum bet to minimum bet `bet_spread`
 - List of tuples where the first value of the tuple indicates the true count and the second value indicates the amount of money wagered for true counts closest to, but not equaling or exceeding, that particular true count. These values are used to create a bet scale with `len(bet_count_amount) + 1` partitions, each incremented by a defined amount `bet_count_amount`
     - For example, if `min_bet=10`, `bet_strategy='Spread'` and `bet_spread=3`, setting `bet_count_amount=[(1, 10), (4, 15)]` would create three partitions - one for true counts less than 1 (player bets their personal minimum amount, $10), another for true counts greater than or equal to 1 and less than 4 (player bets $15), and finally, one for true counts greater than or equal to 4 (player bets $30, equivalent to `min_bet * bet_spread`).
 - Playing strategy used by the player `play_strategy`
     - Currently, all players adhere to *Basic* strategy for playing decisions.
 - Betting strategy used by the player `bet_strategy`
-    - Options include *Flat*, where the player bets the same amount each hand, or *Spread*, where the player bets according to their bet scale.
+    - Options include *Flat*, where the player bets the same amount each hand, and *Spread*, where the player bets according to their bet scale.
 - Card counting strategy used by the player, if any `count_strategy`
     - Options include balanced counting systems such as *Hi-Lo*, *Hi-Opt I*, *Hi-Opt II*, *Omega II*, *Halves*, and *Zen Count*.
-- Indicates the level of precision to which a player can compute the true count (to the nearest 0.1, 0.5, or 1) `count_accuracy`
-- Minimum true count at which a player will purchase insurance, if available `insurance_count`
+- Precision level to which the player can compute the true count (to the nearest 0.1, 0.5, or 1) `count_accuracy`
+- Minimum true count at which the player will purchase insurance, if available `insurance_count`
 - Strategy in which a player counts cards at a table but does not play a hand `back_counting` 
 - List of true counts indicating the point at which a back counter will start and stop playing hands at the table `back_counting_entry_exit`
 
@@ -200,7 +200,7 @@ In the example above, over the course of 10,000 shoe simulations, *Card Counter*
 
 ## Figures
 
-Setting `figures=True` in the shoe simulation set up creates several plots that help visualize our results.
+Setting `figures=True` in the [Setup Shoe Simulations](#setup-shoe-simulations) section creates several plots that help visualize our results.
 
 ![Card Counter Figure 1](/documentation/card_counter_fig1.png?raw=true)
 ![Back Counter Figure 1](/documentation/back_counter_fig1.png?raw=true)
