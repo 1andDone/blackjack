@@ -30,7 +30,7 @@ class Player(object):
             Ratio of maximum bet to minimum bet (default is None)
         bet_count_amount : list of tuples, optional
             List of tuples in ascending order, where the first value of the tuple indicates
-            the count and the second value indicates the amount of money wagered at that count.
+            the true count and the second value indicates the amount of money wagered at that true count.
             These values are used to create a bet scale that increments by a custom amount (default is None)
         play_strategy : str, optional
             Name of the play strategy used by the player (default is "Basic", which implies
@@ -44,12 +44,12 @@ class Player(object):
         count_accuracy : float, optional
             Accuracy of the card counting strategy (default is 0.5)
         insurance_count : float, optional
-            Minimum count at which a player will purchase insurance, if available (default is None)
+            Minimum true count at which a player will purchase insurance, if available (default is None)
         back_counting : bool, optional
             True if player is back counting the shoe (i.e. wonging), false otherwise (default is
             False)
         back_counting_entry_exit : list, optional
-            Count at which the back counter will start and stop playing hands at the table (default
+            True count at which the back counter will start and stop playing hands at the table (default
             is None)
         """
         if not isinstance(name, str):

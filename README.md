@@ -1,6 +1,6 @@
 # blackjack
 
-Blackjack simulation between a dealer and player(s) where the user can change the house rules as well as the betting, playing, and card counting strategies for each player(s).
+Blackjack simulation between a dealer and player(s) where the user is able to change the house rules as well as the betting, playing, and card counting strategies for each player(s).
 
 ![Blackjack](/documentation/blackjack.jpg?raw=true)
 
@@ -20,14 +20,14 @@ This simulation allows the user to fully customize the house rules. By default, 
 - Players are allowed to surrender after dealer checks for blackjack and forfeit half their original wager `late_surrender`
 - 21 on a split Ace does not count as Blackjack `default`
 
-Additional parameters allows the user to specify the following:
+Additional parameters allow the user to specify the following:
 
 - Minimum and maximum bet allowed at the table `bet_limits`
-- Dealer reveals hole card even when all players surrender, bust, or have natural blackjack `dealer_shows_hole_card`
+- Dealer reveals hole card even when all players surrender, bust, or have a natural blackjack `dealer_shows_hole_card`
     - This setting will only have an impact on players that are counting cards. By default, `dealer_shows_hole_card=False`.
 
 An example of the *Vegas Strip* configuration is seen below:
-```
+```python
 r = HouseRules(
             bet_limits=[10, 500],
             s17=True,
@@ -45,27 +45,27 @@ r = HouseRules(
 
 ## Setup Table
 
-This simulation also allows the user to set betting, playing, and card counting strategies for individual players and have as many as 7 playing at a table at once. Individual players can have the following parameters:
+Betting, playing, and card counting strategies for individual players can also be customized in this simulation. Individual players can have the following parameters:
 
-- Name player is referred to at the table `name`
+- Name a player is referred to at the table `name`
 - Amount of money a player begins with when sitting down at the table `bankroll`
 - Minimum amount of money a player is willing to wager when playing a hand `min_bet`
-- Ratio of maximum bet to minimum bet `bet_spread`
+- Ratio of a player's maximum bet to minimum bet `bet_spread`
 - List of tuples where the first value of the tuple indicates the true count and the second value indicates the amount of money wagered for true counts closest to, but not equaling or exceeding, that particular true count. These values are used to create a bet scale with `len(bet_count_amount) + 1` partitions, each incremented by a defined amount `bet_count_amount`
-    - For example, if `min_bet=10`, `bet_strategy='Spread'` and `bet_spread=3`, setting `bet_count_amount=[(1, 10), (3, 15)]` would create three partitions - one for true counts less than 1 (player bets their personal minimum amount, $10), another for true counts greater than or equal to 1 and less than 3 (player bets $15), and finally, one for true counts greater than or equal to 3 (player bets $30, equivalent to `min_bet * bet_spread`).
+    - For example, if `min_bet=10`, `bet_strategy='Spread'` and `bet_spread=3`, setting `bet_count_amount=[(1, 10), (4, 15)]` would create three partitions - one for true counts less than 1 (player bets their personal minimum amount, $10), another for true counts greater than or equal to 1 and less than 4 (player bets $15), and finally, one for true counts greater than or equal to 4 (player bets $30, equivalent to `min_bet * bet_spread`).
 - Playing strategy used by the player `play_strategy`
     - Currently, all players adhere to *Basic* strategy for playing decisions.
 - Betting strategy used by the player `bet_strategy`
     - Options include *Flat*, where the player bets the same amount each hand, or *Spread*, where the player bets according to their bet scale.
 - Card counting strategy used by the player, if any `count_strategy`
     - Options include balanced counting systems such as *Hi-Lo*, *Hi-Opt I*, *Hi-Opt II*, *Omega II*, *Halves*, and *Zen Count*.
-- Indicates the level of accuracy to which a player can compute the true count (to the nearest 0.1, 0.5, or 1) `count_accuracy`
+- Indicates the level of precision to which a player can compute the true count (to the nearest 0.1, 0.5, or 1) `count_accuracy`
 - Minimum true count at which a player will purchase insurance, if available `insurance_count`
 - Strategy in which a player counts cards at a table but does not play a hand `back_counting` 
 - List of true counts indicating the point at which a back counter will start and stop playing hands at the table `back_counting_entry_exit`
 
 An example table setup is seen below:
-```
+```python
 p = [
         Player(
             name='Card Counter',
@@ -85,8 +85,7 @@ p = [
             bankroll=750,
             min_bet=15,
             play_strategy='Basic',
-            bet_strategy='Flat',
-            count_strategy=None,
+            bet_strategy='Flat'
         ),
         Player(
             name='Back Counter',
@@ -104,7 +103,7 @@ p = [
         )
 ]
 ```
-In the example above, *Card Counter* is the first to act every game and sits down at the table with a $12,000 bankroll. *Card Counter* is counting cards using the *Halves* strategy and is able to compute the true count to the nearest 0.5. *Card Counter* will vary their bets according to their personal bet scale:
+In the example above, *Card Counter* is the first to act every game and sits down at the table with a $12,000 bankroll. *Card Counter* is counting cards using the *Halves* strategy and is able to compute the true count at any point in time to the nearest 0.5. *Card Counter* will make the insurance side bet offered at the table only when the true count is greater than or equal to 5. Additionally, *Card Counter* will vary their bets according to their personal bet scale:
 
 | Amount Bet | Halves True Count |
 |:----------:| :----------------:|
@@ -113,11 +112,9 @@ In the example above, *Card Counter* is the first to act every game and sits dow
 | $75        | 5 - <7            |
 | $100       | >=7               |
 
-Additionally, *Card Counter* will make the insurance side bet offered at the table only when the true count is greater than or equal to 5.  
-
 The next player to act, *Average*, sits down at the table with $750 and will make $15 bets each hand. *Average* does not bother counting cards.
 
-Finally, the last player to act, *Back Counter*, is back counting while using the *Hi-Lo* strategy. *Back Counter* only starts playing at the table when the true count (computed to the nearest 0.1) is 5 or higher and will leave the table if it drops below 0. *Back Counter* starts off with $50,000 dollars and will bet a minimum of $25 each hand but is willing to bet up to $300 on any given hand, depending on the true count. The exact amount *Back Counter* bets is based on their personal betting scale: 
+Finally, the last player to act, *Back Counter*, is back counting while using the *Hi-Lo* strategy. *Back Counter* only starts playing at the table when the true count (computed to the nearest 0.1) is 5 or higher and will leave the table if it drops below 0. *Back Counter* begins with $50,000 and will bet a minimum of $25 each hand but may end up betting as much as $300 on a hand, depending on the true count. The exact amount *Back Counter* bets is based on their personal betting scale: 
 
 | Amount Bet | Hi-Lo True Count  |
 |:----------:|:-----------------:|
@@ -132,14 +129,14 @@ Finally, the last player to act, *Back Counter*, is back counting while using th
 Now that the rules and table have been set, it's time to set up the shoe simulation. Below, a few important parameters are highlighted for the shoe simulation:
 
 - Initializes the pseudorandom number generator to replicate the ordering of the deck from run-to-run `seed_number`
-- Number of shoes to simulate over `simulations`
+- Number of shoes to simulate `simulations`
 - Number of decks of cards that will be used in a shoe `shoe_size`
 - Percentage of a shoe played before the shoe is re-shuffled `penetration`
-- Option to create as many as three different visualizations for each player `figures`
+- Option to create default visualizations for each player `figures`
     - See the [Figures](#figures) section for more information.
 
 An example shoe simulation is seen below:
-```
+```python
 ps = PlayShoe(
         rules=r,
         players=p,
@@ -154,7 +151,7 @@ ps = PlayShoe(
 ## Run 
 
 Finally, after setting everything up, the code below runs the shoe simulation:
-```
+```python
 ps.main()
 ```
 
@@ -163,11 +160,11 @@ ps.main()
 By default, basic shoe simulation statistics will be printed off. These include:
 
 - *Total hands* - number of hands played by an individual player
-- *Total amount bet* - combination of the initial wager and additional wagers from splits and doubling
-- *Total initial bet* - only includes the initial wager (does not include additional wagers from splits and doubling)
-- *Total net winnings* - total amount won by the player won less the total amount lost by the player 
-- *House edge* - ratio of the total net winnings to the total initial bet
-- *Element of risk* - ratio of the total net winnings to the total amount bet
+- *Total amount bet* - combination of the initial wager and additional wagers from splits and doubling made by an individual player
+- *Total initial bet* - only includes the initial wagers made by an individual player (does not include additional wagers from splits and doubling)
+- *Total net winnings* - total amount won less total amount lost by an individual player
+- *House edge* - ratio of an individual player's total net winnings to total initial bet
+- *Element of risk* - ratio of an individual player's total net winnings to total amount bet
 
 ```
 Player: Card Counter
@@ -199,7 +196,7 @@ Total net winnings: 89015.0
 House edge: 2.9408849580911918
 Element of risk: 2.6525953804938958
 ```
-In the example above, over the course of the simulation, *Card Counter* won $55,577.50 while playing every hand of the simulation. *Average* lasted 19,463 hands before having to leave the table after losing all of their initial bankroll. *Back Counter* played slightly more hands than *Average* but walked away with the most winnings ($89,015).
+In the example above, over the course of 10,000 shoe simulations, *Card Counter* won $55,577.50 while playing every hand of the simulation. *Average* lasted 19,463 hands before having to leave the table after losing all of their initial bankroll. *Back Counter* played slightly more hands than *Average* but walked away with the most winnings ($89,015).
 
 ## Figures
 
@@ -208,12 +205,12 @@ Setting `figures=True` in the shoe simulation set up creates several plots that 
 ![Card Counter Figure 1](/documentation/card_counter_fig1.png?raw=true)
 ![Back Counter Figure 1](/documentation/back_counter_fig1.png?raw=true)
 
-The two plots above are only created for players that count cards. These plots show the net winnings per shoe for each player for each hand played at a given true count. 
+The two plots above are only created for players that count cards. These plots show the net winnings per shoe for each hand played at a given true count for an individual player. 
 
 ![Card Counter Figure 2](/documentation/card_counter_fig2.png?raw=true)
 ![Back Counter Figure 2](/documentation/back_counter_fig2.png?raw=true)
 
-The two plots above are only created for players that count cards. These plots show the net cumulative net winnings per shoe for each player for each hand played at a given true count. 
+The two plots above are only created for players that count cards. These plots show the net cumulative net winnings per shoe for each hand played at a given true count for an individual player. 
 
 ![Card Counter Figure 3](/documentation/card_counter_fig3.png?raw=true)
 ![Average Figure 3](/documentation/average_fig3.png?raw=true)
