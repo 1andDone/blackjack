@@ -73,12 +73,13 @@ def net_winnings_figure(
 ):
     """
     Creates a plot based on the player's counting strategy of their individual net winnings
-    for each true or running count value they played a hand during.
+    for each true count value which they played a hand as well as their cumulative
+    net winnings as the true count increased.
 
     Parameters
     ----------
     count : array_like
-        Current true or running count based on the player's counting strategy
+        Current true count based on the player's counting strategy
     count_accuracy : float
         Accuracy of player's counting strategy
     net_winnings : array_like
