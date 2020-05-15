@@ -1,6 +1,6 @@
 # blackjack
 
-Blackjack simulation between a dealer and player(s) where the user is able to change the house rules as well as the betting, playing, and card counting strategies for each player(s).
+Blackjack simulation between a dealer and as many as 7 players where the user can fully customize both the house rules as well as multiple facets of an individual player's gameplay and strategy. The simulation plays through a user-specified number of shoes so long as at least one player seated at the table has sufficient funds to continue to play. Default statistics and visualizations are produced each simulation.  
 
 ![Blackjack](/documentation/blackjack.jpg?raw=true)
 
