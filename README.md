@@ -1,6 +1,6 @@
 # blackjack
 
-Blackjack simulation between a dealer and as many as 7 players that allows the user to fully customize the house rules as well as multiple facets of an individual player's gameplay and strategy. The simulation plays through a user-specified number of shoes so long as at least one player seated at the table has sufficient funds to continue to play. Default statistics and visualizations are produced each simulation.  
+Blackjack simulation between a dealer and as many as 7 players that allows the user to fully customize the house rules as well as multiple facets of an individual player's gameplay and strategy. The simulation plays through a user-specified number of shoes so long as at least one player seated at the table has sufficient funds to continue play. Default statistics and visualizations are produced each simulation.  
 
 ![Blackjack](/documentation/blackjack.jpg?raw=true)
 
@@ -45,7 +45,7 @@ r = HouseRules(
 
 ## Setup Table
 
-Betting, playing, and card counting strategies for individual players can also be customized in this simulation. Individual players can have the following parameters:
+Betting, playing, and card counting strategies for individual players can also be customized in this simulation. Individual players have the following parameters:
 
 - Name of the player `name`
 - Amount of money the player begins with when sitting down at the table `bankroll`
