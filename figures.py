@@ -66,7 +66,7 @@ def format_title(
     return title
 
 
-def net_winnings_per_shoe(
+def net_winnings_figure(
         count, count_accuracy, net_winnings, name, shoe_size, penetration,
         blackjack_payout, count_strategy, play_strategy, bet_strategy,
         bet_spread, initial_bankroll, min_bet, simulations
@@ -77,11 +77,11 @@ def net_winnings_per_shoe(
 
     Parameters
     ----------
-    count : float
+    count : array_like
         Current true or running count based on the player's counting strategy
     count_accuracy : float
         Accuracy of player's counting strategy
-    net_winnings : float
+    net_winnings : array_like
         Amount of money a player has won or lost since starting
     name : str
         Name of the player
@@ -115,15 +115,18 @@ def net_winnings_per_shoe(
     else:
         width = 0.8
 
-    plt.figure(figsize=(12, 9))
-    plt.bar(x=count[net_winnings > 0], height=net_winnings[net_winnings > 0] / simulations, color='b', width=width)
-    plt.bar(x=count[net_winnings < 0], height=net_winnings[net_winnings < 0] / simulations, color='r', width=width)
-    plt.xlabel(str(count_strategy) + ' True Count')
-    plt.ylabel('Net Winnings Per Shoe ($)')
-    plt.title(
+    fig, (ax1, ax2) = plt.subplots(
+                                nrows=2,
+                                ncols=1,
+                                sharex=True,
+                                gridspec_kw={'hspace': 0.1},
+                                figsize=(12, 9)
+    )
+
+    ax1.set_title(
         format_title(
             name=name,
-            plot_name='Net Winnings Per Shoe',
+            plot_name='Net Winnings',
             shoe_size=shoe_size,
             penetration=penetration,
             blackjack_payout=blackjack_payout,
@@ -136,73 +139,21 @@ def net_winnings_per_shoe(
             simulations=simulations
         )
     )
-    plt.grid()
+
+    ax1.bar(x=count[net_winnings > 0], height=net_winnings[net_winnings > 0] / simulations, color='b', width=width)
+    ax1.bar(x=count[net_winnings < 0], height=net_winnings[net_winnings < 0] / simulations, color='r', width=width)
+    ax1.set_ylabel('Net Winnings Per Shoe ($)')
+    ax1.grid()
+
+    ax2.plot(count, np.cumsum(net_winnings), color='k')
+    ax2.set_ylabel('Cumulative Net Winnings ($)')
+    ax2.set_xlabel(str(count_strategy) + ' True Count')
+    ax2.grid()
+
     plt.show()
 
 
-def cumulative_net_winnings_per_shoe(
-        count, net_winnings, name, shoe_size, penetration, blackjack_payout, count_strategy,
-        play_strategy, bet_strategy, bet_spread, initial_bankroll, min_bet, simulations
-):
-    """
-    Creates a plot based on the player's counting strategy of their individual cumulative
-    net winnings over each true or running count value they played a hand during.
-
-    Parameters
-    ----------
-    count : float
-        Current true or running count based on the player's counting strategy
-    net_winnings : float
-        Amount of money a player has won or lost since starting
-    name : str
-        Name of the player
-    shoe_size : int
-        Number of decks used during a blackjack game
-    penetration : float
-        Percentage of shoe played before the deck is re-shuffled
-    blackjack_payout : float
-        Payout for a player receiving a natural blackjack
-    count_strategy : str
-        Name of the card counting strategy used by the player
-    play_strategy : str
-        Name of the play strategy used by the player
-    bet_strategy : str
-        Name of the bet strategy used by the player
-    bet_spread : float
-        Ratio of maximum bet to minimum bet
-    initial_bankroll : float
-        Amount of money a player starts out with when sitting down at a table
-    min_bet : float
-        Minimum amount of money a player is willing to wager when playing a hand
-    simulations : int
-        Number of shoes played
-
-    """
-    plt.figure(figsize=(12, 9))
-    plt.plot(count, np.cumsum(net_winnings) / simulations)
-    plt.xlabel(str(count_strategy) + ' True Count')
-    plt.ylabel('Net Winnings Per Shoe')
-    plt.title(
-        format_title(
-                name=name,
-                plot_name='Cumulative Net Winnings per Shoe',
-                shoe_size=shoe_size,
-                penetration=penetration,
-                blackjack_payout=blackjack_payout,
-                count_strategy=count_strategy,
-                play_strategy=play_strategy,
-                bet_strategy=bet_strategy,
-                bet_spread=bet_spread,
-                initial_bankroll=initial_bankroll,
-                min_bet=min_bet,
-                simulations=simulations
-        )
-    )
-    plt.grid()
-    plt.show()
-
-
-def bankroll_growth(
+def bankroll_growth_figure(
         bankroll, shoe_num, name, shoe_size, penetration, blackjack_payout, count_strategy,
         play_strategy, bet_strategy, bet_spread, initial_bankroll, min_bet, simulations
 ):
@@ -211,9 +162,9 @@ def bankroll_growth(
 
     Parameters
     ----------
-    bankroll : float
-        Amount of money a player currently has
-    shoe_num : int
+    bankroll : array_like
+        Amount of money a player has at the end of a shoe
+    shoe_num : array_like
         Current shoe number
     name : str
         Name of the player

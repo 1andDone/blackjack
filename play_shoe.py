@@ -6,7 +6,7 @@ from counting_strategy import CountingStrategy
 from table import Table
 from simulation_stats import SimulationStats
 from gameplay import players_place_bets, deal_hands, players_play_hands, dealer_turn, dealer_plays_hand, compare_hands
-from figures import net_winnings_per_shoe, cumulative_net_winnings_per_shoe, bankroll_growth
+from figures import net_winnings_figure, bankroll_growth_figure
 
 
 class PlayShoe(object):
@@ -240,12 +240,12 @@ class PlayShoe(object):
             print('Element of risk:', 100 * (np.sum(net_winnings) / np.sum(overall_bet)))
             print('\n')
 
-            # figures for players that are counting cards
+            # figures are only created for players that are counting cards
             if self.figures:
                 for p in self.players:
                     if p.get_name() == player_key:
                         if p.get_count_strategy() is not None:
-                            net_winnings_per_shoe(
+                            net_winnings_figure(
                                 count=count,
                                 count_accuracy=p.get_count_accuracy(),
                                 net_winnings=net_winnings,
@@ -261,21 +261,6 @@ class PlayShoe(object):
                                 min_bet=p.get_min_bet(),
                                 simulations=self.simulations
                             )
-                            cumulative_net_winnings_per_shoe(
-                                    count=count,
-                                    net_winnings=net_winnings,
-                                    name=p.get_name(),
-                                    shoe_size=self.shoe_size,
-                                    penetration=self.penetration,
-                                    blackjack_payout=self.rules.blackjack_payout,
-                                    count_strategy=p.get_count_strategy(),
-                                    play_strategy=p.play_strategy.get_strategy(),
-                                    bet_strategy=p.bet_strategy.get_strategy(),
-                                    bet_spread=p.get_bet_spread(),
-                                    initial_bankroll=ending_bankroll[p.get_name()][0],
-                                    min_bet=p.get_min_bet(),
-                                    simulations=self.simulations
-                            )
 
         # figures for all players
         if self.figures:
@@ -289,7 +274,7 @@ class PlayShoe(object):
 
                 for p in self.players:
                     if p.get_name() == player_key:
-                        bankroll_growth(
+                        bankroll_growth_figure(
                             bankroll=bankroll,
                             shoe_num=shoe_num,
                             name=p.get_name(),

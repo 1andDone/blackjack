@@ -200,21 +200,16 @@ In the example above, over the course of 10,000 shoe simulations, *Card Counter*
 
 ## Figures
 
-Setting `figures=True` in the [Setup Shoe Simulations](#setup-shoe-simulations) section creates several plots that help visualize our results.
+Setting `figures=True` in the [Setup Shoe Simulations](#setup-shoe-simulations) section creates a couple plots that help visualize our results.
 
 ![Card Counter Figure 1](/documentation/card_counter_fig1.png?raw=true)
 ![Back Counter Figure 1](/documentation/back_counter_fig1.png?raw=true)
 
-The two plots above are only created for players that count cards. These plots show the net winnings per shoe for each hand played at a given true count for an individual player. 
+The two plots above are only created for players that count cards. The top subplot shows the net winnings per shoe for each hand played at a given true count for an individual player. The bottom subplot tracks the cumulative net winnings for an individual player as the true count increases.
 
 ![Card Counter Figure 2](/documentation/card_counter_fig2.png?raw=true)
+![Average Figure 2](/documentation/average_fig2.png?raw=true)
 ![Back Counter Figure 2](/documentation/back_counter_fig2.png?raw=true)
-
-The two plots above are only created for players that count cards. These plots show the net cumulative net winnings per shoe for each hand played at a given true count for an individual player. 
-
-![Card Counter Figure 3](/documentation/card_counter_fig3.png?raw=true)
-![Average Figure 3](/documentation/average_fig3.png?raw=true)
-![Back Counter Figure 3](/documentation/back_counter_fig3.png?raw=true)
 
 The three plots above show the players bankroll growth over the course of the shoe simulations. 
 
