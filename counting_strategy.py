@@ -19,18 +19,21 @@ class CountingStrategy(object):
             raise TypeError('cards must be of type Cards.')
         self.cards = cards
         running_count_dict = {}
-        for strategy in ['Hi-Lo', 'Hi-Opt I', 'Hi-Opt II', 'Omega II', 'Halves', 'Zen Count']:
-            running_count_dict[strategy] = 0
+        for strategy in ['Hi-Lo', 'Hi-Opt I', 'Hi-Opt II', 'Omega II', 'Halves', 'Zen Count']:  # balanced system
+            running_count_dict[strategy] = 0  # starting count equal to 0
+        for strategy in ['KO']:  # unbalanced system
+            running_count_dict[strategy] = -4 * (cards.shoe_size - 1)  # starting count not equal to 0
         self.running_count_dict = running_count_dict
 
     def update_running_count(self):
-        for strategy in ['Hi-Lo', 'Hi-Opt I', 'Hi-Opt II', 'Omega II', 'Halves', 'Zen Count']:
+        for strategy in ['Hi-Lo', 'Hi-Opt I', 'Hi-Opt II', 'Omega II', 'Halves', 'Zen Count', 'KO']:
             for card in self.cards.get_visible_cards():
                 self.running_count_dict[strategy] += count_dict[strategy].get(card)
 
     def running_count(self, strategy):
-        if strategy not in ['Hi-Lo', 'Hi-Opt I', 'Hi-Opt II', 'Omega II', 'Halves', 'Zen Count']:
-            raise ValueError('Strategy must be "Hi-Lo", "Hi-Opt I", "Hi-Opt II", "Omega II", "Halves", or "Zen Count".')
+        if strategy not in ['Hi-Lo', 'Hi-Opt I', 'Hi-Opt II', 'Omega II', 'Halves', 'Zen Count', 'KO']:
+            raise ValueError('Strategy must be "Hi-Lo", "Hi-Opt I", "Hi-Opt II", "Omega II", "Halves", '
+                             '"Zen Count", or "KO".')
         return self.running_count_dict[strategy]
 
     def true_count(self, strategy, accuracy=0.5):

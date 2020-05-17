@@ -18,8 +18,7 @@ def players_place_bets(table, rules, counting_strategy):
         CountingStrategy class instance
 
     """
-    # need to use copy because players can be removed mid-iteration
-    for p in table.get_players().copy():
+    for p in table.get_players().copy():  # need to use copy because players can be removed mid-iteration
 
         if p.get_count_strategy() in ['Hi-Lo', 'Hi-Opt I', 'Hi-Opt II', 'Omega II', 'Halves', 'Zen Count']:
             amount = p.bet_strategy.initial_bet(
@@ -27,6 +26,14 @@ def players_place_bets(table, rules, counting_strategy):
                                         bet_spread=p.get_bet_spread(),
                                         bet_scale=p.get_bet_scale(),
                                         count=counting_strategy.true_count(strategy=p.get_count_strategy())
+            )
+
+        elif p.get_count_strategy() == 'KO':
+            amount = p.bet_strategy.initial_bet(
+                                        min_bet=p.get_min_bet(),
+                                        bet_spread=p.get_bet_spread(),
+                                        bet_scale=p.get_bet_scale(),
+                                        count=counting_strategy.running_count(strategy=p.get_count_strategy())
             )
 
         else:

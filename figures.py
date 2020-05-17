@@ -48,18 +48,18 @@ def format_title(
              '{count_strategy}{play_strategy}{bet_strategy}{bet_spread}\n' +
              '{initial_bankroll} Initial Bankroll, {min_bet} Minimum Bet\n' +
              '{simulations} Shoe Simulations').format(
-        name=name,
+        name="'" + name + "'",
         plot_name=plot_name,
         shoe_size=shoe_size,
         penetration=int(penetration * 100) if (penetration * 100) - int(penetration * 100) == 0 else penetration * 100,
         blackjack_payout=blackjack_payout,
-        count_strategy=count_strategy + ' True Count, ' if count_strategy is not None else '',
+        count_strategy="'" + count_strategy + "'" + ' Card Counting System, ' if count_strategy is not None else '',
         play_strategy='Basic Strategy' if play_strategy == 'Basic' else play_strategy,
         bet_strategy=', ' + bet_strategy + ' Bet' if bet_strategy == 'Flat' else '',
-        bet_spread=', 1-' + str(int(bet_spread) if bet_spread - int(bet_spread) == 0
-                   else bet_spread) + ' Bet Spread' if bet_strategy == 'Spread' else '',
+        bet_spread=', 1-' + str(int(bet_spread) if bet_spread - int(bet_spread) == 0 else bet_spread) +
+        ' Bet Spread' if bet_strategy == 'Spread' else '',
         initial_bankroll='\${:.2f}'.format(int(initial_bankroll)) if initial_bankroll - int(initial_bankroll) == 0
-                          else '\${:.2f}'.format(initial_bankroll),
+        else '\${:.2f}'.format(initial_bankroll),
         min_bet='\${:.2f}'.format(int(min_bet)) if min_bet - int(min_bet) == 0 else '\${:.2f}'.format(min_bet),
         simulations=simulations)
 
@@ -67,21 +67,22 @@ def format_title(
 
 
 def net_winnings_figure(
-        count, count_accuracy, net_winnings, name, shoe_size, penetration,
+        count, true_count_accuracy, net_winnings, name, shoe_size, penetration,
         blackjack_payout, count_strategy, play_strategy, bet_strategy,
         bet_spread, initial_bankroll, min_bet, simulations
 ):
     """
-    Creates a plot based on the player's counting strategy of their individual net winnings
-    for each true count value which they played a hand as well as their cumulative
-    net winnings as the true count increased.
+    Creates two sub-plots based on the player's counting strategy. The top sub-plot shows
+    the individual net winnings of a player for each running or true count value for which
+    they played a hand. The bottom sub-plot shows the cumulative net winnings of a player
+    as the running or true count increased.
 
     Parameters
     ----------
     count : array_like
-        Current true count based on the player's counting strategy
-    count_accuracy : float
-        Accuracy of player's counting strategy
+        Current running or true count based on the player's counting strategy
+    true_count_accuracy : float
+        Accuracy of player's balanced card counting strategy
     net_winnings : array_like
         Amount of money a player has won or lost since starting
     name : str
@@ -108,10 +109,12 @@ def net_winnings_figure(
         Number of shoes played
 
     """
-    # format width to be 80% of count accuracy
-    if count_accuracy == 0.1:
+    balanced_card_counting_systems = ['Hi-Lo', 'Hi-Opt I', 'Hi-Opt II', 'Omega II', 'Halves', 'Zen Count']
+
+    # format width to be 80% of true count accuracy
+    if true_count_accuracy == 0.1:
         width = 0.08
-    elif count_accuracy == 0.5:
+    elif true_count_accuracy == 0.5:
         width = 0.4
     else:
         width = 0.8
@@ -148,7 +151,8 @@ def net_winnings_figure(
 
     ax2.plot(count, np.cumsum(net_winnings), color='k')
     ax2.set_ylabel('Cumulative Net Winnings ($)')
-    ax2.set_xlabel(str(count_strategy) + ' True Count')
+    ax2.set_xlabel(str(count_strategy) + ' True Count' if count_strategy in balanced_card_counting_systems else
+                   str(count_strategy) + ' Running Count')
     ax2.grid()
 
     plt.show()

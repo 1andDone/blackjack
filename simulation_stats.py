@@ -15,7 +15,7 @@ class SimulationStats(object):
             HouseRules class instance
         """
         if not isinstance(rules, HouseRules):
-            raise TypeError('rules must be of type HouseRules.')
+            raise TypeError('Rules must be of type HouseRules.')
         self.rules = rules
         self.stats_dict = {}
 

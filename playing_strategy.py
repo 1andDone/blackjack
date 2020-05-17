@@ -19,7 +19,7 @@ class PlayingStrategy(object):
             Name of the playing strategy used by a player at the table
         """
         if not isinstance(rules, HouseRules):
-            raise TypeError('rules must be of type HouseRules.')
+            raise TypeError('Rules must be of type HouseRules.')
         if strategy not in ['Basic']:
             raise ValueError('Strategy must be "Basic".')
         self.rules = rules

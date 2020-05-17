@@ -127,7 +127,8 @@ class TestPlayer(object):
                     bet_count_amount=[(1, 20), (2, 50)],
                     bet_spread=bet_spread,
                     bet_strategy='Spread',
-                    count_strategy='Hi-Lo'
+                    count_strategy='Hi-Lo',
+                    true_count_accuracy=0.5
                 )
 
         else:
@@ -139,7 +140,8 @@ class TestPlayer(object):
                     bet_count_amount=[(1, 20), (2, 50)],
                     bet_spread=bet_spread,
                     bet_strategy='Spread',
-                    count_strategy='Hi-Lo'
+                    count_strategy='Hi-Lo',
+                    true_count_accuracy=0.5
             )
             assert p.get_bet_spread() == expected
 
@@ -169,7 +171,8 @@ class TestPlayer(object):
                     bet_count_amount=bet_count_amount,
                     bet_spread=10,
                     bet_strategy='Spread',
-                    count_strategy='Hi-Lo'
+                    count_strategy='Hi-Lo',
+                    true_count_accuracy=0.5
                 )
 
         else:
@@ -181,9 +184,56 @@ class TestPlayer(object):
                     bet_count_amount=bet_count_amount,
                     bet_spread=10,
                     bet_strategy='Spread',
-                    count_strategy='Hi-Lo'
+                    count_strategy='Hi-Lo',
+                    true_count_accuracy=0.5
             )
             assert p.bet_scale == expected
+
+    @pytest.mark.parametrize('bet_strategy, count_strategy, true_count_accuracy, expected',
+                             [
+                                 ('Spread', 'Hi-Lo', 1, 1),
+                                 ('Spread', 'Hi-Lo', 0.5, 0.5),
+                                 ('Spread', 'Hi-Lo', 0.1, 0.1),
+                                 ('Spread', 'Hi-Lo', None, ValueError),
+                                 ('Spread', 'KO', None, None),
+                                 ('Spread', 'KO', 1, ValueError),
+                                 ('Flat', None, None, None),
+                                 ('Flat', None, 0.5, ValueError)
+                             ])
+    def test_true_count_accuracy(self, bet_strategy, count_strategy, true_count_accuracy, expected):
+        """
+        Tests the true_count_accuracy of the __init__ method.
+
+        """
+        r = HouseRules(bet_limits=[10, 500])
+
+        if type(expected) == type and issubclass(expected, Exception):
+            with pytest.raises(ValueError):
+                Player(
+                    name='Player 1',
+                    rules=r,
+                    bankroll=100,
+                    min_bet=10,
+                    bet_count_amount=[(1, 10), (2, 50)],
+                    bet_spread=10,
+                    bet_strategy=bet_strategy,
+                    count_strategy=count_strategy,
+                    true_count_accuracy=true_count_accuracy
+                )
+
+        else:
+            p = Player(
+                    name='Player 1',
+                    rules=r,
+                    bankroll=100,
+                    min_bet=10,
+                    bet_count_amount=[(1, 10), (2, 50)],
+                    bet_spread=10,
+                    bet_strategy=bet_strategy,
+                    count_strategy=count_strategy,
+                    true_count_accuracy=true_count_accuracy
+            )
+            assert p.get_true_count_accuracy() == expected
 
     @pytest.mark.parametrize('count_strategy, back_counting, back_counting_entry_exit, expected',
                              [
@@ -213,6 +263,7 @@ class TestPlayer(object):
                     bet_spread=10,
                     bet_strategy='Spread',
                     count_strategy=count_strategy,
+                    true_count_accuracy=0.5,
                     back_counting=back_counting,
                     back_counting_entry_exit=back_counting_entry_exit
                 )
@@ -227,6 +278,7 @@ class TestPlayer(object):
                     bet_spread=10,
                     bet_strategy='Spread',
                     count_strategy=count_strategy,
+                    true_count_accuracy=0.5,
                     back_counting=back_counting,
                     back_counting_entry_exit=back_counting_entry_exit
             )
@@ -282,7 +334,7 @@ class TestPlayer(object):
             1: {
                     'hand': [],
                     'initial bet': 10,
-                    'insurance bet' : 0,
+                    'insurance bet': 0,
                     'bet': 10,
                     'insurance': False,
                     'natural blackjack': False,

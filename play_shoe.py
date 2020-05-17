@@ -1,6 +1,7 @@
 import random
 import numpy as np
 
+from house_rules import HouseRules
 from cards import Cards
 from counting_strategy import CountingStrategy
 from table import Table
@@ -27,7 +28,8 @@ class PlayShoe(object):
         players : list of Player
             List of Player class instances
         seed_number : int, optional
-            Seed number used to replicate results (default is None)
+            Initializes the pseudorandom number generator to replicate the ordering of the
+            shoe from run-to-run (default is None)
         shoe_size : int, optional
             Number of decks used during a blackjack game (default is 6)
         penetration : float, optional
@@ -35,8 +37,10 @@ class PlayShoe(object):
         simulations : int, optional
             Number of shoes played (default is 10,000)
         figures : bool, optional
-            True if plots are created, false otherwise (default is False)
+            True if default plots are created, false otherwise (default is False)
         """
+        if not isinstance(rules, HouseRules):
+            raise TypeError('Rules must be of type HouseRules.')
         self.rules = rules
         self.players = players
         self.seed_number = seed_number
@@ -74,6 +78,10 @@ class PlayShoe(object):
             # update ending bankroll
             ending_bankroll[p.get_name()][0] = p.get_bankroll()
 
+        # balanced and unbalanced card counting systems
+        balanced_card_counting_systems = ['Hi-Lo', 'Hi-Opt I', 'Hi-Opt II', 'Omega II', 'Halves', 'Zen Count']
+        unbalanced_card_counting_systems = ['KO']
+
         for sim in range(1, self.simulations + 1):
 
             # set up cards and shuffle
@@ -88,26 +96,42 @@ class PlayShoe(object):
                 # add back counters to the table if the count is favorable
                 for p in self.players:
                     if p.get_back_counting() and p not in t.get_players() and current_bankroll[p.get_name()] >= \
-                            self.rules.min_bet and p.get_count_strategy() is not None:
-                        if cs.true_count(strategy=p.get_count_strategy(), accuracy=p.get_count_accuracy()) >= \
-                                p.get_back_counting_entry_exit()[0]:
-                            t.add_player(player=p)
+                            self.rules.min_bet:  # and p.get_count_strategy() is not None:
+                        if p.get_count_strategy() in balanced_card_counting_systems:
+                            if cs.true_count(strategy=p.get_count_strategy(), accuracy=p.get_true_count_accuracy()) >= \
+                                 p.get_back_counting_entry_exit()[0]:
+                                t.add_player(player=p)
+                        else:
+                            if cs.running_count(strategy=p.get_count_strategy()) >= p.get_back_counting_entry_exit()[0]:
+                                t.add_player(player=p)
 
                 # remove back counters from the table if the count is not favorable
                 for p in self.players:
-                    if p.get_back_counting() and p in t.get_players() and p.get_count_strategy() is not None:
-                        if cs.true_count(strategy=p.get_count_strategy(), accuracy=p.get_count_accuracy()) < \
-                                p.get_back_counting_entry_exit()[1]:
-                            t.remove_player(player=p)
+                    if p.get_back_counting() and p in t.get_players():  # and p.get_count_strategy() is not None:
+                        if p.get_count_strategy() in balanced_card_counting_systems:
+                            if cs.true_count(strategy=p.get_count_strategy(), accuracy=p.get_true_count_accuracy()) < \
+                                 p.get_back_counting_entry_exit()[1]:
+                                t.remove_player(player=p)
+                        else:
+                            if cs.running_count(strategy=p.get_count_strategy()) < p.get_back_counting_entry_exit()[1]:
+                                t.remove_player(player=p)
 
                 for p in t.get_players():
 
                     # get true count
-                    if p.get_count_strategy() is not None:
+                    if p.get_count_strategy() in balanced_card_counting_systems:
                         p.set_count(
                             count=cs.true_count(
                                     strategy=p.get_count_strategy(),
-                                    accuracy=p.get_count_accuracy()
+                                    accuracy=p.get_true_count_accuracy()
+                            )
+                        )
+
+                    # get running count
+                    elif p.get_count_strategy() in unbalanced_card_counting_systems:
+                        p.set_count(
+                            count=cs.running_count(
+                                    strategy=p.get_count_strategy()
                             )
                         )
 
@@ -247,7 +271,7 @@ class PlayShoe(object):
                         if p.get_count_strategy() is not None:
                             net_winnings_figure(
                                 count=count,
-                                count_accuracy=p.get_count_accuracy(),
+                                true_count_accuracy=p.get_true_count_accuracy(),
                                 net_winnings=net_winnings,
                                 name=p.get_name(),
                                 shoe_size=self.shoe_size,

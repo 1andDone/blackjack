@@ -12,7 +12,7 @@ class Player(object):
     """
     def __init__(
             self, name, rules, bankroll, min_bet, bet_spread=None, bet_count_amount=None, play_strategy='Basic',
-            bet_strategy='Flat', count_strategy=None, count_accuracy=0.5, insurance_count=None,
+            bet_strategy='Flat', count_strategy=None, true_count_accuracy=None, insurance_count=None,
             back_counting=False, back_counting_entry_exit=None
     ):
         """
@@ -30,8 +30,9 @@ class Player(object):
             Ratio of maximum bet to minimum bet (default is None)
         bet_count_amount : list of tuples, optional
             List of tuples in ascending order, where the first value of the tuple indicates
-            the true count and the second value indicates the amount of money wagered at that true count.
-            These values are used to create a bet scale that increments by a custom amount (default is None)
+            the running or true count and the second value indicates the amount of money wagered
+            at that running or true count. These values are used to create a bet scale that
+            increments by a custom amount (default is None)
         play_strategy : str, optional
             Name of the play strategy used by the player (default is "Basic", which implies
             the player plays optimally)
@@ -39,18 +40,19 @@ class Player(object):
             Name of the bet strategy used by the player (default is "Flat", which implies
             the player bets the same amount every hand)
         count_strategy : str, optional
-            Name of the card counting strategy used by the player (default is None, which implies
-            the player does not count cards)
-        count_accuracy : float, optional
-            Accuracy of the card counting strategy (default is 0.5)
+            Name of the balanced or unbalanced card counting strategy used by the player (default is
+            None, which implies the player does not count cards)
+        true_count_accuracy : float, optional
+            Accuracy of the balanced card counting strategy (default is None)
         insurance_count : float, optional
-            Minimum true count at which a player will purchase insurance, if available (default is None)
+            Minimum running or true count at which a player will purchase insurance, if
+            available (default is None)
         back_counting : bool, optional
             True if player is back counting the shoe (i.e. wonging), false otherwise (default is
             False)
         back_counting_entry_exit : list, optional
-            True count at which the back counter will start and stop playing hands at the table (default
-            is None)
+            Running or true count at which the back counter will start and stop playing hands at the
+            table (default is None)
         """
         if not isinstance(name, str):
             raise TypeError('Name must be of type string.')
@@ -82,16 +84,24 @@ class Player(object):
             raise ValueError('Bet count amount must be sorted from least to greatest amounts.')
         if bet_count_amount is not None and bet_count_amount[0][1] != min_bet:
             raise ValueError('First amount in bet count amount must be the minimum player bet.')
-        if bet_count_amount is not None and bet_count_amount[len(bet_count_amount) - 1][1] > min_bet * bet_spread:
+        if bet_count_amount is not None and bet_spread is not None and \
+                bet_count_amount[len(bet_count_amount) - 1][1] > min_bet * bet_spread:
             raise ValueError('Last amount in bet count amount must be less than the maximum player bet.')
         if play_strategy not in ['Basic']:
             raise ValueError('Playing strategy must be "Basic".')
         if bet_strategy not in ['Flat', 'Spread']:
             raise ValueError('Betting strategy must be either "Flat" or "Spread".')
         if count_strategy is not None:
-            if count_strategy not in ['Hi-Lo', 'Hi-Opt I', 'Hi-Opt II', 'Omega II', 'Halves', 'Zen Count']:
+            if count_strategy not in ['Hi-Lo', 'Hi-Opt I', 'Hi-Opt II', 'Omega II', 'Halves', 'Zen Count', 'KO']:
                 raise ValueError('Count Strategy must be "Hi-Lo", "Hi-Opt I", "Hi-Opt II", "Omega II", '
-                                 '"Halves", or "Zen Count".')
+                                 '"Halves", "Zen Count", or "KO".')
+        if true_count_accuracy is None and count_strategy in ['Hi-Lo', 'Hi-Opt I', 'Hi-Opt II', 'Omega II', 'Halves',
+                                                              'Zen Count']:
+            raise ValueError('True count accuracy cannot be None while using a balanced card counting system.')
+        if true_count_accuracy is not None and count_strategy == 'KO':
+            raise ValueError('True count accuracy must be None while using an unbalanced card counting system.')
+        if true_count_accuracy is not None and count_strategy is None:
+            raise ValueError('True count accuracy must be None if the player is not counting cards.')
         if back_counting and count_strategy is None:
             raise ValueError('Back counting requires a counting strategy.')
         if not back_counting and back_counting_entry_exit is not None:
@@ -117,7 +127,7 @@ class Player(object):
         self.play_strategy = PlayingStrategy(rules=rules, strategy=play_strategy)
         self.bet_strategy = BettingStrategy(strategy=bet_strategy)
         self.count_strategy = count_strategy
-        self.count_accuracy = count_accuracy
+        self.true_count_accuracy = true_count_accuracy
         self.insurance_count = insurance_count
         self.back_counting = back_counting
         self.back_counting_entry_exit = back_counting_entry_exit
@@ -142,8 +152,8 @@ class Player(object):
     def get_count_strategy(self):
         return self.count_strategy
 
-    def get_count_accuracy(self):
-        return self.count_accuracy
+    def get_true_count_accuracy(self):
+        return self.true_count_accuracy
 
     def get_insurance_count(self):
         return self.insurance_count

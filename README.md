@@ -51,57 +51,59 @@ Betting, playing, and card counting strategies for individual players can also b
 - Amount of money the player begins with when sitting down at the table `bankroll`
 - Minimum amount of money the player is willing to wager when playing a hand `min_bet`
 - Ratio of the player's maximum bet to minimum bet `bet_spread`
-- List of tuples where the first value of the tuple indicates the true count and the second value indicates the amount of money wagered for true counts closest to, but not equaling or exceeding, that particular true count. These values are used to create a bet scale with `len(bet_count_amount) + 1` partitions, each incremented by a defined amount `bet_count_amount`
-    - For example, if `min_bet=10`, `bet_strategy='Spread'` and `bet_spread=3`, setting `bet_count_amount=[(1, 10), (4, 15)]` would create three partitions - one for true counts less than 1 (player bets their `min_bet`, $10), another for true counts greater than or equal to 1 and less than 4 (player bets $15), and finally, one for true counts greater than or equal to 4 (player bets $30, equivalent to `min_bet * bet_spread`).
+- List of tuples where the first value of the tuple indicates the running or true count and the second value indicates the amount of money wagered for running or true counts closest to, but not equaling or exceeding, that particular running or true count. These values are used to create a bet scale with `len(bet_count_amount) + 1` partitions, each incremented by a defined amount `bet_count_amount`
+    - For example, if `min_bet=10`, `bet_strategy='Spread'` and `bet_spread=3`, setting `bet_count_amount=[(1, 10), (4, 15)]` would create three partitions - one for running or true counts less than 1 (player bets their `min_bet`, $10), another for running or true counts greater than or equal to 1 and less than 4 (player bets $15), and finally, one for running or true counts greater than or equal to 4 (player bets $30, equivalent to `min_bet * bet_spread`).
 - Playing strategy used by the player `play_strategy`
     - Currently, all players adhere to *Basic* strategy for playing decisions. See [documentation](documentation/H17_S17_Basic_Strategy.xlsx) for more details.
 - Betting strategy used by the player `bet_strategy`
     - Options include *Flat*, where the player bets the same amount each hand, and *Spread*, where the player bets according to their bet scale.
 - Card counting strategy used by the player, if any `count_strategy`
-    - Options include balanced counting systems such as *Hi-Lo*, *Hi-Opt I*, *Hi-Opt II*, *Omega II*, *Halves*, and *Zen Count*.
-- Precision level to which the player can compute the true count (to the nearest 0.1, 0.5, or 1) `count_accuracy`
-- Minimum true count at which the player will purchase insurance, if available `insurance_count`
+    - Options include balanced counting systems (*Hi-Lo*, *Hi-Opt I*, *Hi-Opt II*, *Omega II*, *Halves*, *Zen Count*) as well as unbalanced counting systems (*KO*).
+- Precision level to which the player can compute the true count (to the nearest 0.1, 0.5, or 1), applicable only for balanced counting systems `true_count_accuracy`
+- Minimum true or running count at which the player will purchase insurance, if available `insurance_count`
 - Strategy in which a player counts cards at a table but does not play a hand `back_counting` 
-- List of true counts indicating the point at which a back counter will start and stop playing hands at the table `back_counting_entry_exit`
+- Running or true counts at which a back counter will start and stop playing hands at the table `back_counting_entry_exit`
 
 An example table setup is seen below:
 ```python
-p = [
-        Player(
-            name='Card Counter',
-            rules=r,
-            bankroll=12000,
-            min_bet=10,
-            bet_spread=10,
-            bet_count_amount=[(1, 10), (3, 50), (7, 75)],
-            play_strategy='Basic',
-            bet_strategy='Spread',
-            count_strategy='Halves',
-            insurance_count=5
-        ),
-        Player(
-            name='Average',
-            rules=r,
-            bankroll=750,
-            min_bet=15,
-            play_strategy='Basic',
-            bet_strategy='Flat'
-        ),
-        Player(
-            name='Back Counter',
-            rules=r,
-            bankroll=50000,
-            min_bet=25,
-            bet_spread=12,
-            bet_count_amount=[(1, 25), (3, 95), (5, 165), (10, 235)],
-            play_strategy='Basic',
-            bet_strategy='Spread',
-            count_strategy='Hi-Lo',
-            count_accuracy=0.1,
-            back_counting=True,
-            back_counting_entry_exit=[5, 0]
-        )
-]
+    p = [
+            Player(
+                name='Card Counter',
+                rules=r,
+                bankroll=12000,
+                min_bet=10,
+                bet_spread=10,
+                bet_count_amount=[(1, 10), (3, 50), (7, 75)],
+                play_strategy='Basic',
+                bet_strategy='Spread',
+                count_strategy='Halves',
+                true_count_accuracy=0.5,
+                insurance_count=5
+            ),
+            Player(
+                name='Average',
+                rules=r,
+                bankroll=750,
+                min_bet=15,
+                play_strategy='Basic',
+                bet_strategy='Flat',
+                count_strategy=None,
+            ),
+            Player(
+                name='Back Counter',
+                rules=r,
+                bankroll=50000,
+                min_bet=25,
+                bet_spread=12,
+                bet_count_amount=[(1, 25), (3, 95), (5, 165), (10, 235)],
+                play_strategy='Basic',
+                bet_strategy='Spread',
+                count_strategy='Hi-Lo',
+                true_count_accuracy=0.1,
+                back_counting=True,
+                back_counting_entry_exit=[5, 0]
+            )
+    ]
 ```
 In the example above, *Card Counter* is the first to act every game and sits down at the table with a $12,000 bankroll. *Card Counter* is counting cards using the *Halves* strategy and is able to compute the true count at any point in time to the nearest 0.5. *Card Counter* will make the insurance side bet offered at the table only when the true count is greater than or equal to 5. Additionally, *Card Counter* will vary their bets according to their personal bet scale:
 
@@ -128,7 +130,7 @@ Finally, the last player to act, *Back Counter*, is back counting while using th
 
 Now that the rules and table have been set, it's time to set up the shoe simulation. Below, a few important parameters are highlighted for the shoe simulation:
 
-- Initializes the pseudorandom number generator to replicate the ordering of the deck from run-to-run `seed_number`
+- Initializes the pseudorandom number generator to replicate the ordering of the shoe from run-to-run `seed_number`
 - Number of shoes to simulate `simulations`
 - Number of decks of cards that will be used in a shoe `shoe_size`
 - Percentage of a shoe played before the shoe is re-shuffled `penetration`
@@ -202,14 +204,14 @@ In the example above, over the course of 10,000 shoe simulations, *Card Counter*
 
 Setting `figures=True` in the [Setup Shoe Simulations](#setup-shoe-simulations) section creates a couple plots that help visualize our results.
 
-![Card Counter Figure 1](/documentation/card_counter_fig1.png?raw=true)
-![Back Counter Figure 1](/documentation/back_counter_fig1.png?raw=true)
+![Card Counter Net Winnings](/documentation/net_winnings_card_counter.png?raw=true)
+![Back Counter Net Winnings](/documentation/net_winnings_back_counter.png?raw=true)
 
-The two plots above are only created for players that count cards. The top subplot shows the net winnings per shoe for each hand played at a given true count for an individual player. The bottom subplot tracks the cumulative net winnings for an individual player as the true count increases.
+The two plots above are only created for players that count cards. The top sub-plot shows the net winnings per shoe for each hand played at a given true count for an individual player. The bottom sub-plot tracks the cumulative net winnings for an individual player as the true count increases.
 
-![Card Counter Figure 2](/documentation/card_counter_fig2.png?raw=true)
-![Average Figure 2](/documentation/average_fig2.png?raw=true)
-![Back Counter Figure 2](/documentation/back_counter_fig2.png?raw=true)
+![Card Counter Bankroll Growth](/documentation/bankroll_growth_card_counter.png?raw=true)
+![Average Bankroll Growth](/documentation/bankroll_growth_average.png?raw=true)
+![Back Counter Bankroll Growth](/documentation/bankroll_growth_back_counter.png?raw=true)
 
 The three plots above show the players bankroll growth over the course of the shoe simulations. 
 

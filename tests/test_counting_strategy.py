@@ -26,6 +26,7 @@ class TestCountingStrategy(object):
                 'Hi-Lo': -1,
                 'Hi-Opt I': 0,
                 'Hi-Opt II': 0,
+                'KO': -13,
                 'Omega II': 0,
                 'Zen Count': -1
             }
@@ -33,7 +34,8 @@ class TestCountingStrategy(object):
     @pytest.mark.parametrize('strategy, expected',
                              [
                                  ('No Strategy', ValueError),
-                                 ('Hi-Lo', -1)
+                                 ('Hi-Lo', -1),
+                                 ('KO', -13)
                              ])
     def test_running_count(self, setup_counting_strategy, strategy, expected):
         """
@@ -56,7 +58,8 @@ class TestCountingStrategy(object):
                                  ('Hi-Lo', 0.5, -17.5),
                                  ('Hi-Lo', 1, -17),
                                  ('Hi-Lo', 0.3, ValueError),
-                                 ('No Strategy', 1, ValueError)
+                                 ('KO', None, ValueError),
+                                 ('No Strategy', None, ValueError)
                              ])
     def test_true_count(self, setup_counting_strategy, strategy, accuracy, expected):
         """
