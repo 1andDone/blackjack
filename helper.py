@@ -16,7 +16,7 @@ def count_hand(hand):
         Soft and hard totals for a given hand
 
     """
-    non_aces = [card for card in hand if card != 'A']
+    non_aces = (card for card in hand if card != 'A')
 
     # hard values
     hard_total = 0
