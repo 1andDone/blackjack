@@ -158,65 +158,65 @@ def net_winnings_figure(
     plt.show()
 
 
-def bankroll_growth_figure(
-        bankroll, shoe_num, name, shoe_size, penetration, blackjack_payout, count_strategy,
-        play_strategy, bet_strategy, bet_spread, initial_bankroll, min_bet, simulations
-):
-    """
-    Creates a plot of a player's bankroll growth over the course of many shoe simulations.
-
-    Parameters
-    ----------
-    bankroll : array_like
-        Amount of money a player has at the end of a shoe
-    shoe_num : array_like
-        Current shoe number
-    name : str
-        Name of the player
-    shoe_size : int
-        Number of decks used during a blackjack game
-    penetration : float
-        Percentage of shoe played before the deck is re-shuffled
-    blackjack_payout : float
-        Payout for a player receiving a natural blackjack
-    count_strategy : str
-        Name of the card counting strategy used by the player
-    play_strategy : str
-        Name of the play strategy used by the player
-    bet_strategy : str
-        Name of the bet strategy used by the player
-    bet_spread : float
-        Ratio of maximum bet to minimum bet
-    initial_bankroll : float
-        Amount of money a player starts out with when sitting down at a table
-    min_bet : float
-        Minimum amount of money a player is willing to wager when playing a hand
-    simulations : int
-        Number of shoes played
-
-    """
-    plt.figure(figsize=(12, 9))
-    plt.plot(shoe_num, bankroll)
-    plt.xlabel('Number of Shoes Played')
-    plt.ylabel('Bankroll ($)')
-    plt.xlim(0, max(shoe_num) + 0.01 * max(shoe_num))
-    plt.title(
-        format_title(
-            name=name,
-            plot_name='Bankroll Growth',
-            shoe_size=shoe_size,
-            penetration=penetration,
-            blackjack_payout=blackjack_payout,
-            count_strategy=count_strategy,
-            play_strategy=play_strategy,
-            bet_strategy=bet_strategy,
-            bet_spread=bet_spread,
-            initial_bankroll=initial_bankroll,
-            min_bet=min_bet,
-            simulations=simulations
-        )
-    )
-    plt.grid()
-    plt.show()
+# def bankroll_growth_figure(
+#         bankroll, shoe_num, name, shoe_size, penetration, blackjack_payout, count_strategy,
+#         play_strategy, bet_strategy, bet_spread, initial_bankroll, min_bet, simulations
+# ):
+#     """
+#     Creates a plot of a player's bankroll growth over the course of many shoe simulations.
+#
+#     Parameters
+#     ----------
+#     bankroll : array_like
+#         Amount of money a player has at the end of a shoe
+#     shoe_num : array_like
+#         Current shoe number
+#     name : str
+#         Name of the player
+#     shoe_size : int
+#         Number of decks used during a blackjack game
+#     penetration : float
+#         Percentage of shoe played before the deck is re-shuffled
+#     blackjack_payout : float
+#         Payout for a player receiving a natural blackjack
+#     count_strategy : str
+#         Name of the card counting strategy used by the player
+#     play_strategy : str
+#         Name of the play strategy used by the player
+#     bet_strategy : str
+#         Name of the bet strategy used by the player
+#     bet_spread : float
+#         Ratio of maximum bet to minimum bet
+#     initial_bankroll : float
+#         Amount of money a player starts out with when sitting down at a table
+#     min_bet : float
+#         Minimum amount of money a player is willing to wager when playing a hand
+#     simulations : int
+#         Number of shoes played
+#
+#     """
+#     plt.figure(figsize=(12, 9))
+#     plt.plot(shoe_num, bankroll)
+#     plt.xlabel('Number of Shoes Played')
+#     plt.ylabel('Bankroll ($)')
+#     plt.xlim(0, max(shoe_num) + 0.01 * max(shoe_num))
+#     plt.title(
+#         format_title(
+#             name=name,
+#             plot_name='Bankroll Growth',
+#             shoe_size=shoe_size,
+#             penetration=penetration,
+#             blackjack_payout=blackjack_payout,
+#             count_strategy=count_strategy,
+#             play_strategy=play_strategy,
+#             bet_strategy=bet_strategy,
+#             bet_spread=bet_spread,
+#             initial_bankroll=initial_bankroll,
+#             min_bet=min_bet,
+#             simulations=simulations
+#         )
+#     )
+#     plt.grid()
+#     plt.show()
 
 

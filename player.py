@@ -1,7 +1,6 @@
 import card_values as cv
 from helper import count_hand, splittable
 from playing_strategy import PlayingStrategy
-from betting_strategy import BettingStrategy
 from house_rules import HouseRules
 
 
@@ -125,7 +124,7 @@ class Player(object):
                 bet_scale[count] = round(amount, 2)
             self.bet_scale = bet_scale
         self.play_strategy = PlayingStrategy(rules=rules, strategy=play_strategy)
-        self.bet_strategy = BettingStrategy(strategy=bet_strategy)
+        self.bet_strategy = bet_strategy
         self.count_strategy = count_strategy
         self.true_count_accuracy = true_count_accuracy
         self.insurance_count = insurance_count
@@ -149,6 +148,9 @@ class Player(object):
     def get_bet_scale(self):
         return self.bet_scale
 
+    def get_bet_strategy(self):
+        return self.bet_strategy
+
     def get_count_strategy(self):
         return self.count_strategy
 
@@ -170,111 +172,86 @@ class Player(object):
     def get_hands_dict(self):
         return self.hands_dict
 
-    def set_bankroll(self, amount):
-        self.bankroll = amount
-
     def set_count(self, count):
         self.count = count
 
-    def increment_bankroll(self, amount):
-        self.bankroll = self.bankroll + amount
-
-    def sufficient_funds(self, amount):
-        if amount < 0:
-            raise ValueError('Amount needs to be a positive value.')
-        return self.bankroll - amount >= 0
-
-    def create_hand(self, amount):
+    def create_hand(self):
         self.hands_dict = {1: {}}
         self.hands_dict[1]['hand'] = []
-        self.hands_dict[1]['initial bet'] = amount
-        self.hands_dict[1]['insurance bet'] = 0
-        self.hands_dict[1]['bet'] = amount
         self.hands_dict[1]['insurance'] = False
-        self.hands_dict[1]['natural blackjack'] = False
-        self.hands_dict[1]['surrender'] = False
-        self.hands_dict[1]['busted'] = False
-        self.hands_dict[1]['split'] = False
         self.hands_dict[1]['stand'] = False
+        self.hands_dict[1]['surrender'] = False
+        self.hands_dict[1]['natural blackjack'] = False
+        self.hands_dict[1]['double down'] = False
+        self.hands_dict[1]['split'] = False
+        self.hands_dict[1]['busted'] = False
 
-    def initial_bet(self, amount):
-        if amount < self.rules.min_bet:
-            raise ValueError('Initial bet must exceed table minimum.')
-        if amount > self.rules.max_bet:
-            raise ValueError('Initial bet must not exceed table maximum.')
-        self.increment_bankroll(amount=-amount)
-        self.create_hand(amount=amount)
+    def initial_bet(self):
+        self.create_hand()
 
     def get_hand(self, key):
         return self.hands_dict[key]['hand']
 
-    def get_initial_bet(self):
-        return self.hands_dict[1]['initial bet']
-
-    def get_insurance_bet(self):
-        return self.hands_dict[1]['insurance bet']
-
-    def get_bet(self, key):
-        return self.hands_dict[key]['bet']
-
     def get_insurance(self):
         return self.hands_dict[1]['insurance']
-
-    def get_natural_blackjack(self):
-        return self.hands_dict[1]['natural blackjack']
-
-    def get_surrender(self):
-        return self.hands_dict[1]['surrender']
-
-    def get_busted(self, key):
-        return self.hands_dict[key]['busted']
-
-    def get_split(self, key):
-        return self.hands_dict[key]['split']
 
     def get_stand(self, key):
         return self.hands_dict[key]['stand']
 
+    def get_surrender(self):
+        return self.hands_dict[1]['surrender']
+
+    def get_natural_blackjack(self):
+        return self.hands_dict[1]['natural blackjack']
+
+    def get_double_down(self, key):
+        return self.hands_dict[key]['double down']
+
+    def get_split(self, key):
+        return self.hands_dict[key]['split']
+
+    def get_busted(self, key):
+        return self.hands_dict[key]['busted']
+
     def insurance(self):
         self.hands_dict[1]['insurance'] = True
-        self.hands_dict[1]['insurance bet'] = 0.5 * self.get_initial_bet()
+
+    def stand(self, key):
+        self.hands_dict[key]['stand'] = True
+
+    def surrender(self):
+        self.hands_dict[1]['surrender'] = True
+        self.stand(key=1)
 
     def natural_blackjack(self):
         self.hands_dict[1]['natural blackjack'] = True
 
-    def surrender(self):
-        self.hands_dict[1]['surrender'] = True
+    def hit(self, key, new_card):
+        self.hands_dict[key]['hand'].append(new_card)
 
-    def stand(self, key):
-        self.hands_dict[key]['stand'] = True
+    def double_down(self, key, new_card):
+        self.hands_dict[key]['double down'] = True
+        self.hit(key=key, new_card=new_card)
+        self.stand(key=key)
+
+    def split(self, key, new_key):
+        if splittable(rules=self.rules, hand=self.hands_dict[key]['hand']):
+            self.hands_dict[key]['split'] = True
+            self.hands_dict[new_key] = {}
+            self.hands_dict[new_key]['hand'] = [self.get_hand(key=key).pop()]
+            self.hands_dict[new_key]['stand'] = False
+            self.hands_dict[new_key]['double down'] = False
+            self.hands_dict[new_key]['split'] = True
+            self.hands_dict[new_key]['busted'] = False
 
     def busted(self, key):
         self.hands_dict[key]['busted'] = True
         self.stand(key=key)
 
-    def hit(self, key, new_card):
-        self.hands_dict[key]['hand'].append(new_card)
-
-    def split(self, amount, key, new_key):
-        if splittable(rules=self.rules, hand=self.hands_dict[key]['hand']):
-            self.hands_dict[key]['split'] = True
-            self.hands_dict[new_key] = {}
-            self.hands_dict[new_key]['hand'] = [self.get_hand(key=key).pop()]
-            self.hands_dict[new_key]['bet'] = amount
-            self.hands_dict[new_key]['busted'] = False
-            self.hands_dict[new_key]['split'] = True
-            self.hands_dict[new_key]['stand'] = False
-
-    def double_down(self, key, new_card):
-        self.hands_dict[key]['bet'] = 2 * self.hands_dict[key]['bet']
-        self.hit(key=key, new_card=new_card)
-        self.stand(key=key)
-
-    def decision(self, hand, dealer_up_card, num_hands, amount):
+    def decision(self, hand, dealer_up_card, num_hands):
         if len(hand) == 1:  # if card is split, first action is always to hit
             return 'H'
-        elif splittable(rules=self.rules, hand=hand) and num_hands < self.rules.max_hands \
-                and self.sufficient_funds(amount=amount):
+        elif splittable(rules=self.rules, hand=hand) and num_hands < self.rules.max_hands:
             if hand[0] == 'A':
                 return self.play_strategy.splits()[hand[0]][dealer_up_card]
             elif cv.card_values[hand[0]] == 10:

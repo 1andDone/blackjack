@@ -2,6 +2,9 @@ from house_rules import HouseRules
 from player import Player
 from play_shoe import PlayShoe
 
+import time
+
+start = time.time()
 
 if __name__ == "__main__":
 
@@ -65,10 +68,14 @@ if __name__ == "__main__":
             rules=r,
             players=p,
             seed_number=78,
-            simulations=10000,
+            simulations=1,
             shoe_size=6,
             penetration=0.75,
             figures=True
     )
 
     ps.main()
+
+end = time.time()
+
+print('time elapsed:', end-start)

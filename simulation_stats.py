@@ -7,103 +7,61 @@ class SimulationStats(object):
     games of blackjack.
 
     """
-    def __init__(self, rules):
-        """
-        Parameters
-        ----------
-        rules : HouseRules
-            HouseRules class instance
-        """
-        if not isinstance(rules, HouseRules):
-            raise TypeError('Rules must be of type HouseRules.')
-        self.rules = rules
+    def __init__(self):
         self.stats_dict = {}
 
     def get_stats_dict(self):
         return self.stats_dict
 
     def create_player_key(self, player_key):
-        if player_key not in self.stats_dict.keys():
+        if player_key not in self.stats_dict:
             self.stats_dict[player_key] = {}
 
     def create_count_key(self, player_key, count_key):
-        if count_key not in self.stats_dict[player_key].keys():
+        if count_key not in self.stats_dict[player_key]:
             self.stats_dict[player_key][count_key] = {}
-            self.stats_dict[player_key][count_key]['initial bet'] = 0
-            self.stats_dict[player_key][count_key]['overall bet'] = 0
-            self.stats_dict[player_key][count_key]['net winnings'] = 0
-            self.stats_dict[player_key][count_key]['player insurance win'] = 0
-            self.stats_dict[player_key][count_key]['dealer insurance win'] = 0
-            self.stats_dict[player_key][count_key]['player showdown win'] = 0
-            self.stats_dict[player_key][count_key]['dealer showdown win'] = 0
-            self.stats_dict[player_key][count_key]['push'] = 0
-            self.stats_dict[player_key][count_key]['player surrender'] = 0
-            self.stats_dict[player_key][count_key]['player bust'] = 0
-            self.stats_dict[player_key][count_key]['dealer bust'] = 0
-            self.stats_dict[player_key][count_key]['player natural blackjack'] = 0
-            self.stats_dict[player_key][count_key]['dealer natural blackjack'] = 0
-            self.stats_dict[player_key][count_key]['number of hands'] = 0
 
-    def player_bets(self, player_key, count_key, amount, initial_amount):
-        self.stats_dict[player_key][count_key]['initial bet'] += initial_amount
-        self.stats_dict[player_key][count_key]['overall bet'] += amount
+    def create_outcome_key(self, player_key, count_key):
+        if ('win' or 'loss' or 'push') not in self.stats_dict[player_key][count_key]:
+            self.stats_dict[player_key][count_key]['win'] = {}
+            self.stats_dict[player_key][count_key]['loss'] = {}
+            self.stats_dict[player_key][count_key]['push'] = {}
+            self.stats_dict[player_key][count_key]['win']['natural blackjack'] = 0
+            self.stats_dict[player_key][count_key]['loss']['surrender'] = 0
+            for outcome_key in ['win', 'loss']:
+                self.stats_dict[player_key][count_key][outcome_key]['insurance'] = 0
+            for outcome_key in ['win', 'loss', 'push']:
+                self.stats_dict[player_key][count_key][outcome_key]['number of hands'] = 0
+                self.stats_dict[player_key][count_key][outcome_key]['double down'] = 0
+                self.stats_dict[player_key][count_key][outcome_key]['double after split'] = 0
+                self.stats_dict[player_key][count_key][outcome_key]['split'] = 0
+                self.stats_dict[player_key][count_key][outcome_key]['other'] = 0
 
-    def player_insurance_win(self, player_key, count_key, insurance_amount):
-        self.stats_dict[player_key][count_key]['player insurance win'] += 1
-        self.stats_dict[player_key][count_key]['net winnings'] += 2 * insurance_amount
-        self.stats_dict[player_key][count_key]['overall bet'] += insurance_amount
+    def natural_blackjack(self, player_key, count_key):
+        self.stats_dict[player_key][count_key]['win']['natural blackjack'] += 1
+        self.stats_dict[player_key][count_key]['win']['number of hands'] += 1
 
-    def dealer_insurance_win(self, player_key, count_key, insurance_amount):
-        self.stats_dict[player_key][count_key]['dealer insurance win'] += 1
-        self.stats_dict[player_key][count_key]['net winnings'] += -insurance_amount
-        self.stats_dict[player_key][count_key]['overall bet'] += insurance_amount
+    def insurance(self, player_key, count_key, outcome_key):
+        self.stats_dict[player_key][count_key][outcome_key]['insurance'] += 1
 
-    def player_showdown_win(self, player_key, count_key, amount, initial_amount):
-        self.stats_dict[player_key][count_key]['player showdown win'] += 1
-        self.stats_dict[player_key][count_key]['number of hands'] += 1
-        self.stats_dict[player_key][count_key]['net winnings'] += amount
-        self.player_bets(player_key=player_key, count_key=count_key, amount=amount, initial_amount=initial_amount)
+    def surrender(self, player_key, count_key):
+        self.stats_dict[player_key][count_key]['loss']['surrender'] += 1
+        self.stats_dict[player_key][count_key]['loss']['number of hands'] += 1
 
-    def dealer_showdown_win(self, player_key, count_key, amount, initial_amount):
-        self.stats_dict[player_key][count_key]['dealer showdown win'] += 1
-        self.stats_dict[player_key][count_key]['number of hands'] += 1
-        self.stats_dict[player_key][count_key]['net winnings'] += -amount
-        self.player_bets(player_key=player_key, count_key=count_key, amount=amount, initial_amount=initial_amount)
+    def other(self, player_key, count_key, outcome_key, hand_key=1, double_down=False):
+        self.stats_dict[player_key][count_key][outcome_key]['number of hands'] += 1
+        if hand_key == 1:
+            if double_down:
+                self.stats_dict[player_key][count_key][outcome_key]['double down'] += 1
+            else:
+                self.stats_dict[player_key][count_key][outcome_key]['other'] += 1
+        else:
+            if double_down:
+                self.stats_dict[player_key][count_key][outcome_key]['double after split'] += 1
+            else:
+                self.stats_dict[player_key][count_key][outcome_key]['split'] += 1
 
-    def push(self, player_key, count_key, amount, initial_amount):
-        self.stats_dict[player_key][count_key]['push'] += 1
-        self.stats_dict[player_key][count_key]['number of hands'] += 1
-        self.player_bets(player_key=player_key, count_key=count_key, amount=amount, initial_amount=initial_amount)
 
-    def player_surrender(self, player_key, count_key, amount, initial_amount):
-        self.stats_dict[player_key][count_key]['player surrender'] += 1
-        self.stats_dict[player_key][count_key]['number of hands'] += 1
-        self.stats_dict[player_key][count_key]['net winnings'] += -0.5 * amount
-        self.player_bets(player_key=player_key, count_key=count_key, amount=amount, initial_amount=initial_amount)
-
-    def player_bust(self, player_key, count_key, amount, initial_amount):
-        self.stats_dict[player_key][count_key]['player bust'] += 1
-        self.stats_dict[player_key][count_key]['number of hands'] += 1
-        self.stats_dict[player_key][count_key]['net winnings'] += -amount
-        self.player_bets(player_key=player_key, count_key=count_key, amount=amount, initial_amount=initial_amount)
-
-    def dealer_bust(self, player_key, count_key, amount, initial_amount):
-        self.stats_dict[player_key][count_key]['dealer bust'] += 1
-        self.stats_dict[player_key][count_key]['number of hands'] += 1
-        self.stats_dict[player_key][count_key]['net winnings'] += amount
-        self.player_bets(player_key=player_key, count_key=count_key, amount=amount, initial_amount=initial_amount)
-
-    def player_natural_blackjack(self, player_key, count_key, amount, initial_amount):
-        self.stats_dict[player_key][count_key]['player natural blackjack'] += 1
-        self.stats_dict[player_key][count_key]['number of hands'] += 1
-        self.stats_dict[player_key][count_key]['net winnings'] += self.rules.blackjack_payout * amount
-        self.player_bets(player_key=player_key, count_key=count_key, amount=amount, initial_amount=initial_amount)
-
-    def dealer_natural_blackjack(self, player_key, count_key, amount, initial_amount):
-        self.stats_dict[player_key][count_key]['dealer natural blackjack'] += 1
-        self.stats_dict[player_key][count_key]['number of hands'] += 1
-        self.stats_dict[player_key][count_key]['net winnings'] += -amount
-        self.player_bets(player_key=player_key, count_key=count_key, amount=amount, initial_amount=initial_amount)
 
 
 

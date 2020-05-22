@@ -1,61 +1,6 @@
 from helper import count_hand, max_count_hand
 
 
-def players_place_bets(table, rules, counting_strategy):
-    """
-    Players at table place bets. If they're unable to bet the desired
-    amount, they place a bet closest to that amount, while staying within
-    the betting constraints of the table. If they are unable to make the
-    minimum bet, they are removed from the table.
-
-    Parameters
-    ----------
-    table : Table
-        Table class instance
-    rules : HouseRules
-        HouseRules class instance
-    counting_strategy : CountingStrategy
-        CountingStrategy class instance
-
-    """
-    for p in table.get_players().copy():  # need to use copy because players can be removed mid-iteration
-
-        if p.get_count_strategy() in ['Hi-Lo', 'Hi-Opt I', 'Hi-Opt II', 'Omega II', 'Halves', 'Zen Count']:
-            amount = p.bet_strategy.initial_bet(
-                                        min_bet=p.get_min_bet(),
-                                        bet_spread=p.get_bet_spread(),
-                                        bet_scale=p.get_bet_scale(),
-                                        count=counting_strategy.true_count(strategy=p.get_count_strategy())
-            )
-
-        elif p.get_count_strategy() == 'KO':
-            amount = p.bet_strategy.initial_bet(
-                                        min_bet=p.get_min_bet(),
-                                        bet_spread=p.get_bet_spread(),
-                                        bet_scale=p.get_bet_scale(),
-                                        count=counting_strategy.running_count(strategy=p.get_count_strategy())
-            )
-
-        else:
-            amount = p.bet_strategy.initial_bet(
-                                        min_bet=p.get_min_bet(),
-                                        bet_spread=p.get_bet_spread()
-            )
-
-        # remove from table if player does not have the minimum bet amount
-        if not p.sufficient_funds(amount=rules.min_bet):
-            table.remove_player(player=p)
-
-        # amount is within the allowed range of the table
-        elif p.sufficient_funds(amount=amount):
-            p.initial_bet(amount=amount)
-
-        # player does not have sufficient funds to make bet
-        # player bets remaining bankroll
-        else:
-            p.initial_bet(amount=p.get_bankroll())
-
-
 def deal_hands(table, cards):
     """
     Deal first and second cards to each player seated at the table
@@ -75,6 +20,7 @@ def deal_hands(table, cards):
 
     """
     for p in table.get_players():
+        p.create_hand()  # added
         p.hit(key=1, new_card=cards.deal_card())  # dealing a card is effectively the same as hitting
 
     dealer_hand = [cards.deal_card(visible=False)]
@@ -114,9 +60,7 @@ def players_play_hands(table, rules, cards, dealer_hand, dealer_up_card):
         # insurance option
         if rules.insurance and dealer_up_card == 'A':
             if p.get_insurance_count() is not None:
-                initial_bet = p.get_initial_bet()
-                if p.get_count() >= p.get_insurance_count() and p.sufficient_funds(amount=0.5 * initial_bet):
-                    p.increment_bankroll(amount=-0.5 * initial_bet)
+                if p.get_count() >= p.get_insurance_count():
                     p.insurance()
 
         # dealer and players check for natural 21
@@ -130,11 +74,8 @@ def players_play_hands(table, rules, cards, dealer_hand, dealer_up_card):
         # only available if dealer doesn't have natural 21
         if rules.late_surrender and dealer_total != 21:
             hand = p.get_hand(key=1)
-            initial_bet = p.get_initial_bet()
-            if p.decision(hand=hand, dealer_up_card=dealer_up_card, num_hands=1, amount=initial_bet) in \
-                    ['Rh', 'Rs', 'Rp']:
+            if p.decision(hand=hand, dealer_up_card=dealer_up_card, num_hands=1) in ['Rh', 'Rs', 'Rp']:
                 p.surrender()
-                p.stand(key=1)
                 continue
 
         processed = set()
@@ -154,39 +95,34 @@ def players_play_hands(table, rules, cards, dealer_hand, dealer_up_card):
                     num_hands = max(p.get_hands_dict().keys())
                     hand = p.get_hand(key=k)
                     hand_length = len(p.get_hand(key=k))
-                    bet = p.get_bet(key=k)
-                    decision = p.decision(dealer_up_card=dealer_up_card, hand=hand, num_hands=num_hands, amount=bet)
+                    decision = p.decision(dealer_up_card=dealer_up_card, hand=hand, num_hands=num_hands)
 
                     # split cards
-                    if decision in ['P', 'Rp'] and p.sufficient_funds(amount=bet):
-                        p.increment_bankroll(amount=-bet)
+                    if decision in ['P', 'Rp']:
 
                         # if unable to re-split aces, player only gets 1 card on each split pair
                         if not rules.resplit_aces and 'A' in hand:
-                            p.split(amount=bet, key=k, new_key=num_hands + 1)
+                            p.split(key=k, new_key=num_hands + 1)
                             p.hit(key=k, new_card=cards.deal_card())
                             p.stand(key=k)
                             p.hit(key=num_hands + 1, new_card=cards.deal_card())
                             p.stand(key=num_hands + 1)
 
                         else:
-                            p.split(amount=bet, key=k, new_key=num_hands + 1)
+                            p.split(key=k, new_key=num_hands + 1)
 
                     # split cards if double after split available
-                    elif rules.double_after_split and decision == 'Ph' and p.sufficient_funds(amount=bet):
-                        p.increment_bankroll(amount=-bet)
-                        p.split(amount=bet, key=k, new_key=num_hands + 1)
+                    elif rules.double_after_split and decision == 'Ph':
+                        p.split(key=k, new_key=num_hands + 1)
 
                     # double down
-                    elif rules.double_down and decision in ['Dh', 'Ds'] and hand_length == 2 and \
-                            not p.get_split(key=k) and p.sufficient_funds(amount=bet):
-                        p.increment_bankroll(amount=-bet)
+                    elif rules.double_down and decision in ['Dh', 'Ds'] and \
+                            hand_length == 2 and not p.get_split(key=k):
                         p.double_down(key=k, new_card=cards.deal_card())
 
                     # double after split
-                    elif rules.double_after_split and decision in ['Dh', 'Ds'] and hand_length == 2 and \
-                            p.get_split(key=k) and p.sufficient_funds(amount=bet):
-                        p.increment_bankroll(amount=-bet)
+                    elif rules.double_after_split and decision in ['Dh', 'Ds'] and \
+                            hand_length == 2 and p.get_split(key=k):
                         p.double_down(key=k, new_card=cards.deal_card())
 
                     # hit
@@ -321,129 +257,111 @@ def compare_hands(table, rules, stats, dealer_hand):
         for k in p.get_hands_dict().keys():
 
             player_total = max_count_hand(hand=p.get_hand(key=k))
-            player_bet = p.get_bet(key=k)
 
-            # only want the initial bet for the first hand
-            if k == 1:
-                player_initial_bet = p.get_initial_bet()
-            else:
-                player_initial_bet = 0
-
-            if p.get_insurance():  # player bought insurance
+            if p.get_insurance():  # player took insurance side bet
                 if dealer_total == 21 and dealer_hand_length == 2:  # dealer has natural 21
-                    p.increment_bankroll(amount=3 * p.get_insurance_bet())
-                    stats.player_insurance_win(
+                    stats.insurance(
                         player_key=p.get_name(),
                         count_key=p.get_count(),
-                        insurance_amount=p.get_insurance_bet()
+                        outcome_key='win'
                     )
                 else:  # dealer does not have natural 21
-                    stats.dealer_insurance_win(
+                    stats.insurance(
                         player_key=p.get_name(),
                         count_key=p.get_count(),
-                        insurance_amount=p.get_insurance_bet()
+                        outcome_key='loss'
                     )
 
             if p.get_surrender():  # player surrenders
-                p.increment_bankroll(amount=0.5 * player_bet)
-                stats.player_surrender(
+                stats.surrender(
                     player_key=p.get_name(),
-                    count_key=p.get_count(),
-                    amount=player_bet,
-                    initial_amount=player_initial_bet
+                    count_key=p.get_count()
                 )
 
             elif player_total == 21 and dealer_total == 21:
 
                 if p.get_natural_blackjack() and dealer_hand_length == 2:  # push - both dealer/player have natural 21
-                    p.increment_bankroll(amount=player_bet)
-                    stats.push(
+                    stats.other(
                         player_key=p.get_name(),
                         count_key=p.get_count(),
-                        amount=player_bet,
-                        initial_amount=player_initial_bet
+                        outcome_key='push'
                     )
 
                 elif p.get_natural_blackjack() and dealer_hand_length > 2:  # player has natural 21
                     if len(table.get_players()) > 1:
-                        p.increment_bankroll(amount=(1 + rules.blackjack_payout) * player_bet)
-                        stats.player_natural_blackjack(
+                        stats.natural_blackjack(
                             player_key=p.get_name(),
-                            count_key=p.get_count(),
-                            amount=player_bet,
-                            initial_amount=player_initial_bet
+                            count_key=p.get_count()
                         )
                     else:
                         raise ValueError('Impossible when playing heads up against dealer.')
 
                 elif not p.get_natural_blackjack() and dealer_hand_length > 2:  # push - both dealer/player have 21
-                    p.increment_bankroll(amount=player_bet)
-                    stats.push(
+                    stats.other(
                         player_key=p.get_name(),
                         count_key=p.get_count(),
-                        amount=player_bet,
-                        initial_amount=player_initial_bet
+                        outcome_key='push'
                     )
 
                 else:
                     raise ValueError('Impossible for a dealer to have a natural 21 and a player to have 3+ cards.')
 
             elif p.get_natural_blackjack():  # player has natural 21
-                p.increment_bankroll(amount=(1 + rules.blackjack_payout) * player_bet)
-                stats.player_natural_blackjack(
+                stats.natural_blackjack(
                     player_key=p.get_name(),
-                    count_key=p.get_count(),
-                    amount=player_bet,
-                    initial_amount=player_initial_bet
+                    count_key=p.get_count()
                 )
 
             elif dealer_total == 21 and dealer_hand_length == 2:  # dealer has natural 21
-                stats.dealer_natural_blackjack(
+                stats.other(
                     player_key=p.get_name(),
                     count_key=p.get_count(),
-                    amount=player_bet,
-                    initial_amount=player_initial_bet
+                    outcome_key='loss',
+                    hand_key=k,
+                    double_down=p.get_double_down(key=k)
                 )
 
             elif player_total > 21:  # player busts
-                stats.player_bust(
+                stats.other(
                     player_key=p.get_name(),
                     count_key=p.get_count(),
-                    amount=player_bet,
-                    initial_amount=player_initial_bet
+                    outcome_key='loss',
+                    hand_key=k,
+                    double_down=p.get_double_down(key=k)
                 )
 
             elif dealer_total > 21:  # dealer busts
-                p.increment_bankroll(amount=2 * player_bet)
-                stats.dealer_bust(
+                stats.other(
                     player_key=p.get_name(),
                     count_key=p.get_count(),
-                    amount=player_bet,
-                    initial_amount=player_initial_bet
+                    outcome_key='win',
+                    hand_key=k,
+                    double_down=p.get_double_down(key=k)
                 )
 
             elif dealer_total == player_total:  # push
-                p.increment_bankroll(amount=player_bet)
-                stats.push(
+                stats.other(
                     player_key=p.get_name(),
                     count_key=p.get_count(),
-                    amount=player_bet,
-                    initial_amount=player_initial_bet
+                    outcome_key='push',
+                    hand_key=k,
+                    double_down=p.get_double_down(key=k)
                 )
 
             elif player_total > dealer_total:  # player beats dealer
-                p.increment_bankroll(amount=2 * player_bet)
-                stats.player_showdown_win(
+                stats.other(
                     player_key=p.get_name(),
                     count_key=p.get_count(),
-                    amount=player_bet,
-                    initial_amount=player_initial_bet
+                    outcome_key='win',
+                    hand_key=k,
+                    double_down=p.get_double_down(key=k)
                 )
 
             else:  # dealer beats player
-                stats.dealer_showdown_win(
+                stats.other(
                     player_key=p.get_name(),
                     count_key=p.get_count(),
-                    amount=player_bet,
-                    initial_amount=player_initial_bet
+                    outcome_key='loss',
+                    hand_key=k,
+                    double_down=p.get_double_down(key=k)
                 )
