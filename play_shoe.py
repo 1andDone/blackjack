@@ -194,6 +194,8 @@ class PlayShoe(object):
                     # update current bankroll for each player
                     for p in self.players:
                         current_bankroll[p.get_name()] = p.get_bankroll()
+                        if p.get_hands_dict()[1]['initial bet'] and p.get_hands_dict()[1]['surrender']:
+                            print(p.get_hands_dict()[1]['initial bet'])
 
                     # update ending bankroll for only players involved in that shoe
                     for p in t.get_players():
