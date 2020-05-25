@@ -3,7 +3,8 @@ import card_values as cv
 
 def count_hand(hand):
     """
-    Returns the soft and hard totals for a given hand.
+    Returns the total for a given hand and indicates
+    whether or not the hand is soft.
 
     Parameters
     ----------
@@ -12,56 +13,24 @@ def count_hand(hand):
 
     Returns
     -------
-    tuple of int
-        Soft and hard totals for a given hand
+    tuple of int, boolean
+        Maximum total for a given hand and an indicator
+        of whether or not it is a soft hand
 
     """
-    non_aces = [card for card in hand if card != 'A']
+    total = 0
+    soft_hand = False
+    for card in hand:
+        total += cv.card_values[card]
 
-    # hard values
-    hard_total = 0
-    for card in non_aces:
-        hard_total += cv.card_values[card]
+    if 'A' in hand and total < 12:
+        total += 10
+        soft_hand = True
 
-    # possible soft values
-    aces = [card for card in hand if card == 'A']
-    num_aces = len(aces)
-
-    soft_total = hard_total
-
-    # if there are multiple aces, only one can be valued at 11
-    if num_aces > 0:
-        soft_total += 11 + (num_aces - 1)
-        hard_total += num_aces
-
-    return soft_total, hard_total
+    return total, soft_hand
 
 
-def max_count_hand(hand):
-    """
-    Determines the maximum count of a hand, while trying not to
-    exceed 21. If both the soft and hard totals exceed 21, the hard
-    total is reported.
-
-    Parameters
-    ----------
-    hand : list of str
-        List of string card elements
-
-    Returns
-    -------
-    int
-        Maximum count of a hand, while trying not exceed 21
-
-    """
-    soft_total, hard_total = count_hand(hand)
-
-    if soft_total <= 21 and hard_total <= 21:
-        return soft_total
-    return hard_total
-
-
-def splittable(rules, hand):
+def splittable(rules, hand, num_hands=1):
     """
     Determines if a hand is splittable or not.
 
@@ -71,6 +40,8 @@ def splittable(rules, hand):
         HouseRules class instance
     hand : list of str
         List of string card elements
+    num_hands : int
+        Number of hands being played by a player
 
     Returns
     -------
@@ -78,12 +49,10 @@ def splittable(rules, hand):
         True if hand is splittable, false otherwise
 
     """
-    if len(hand) == 2:
+    if len(hand) == 2 and num_hands < rules.max_hands:
         if hand[0] == hand[1]:
             return True
         if rules.split_unlike_tens:
-            if hand[0] == 'A' or hand[1] == 'A':
-                return False
-            if cv.card_values[hand[0]] == 10 and cv.card_values[hand[1]] == 10:
+            if all(x in ['10', 'J', 'Q', 'K'] for x in hand):
                 return True
     return False

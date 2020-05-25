@@ -20,25 +20,26 @@ class PlayingStrategy(object):
         """
         if not isinstance(rules, HouseRules):
             raise TypeError('Rules must be of type HouseRules.')
-        if strategy not in ['Basic']:
+        if strategy != 'Basic':
             raise ValueError('Strategy must be "Basic".')
         self.rules = rules
-        self.strategy = strategy
+        self._strategy = strategy
 
-    def get_strategy(self):
-        return self.strategy
+    @property
+    def strategy(self):
+        return self._strategy
 
     def splits(self):
-        if self.strategy == 'Basic' and self.rules.s17:
+        if self._strategy == 'Basic' and self.rules.s17:
             return basic_strategy.s17_splits
         return basic_strategy.h17_splits
 
     def soft(self):
-        if self.strategy == 'Basic' and self.rules.s17:
+        if self._strategy == 'Basic' and self.rules.s17:
             return basic_strategy.s17_soft
         return basic_strategy.h17_soft
 
     def hard(self):
-        if self.strategy == 'Basic' and self.rules.s17:
+        if self._strategy == 'Basic' and self.rules.s17:
             return basic_strategy.s17_hard
         return basic_strategy.h17_hard

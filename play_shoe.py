@@ -8,6 +8,25 @@ from table import Table
 from simulation_stats import SimulationStats
 from gameplay import deal_hands, players_play_hands, dealer_turn, dealer_plays_hand, compare_hands
 from figures import net_winnings_figure
+import cProfile, pstats, io
+
+
+def profile(fnc):
+    """A decorator that uses cProfile to profile a function"""
+
+    def inner(*args, **kwargs):
+        pr = cProfile.Profile()
+        pr.enable()
+        retval = fnc(*args, **kwargs)
+        pr.disable()
+        s = io.StringIO()
+        sortby = 'cumulative'
+        ps = pstats.Stats(pr, stream=s).sort_stats(sortby)
+        ps.print_stats()
+        print(s.getvalue())
+        return retval
+
+    return inner
 
 
 class PlayShoe(object):
@@ -50,6 +69,7 @@ class PlayShoe(object):
         self.figures = figures
         self.stats = SimulationStats()
 
+    @profile
     def main(self):
 
         # set seed to replicate results
@@ -62,17 +82,17 @@ class PlayShoe(object):
         for p in self.players:
 
             # create player key
-            self.stats.create_player_key(player_key=p.get_name())
+            self.stats.create_player_key(player_key=p.name)
 
-            # add players to table
-            if not p.get_back_counting():
+            # add players (not including back counters) to table
+            if not p.back_counting:
                 t.add_player(player=p)
 
         # balanced and unbalanced card counting systems
         balanced_card_counting_systems = ['Hi-Lo', 'Hi-Opt I', 'Hi-Opt II', 'Omega II', 'Halves', 'Zen Count']
         unbalanced_card_counting_systems = ['KO']
 
-        for sim in range(1, self.simulations + 1):
+        for sim in range(0, self.simulations):
 
             # set up cards and shuffle
             c = Cards(shoe_size=self.shoe_size)
@@ -83,56 +103,58 @@ class PlayShoe(object):
 
             while not c.cut_card_reached(penetration=self.penetration):
 
-                # add back counters to the table if the count is favorable
                 for p in self.players:
-                    if p.get_back_counting() and p not in t.get_players():
-                        if p.get_count_strategy() in balanced_card_counting_systems:
-                            if cs.true_count(strategy=p.get_count_strategy(), accuracy=p.get_true_count_accuracy()) >= \
-                                 p.get_back_counting_entry_exit()[0]:
-                                t.add_player(player=p)
-                        else:
-                            if cs.running_count(strategy=p.get_count_strategy()) >= p.get_back_counting_entry_exit()[0]:
-                                t.add_player(player=p)
-
-                # remove back counters from the table if the count is not favorable
-                for p in self.players:
-                    if p.get_back_counting() and p in t.get_players():
-                        if p.get_count_strategy() in balanced_card_counting_systems:
-                            if cs.true_count(strategy=p.get_count_strategy(), accuracy=p.get_true_count_accuracy()) < \
-                                 p.get_back_counting_entry_exit()[1]:
-                                t.remove_player(player=p)
-                        else:
-                            if cs.running_count(strategy=p.get_count_strategy()) < p.get_back_counting_entry_exit()[1]:
-                                t.remove_player(player=p)
-
-                for p in t.get_players():
 
                     # get true count
-                    if p.get_count_strategy() in balanced_card_counting_systems:
-                        p.set_count(
-                            count=cs.true_count(
-                                    strategy=p.get_count_strategy(),
-                                    accuracy=p.get_true_count_accuracy()
-                            )
+                    if p.count_strategy in balanced_card_counting_systems:
+
+                        count = cs.true_count(
+                            strategy=p.count_strategy,
+                            accuracy=p.true_count_accuracy
                         )
+
+                        if p.back_counting:
+
+                            if p in t.players:
+                                if count < p.back_counting_exit:
+                                    t.remove_player(player=p)
+
+                            else:
+                                if count >= p.back_counting_entry:
+                                    t.add_player(player=p)
+
+                        if p in t.players:
+                            p.count = count
 
                     # get running count
-                    elif p.get_count_strategy() in unbalanced_card_counting_systems:
-                        p.set_count(
-                            count=cs.running_count(
-                                    strategy=p.get_count_strategy()
-                            )
+                    elif p.count_strategy in unbalanced_card_counting_systems:
+
+                        count = cs.running_count(
+                            strategy=p.count_strategy
                         )
 
+                        if p.back_counting:
+
+                            if p in t.players:
+                                if count < p.back_counting_exit:
+                                    t.remove_player(player=p)
+
+                            else:
+                                if count >= p.back_counting_entry:
+                                    t.add_player(player=p)
+
+                        if p in t.players:
+                            p.count = count
+
                     else:
-                        p.set_count(count=0)
+                        p.count = 0
 
                     # create count and outcome keys
-                    self.stats.create_count_key(player_key=p.get_name(), count_key=p.get_count())
-                    self.stats.create_outcome_key(player_key=p.get_name(), count_key=p.get_count())
+                    self.stats.create_count_key(player_key=p.name, count_key=p.count)
+                    self.stats.create_outcome_key(player_key=p.name, count_key=p.count)
 
                 # only deal hands if there are players
-                if len(t.get_players()) > 0:
+                if len(t.players) > 0:
 
                     # deal hands to all players and dealer
                     dealer_hand = deal_hands(table=t, cards=c)
@@ -150,10 +172,6 @@ class PlayShoe(object):
                         dealer_up_card=dealer_up_card
                     )
 
-                    # dealer shows hole card when all players bust, surrender, or have natural 21
-                    if not dealer_turn(table=t) and self.rules.dealer_shows_hole_card:
-                        c.update_visible_cards(card=dealer_hole_card)
-
                     # dealer acts if one or more players have a live hand
                     if dealer_turn(table=t):
                         dealer_hand = dealer_plays_hand(
@@ -163,20 +181,24 @@ class PlayShoe(object):
                             dealer_hand=dealer_hand
                         )
 
+                    # dealer reveals hole card when all players bust, surrender, or have natural 21
+                    else:
+                        if self.rules.dealer_shows_hole_card:
+                            c.update_visible_cards(card=dealer_hole_card)
+
                     # compare players hand(s) to dealer and pay out to players, house
                     compare_hands(
                         table=t,
-                        rules=self.rules,
                         stats=self.stats,
                         dealer_hand=dealer_hand
                     )
 
                     # update count and reset visible cards
                     cs.update_running_count()
-                    c.set_visible_cards()
+                    c.visible_cards = []
 
         # unpack nested dictionary
-        for player_key, player_values in self.stats.get_stats_dict().items():
+        for player_key, player_values in self.stats.stats_dict.items():
             print('Player:', player_key)
             print('--------' + '-' * len(player_key))
 
@@ -202,7 +224,7 @@ class PlayShoe(object):
                     (count_values['loss']['surrender'] * -0.5) +
                     (count_values['loss']['insurance'] * -0.5) +
                     (count_values['loss']['double down'] * -2) +
-                    (count_values['win']['double after split'] * -2) +
+                    (count_values['loss']['double after split'] * -2) +
                     (count_values['loss']['split'] * -1) +
                     (count_values['loss']['other'] * -1)
                 )
@@ -217,7 +239,7 @@ class PlayShoe(object):
                     count_values['loss']['surrender'] +
                     (count_values['loss']['insurance'] * 0.5) +
                     (count_values['loss']['double down'] * 2) +
-                    (count_values['win']['double after split'] * -2) +
+                    (count_values['win']['double after split'] * 2) +
                     count_values['loss']['split'] +
                     count_values['loss']['other'] +
                     (count_values['push']['double down'] * 2) +
@@ -242,19 +264,20 @@ class PlayShoe(object):
                 )
 
             # get initial bet for each count played
+            initial_bet_count = np.array([])
+
             for p in self.players:
-                if p.get_name() == player_key:
-                    if p.get_bet_strategy() == 'Spread':
-                        initial_bet_count = np.array([])
+                if p.name == player_key:
+                    if p.bet_strategy == 'Spread':
                         for c in count:
-                            amount = p.get_bet_spread() * p.get_min_bet()
-                            for key, value in p.get_bet_scale().items():
+                            amount = p.bet_spread * p.min_bet
+                            for key, value in p.bet_scale.items():
                                 if c < key:
                                     amount = value
                                     break
                             initial_bet_count = np.append(initial_bet_count, amount)
                     else:
-                        initial_bet_count = p.get_min_bet()
+                        initial_bet_count = p.min_bet
 
             net_winnings = net_winnings * initial_bet_count
             overall_bet = overall_bet * initial_bet_count
@@ -270,25 +293,25 @@ class PlayShoe(object):
                 print('House edge:', 100 * (np.sum(net_winnings) / np.sum(initial_bet)))
                 print('Element of risk:', 100 * (np.sum(net_winnings) / np.sum(overall_bet)))
                 print('\n')
-        #
-        #     # figures are only created for players that are counting cards
-        #     if self.figures:
-        #         for p in self.players:
-        #             if p.get_name() == player_key:
-        #                 if p.get_count_strategy() is not None:
-        #                     net_winnings_figure(
-        #                         count=count,
-        #                         true_count_accuracy=p.get_true_count_accuracy(),
-        #                         net_winnings=net_winnings,
-        #                         name=p.get_name(),
-        #                         shoe_size=self.shoe_size,
-        #                         penetration=self.penetration,
-        #                         blackjack_payout=self.rules.blackjack_payout,
-        #                         count_strategy=p.get_count_strategy(),
-        #                         play_strategy=p.play_strategy.get_strategy(),
-        #                         bet_strategy=p.bet_strategy.get_strategy(),
-        #                         bet_spread=p.get_bet_spread(),
-        #                         initial_bankroll=ending_bankroll[p.get_name()][0],
-        #                         min_bet=p.get_min_bet(),
-        #                         simulations=self.simulations
-        #                     )
+
+            # figures are only created for players that are counting cards
+            if self.figures:
+                for p in self.players:
+                    if p.name == player_key:
+                        if p.count_strategy is not None:
+                            net_winnings_figure(
+                                count=count,
+                                true_count_accuracy=p.true_count_accuracy,
+                                net_winnings=net_winnings,
+                                name=p.name,
+                                shoe_size=self.shoe_size,
+                                penetration=self.penetration,
+                                blackjack_payout=self.rules.blackjack_payout,
+                                count_strategy=p.count_strategy,
+                                play_strategy=p.play_strategy.strategy,
+                                bet_strategy=p.bet_strategy,
+                                bet_spread=p.bet_spread,
+                                initial_bankroll=p.bankroll,
+                                min_bet=p.min_bet,
+                                simulations=self.simulations
+                            )

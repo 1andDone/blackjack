@@ -284,43 +284,6 @@ class TestPlayer(object):
             )
             assert p.get_back_counting_entry_exit() == expected
 
-    @pytest.mark.parametrize('amount, expected',
-                             [
-                                 (10, 110),
-                                 (-10, 90)
-                             ])
-    def test_increment_bankroll(self, setup_player, amount, expected):
-        """
-        Tests the increment_bankroll method.
-
-        """
-        p = setup_player
-        assert p.get_bankroll() == 100
-        p.increment_bankroll(amount=amount)
-        assert p.get_bankroll() == expected
-
-    @pytest.mark.parametrize('amount, expected',
-                             [
-                                 (10, True),
-                                 (100, True),
-                                 (101, False),
-                                 (-10, ValueError)  # negative amount
-                             ])
-    def test_sufficient_funds(self, setup_player, amount, expected):
-        """
-        Tests the sufficient_funds method.
-
-        """
-        p = setup_player
-        assert p.get_bankroll() == 100
-
-        if type(expected) == type and issubclass(expected, Exception):
-            with pytest.raises(ValueError):
-                p.sufficient_funds(amount=amount)
-
-        else:
-            assert p.sufficient_funds(amount=amount) is expected
-
     def test_create_hand(self, setup_player):
         """
         Tests the create_hand method.
@@ -328,44 +291,19 @@ class TestPlayer(object):
         """
         p = setup_player
         assert p.get_hands_dict() == {}
-
-        p.create_hand(amount=10)
+        p.create_hand()
         assert p.get_hands_dict() == {
             1: {
+                    'busted': False,
+                    'double down': False,
                     'hand': [],
-                    'initial bet': 10,
-                    'insurance bet': 0,
-                    'bet': 10,
                     'insurance': False,
                     'natural blackjack': False,
-                    'surrender': False,
-                    'busted': False,
                     'split': False,
-                    'stand': False
+                    'stand': False,
+                    'surrender': False
             }
         }
-
-    @pytest.mark.parametrize('amount, expected',
-                             [
-                                 (5, ValueError),  # initial bet below rules minimum bet
-                                 (505, ValueError),  # initial bet above rules maximum bet
-                                 (20, 80)
-                             ])
-    def test_initial_bet(self, setup_player, amount, expected):
-        """
-        Tests the initial_bet method.
-
-        """
-        p = setup_player
-        assert p.get_bankroll() == 100
-
-        if type(expected) == type and issubclass(expected, Exception):
-            with pytest.raises(ValueError):
-                p.initial_bet(amount=amount)
-
-        else:
-            p.initial_bet(amount=amount)
-            assert p.get_bankroll() == expected
 
     def test_insurance(self, setup_player):
         """
@@ -373,11 +311,9 @@ class TestPlayer(object):
 
         """
         p = setup_player
-        p.create_hand(amount=10)
-        assert p.get_insurance_bet() == 0
+        p.create_hand()
         assert p.get_insurance() is False
         p.insurance()
-        assert p.get_insurance_bet() == 5
         assert p.get_insurance() is True
 
     def test_hit(self, setup_player):
@@ -386,7 +322,7 @@ class TestPlayer(object):
 
         """
         p = setup_player
-        p.create_hand(amount=10)
+        p.create_hand()
         assert p.get_hand(key=1) == []
         p.hit(key=1, new_card='K')
         p.hit(key=1, new_card='7')
@@ -398,15 +334,13 @@ class TestPlayer(object):
 
         """
         p = setup_player
-        p.create_hand(amount=10)
+        p.create_hand()
         p.hit(key=1, new_card='A')
         p.hit(key=1, new_card='A')
         assert p.get_hand(key=1) == ['A', 'A']
-
-        p.split(amount=10, key=1, new_key=2)
+        p.split(key=1, new_key=2)
         for key in [1, 2]:
             assert p.get_hand(key=key) == ['A']
-            assert p.get_bet(key=key) == 10
 
     def test_double_down(self, setup_player):
         """
@@ -414,36 +348,32 @@ class TestPlayer(object):
 
         """
         p = setup_player
-        p.create_hand(amount=10)
-        assert p.get_bet(key=1) == 10
+        p.create_hand()
         p.hit(key=1, new_card='6')
         p.hit(key=1, new_card='4')
+        assert p.get_double_down(key=1) is False
         p.double_down(key=1, new_card='A')
-        assert p.get_bet(key=1) == 20
-        assert p.get_stand(key=1) is True
+        assert p.get_double_down(key=1) is True
 
-    @pytest.mark.parametrize('bankroll, hand, num_hands, expected',
+    @pytest.mark.parametrize('hand, num_hands, expected',
                              [
-                                 (90, ['8'], 1, 'H'),  # hand of length 1
-                                 (90, ['8', '8'], 1, 'P'),  # number of hands is less than max hands
-                                 (70, ['8', '8'], 4, 'Rh'),  # number of hands is not less than max hands
-                                 (0, ['8', '8'], 1, 'Rh'),  # insufficient bankroll to split
-                                 (90, ['A', '7'], 1, 'H'),  # soft total
-                                 (90, ['8', 'J'], 1, 'S'),  # hard total
-                                 (90, ['J', '6', 'K'], 1, 'B')  # busted
+                                 (['8'], 1, 'H'),  # hand of length 1
+                                 (['8', '8'], 1, 'P'),  # number of hands is less than max hands
+                                 (['8', '8'], 4, 'Rh'),  # number of hands is not less than max hands
+                                 (['A', '7'], 1, 'H'),  # soft total
+                                 (['8', 'J'], 1, 'S'),  # hard total
+                                 (['J', '6', 'K'], 1, 'B')  # busted
                              ])
-    def test_decision(self, setup_player, bankroll, hand, num_hands, expected):
+    def test_decision(self, setup_player, hand, num_hands, expected):
         """
         Tests the decision method.
 
         """
         p = setup_player
-        p.set_bankroll(amount=bankroll)
         decision = p.decision(
                         hand=hand,
                         dealer_up_card='J',
-                        num_hands=num_hands,
-                        amount=10
+                        num_hands=num_hands
         )
         assert decision == expected
 

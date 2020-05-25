@@ -17,7 +17,7 @@ if __name__ == "__main__":
                 double_down=True,
                 split_unlike_tens=True,
                 double_after_split=True,
-                resplit_aces=False,
+                resplit_aces=True,
                 insurance=True,
                 late_surrender=True,
                 dealer_shows_hole_card=False
@@ -50,4 +50,4 @@ if __name__ == "__main__":
 
 end = time.time()
 
-print('time elapsed:', end-start)
+print('number of rounds per second:', 10000/(end-start))
