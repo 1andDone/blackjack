@@ -19,6 +19,15 @@ class Cards(object):
         self.deck = [2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 1] * 4 * int(shoe_size)
         self.total_cards = 52 * shoe_size
         self._visible_cards = []
+        self._shoe_counter = 1
+
+    @property
+    def shoe_counter(self):
+        return self._shoe_counter
+
+    @shoe_counter.setter
+    def shoe_counter(self, value):
+        self._shoe_counter += value
 
     @property
     def visible_cards(self):
@@ -45,7 +54,7 @@ class Cards(object):
         self._visible_cards.append(card)
 
     def remaining_decks(self):
-        return len(self.deck)/52
+        return round(len(self.deck)/52, 0)
 
     def cut_card_reached(self, penetration):
         if penetration < 0.5 or penetration > 0.9:

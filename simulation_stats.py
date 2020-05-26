@@ -57,8 +57,3 @@ class SimulationStats(object):
                 self._stats_dict[player_key][count_key][outcome_key]['double after split'] += 1
             else:
                 self._stats_dict[player_key][count_key][outcome_key]['split'] += 1
-
-
-
-
-

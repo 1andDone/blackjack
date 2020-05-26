@@ -63,19 +63,19 @@ def players_play_hands(table, rules, cards, stats, dealer_hand, dealer_up_card):
 
         # insurance option
         if rules.insurance and dealer_up_card == 1:
-            if p.insurance_count is not None:
-                if p.count >= p.insurance_count:
+            if p.insurance is not None:
+                if p.pre_insurance_count >= p.insurance_count:
                     p.set_insurance()
                     if dealer_total == 21:  # dealer has natural blackjack
                         stats.insurance(
                             player_key=p.name,
-                            count_key=p.count,
+                            count_key=p.pre_insurance_count,
                             outcome_key='win'
                         )
                     else:  # dealer does not have natural blackjack
                         stats.insurance(
                             player_key=p.name,
-                            count_key=p.count,
+                            count_key=p.pre_insurance_count,
                             outcome_key='loss'
                         )
 
@@ -85,19 +85,19 @@ def players_play_hands(table, rules, cards, stats, dealer_hand, dealer_up_card):
                 p.set_natural_blackjack()
                 stats.other(
                     player_key=p.name,
-                    count_key=p.count,
+                    count_key=p.bet_count,
                     outcome_key='push'
                 )
             elif total == 21:
                 p.set_natural_blackjack()
                 stats.natural_blackjack(
                     player_key=p.name,
-                    count_key=p.count
+                    count_key=p.bet_count
                 )
             else:
                 stats.other(
                     player_key=p.name,
-                    count_key=p.count,
+                    count_key=p.bet_count,
                     outcome_key='loss'
                 )
             p.set_settled_natural_blackjack()  # settle all bets when dealer has natural blackjack
@@ -118,7 +118,7 @@ def players_play_hands(table, rules, cards, stats, dealer_hand, dealer_up_card):
                 p.set_surrender()
                 stats.surrender(
                     player_key=p.name,
-                    count_key=p.count
+                    count_key=p.bet_count
                 )
                 continue
 
@@ -173,7 +173,7 @@ def players_play_hands(table, rules, cards, stats, dealer_hand, dealer_up_card):
                                 p.set_busted(key=k)
                                 stats.other(
                                     player_key=p.name,
-                                    count_key=p.count,
+                                    count_key=p.bet_count,
                                     outcome_key='loss',
                                     hand_key=k,
                                     double_down=p.get_double_down(key=k)
@@ -312,7 +312,7 @@ def compare_hands(table, stats, dealer_total):
             elif dealer_total > 21 or (total > dealer_total):  # dealer busts or player beats dealer
                 stats.other(
                     player_key=p.name,
-                    count_key=p.count,
+                    count_key=p.bet_count,
                     outcome_key='win',
                     hand_key=k,
                     double_down=p.get_double_down(key=k)
@@ -321,7 +321,7 @@ def compare_hands(table, stats, dealer_total):
             elif total == dealer_total:  # push
                 stats.other(
                     player_key=p.name,
-                    count_key=p.count,
+                    count_key=p.bet_count,
                     outcome_key='push',
                     hand_key=k,
                     double_down=p.get_double_down(key=k)
@@ -330,7 +330,7 @@ def compare_hands(table, stats, dealer_total):
             else:  # dealer beats player
                 stats.other(
                     player_key=p.name,
-                    count_key=p.count,
+                    count_key=p.bet_count,
                     outcome_key='loss',
                     hand_key=k,
                     double_down=p.get_double_down(key=k)

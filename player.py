@@ -9,7 +9,7 @@ class Player(object):
     """
     def __init__(
             self, name, rules, bankroll, min_bet, bet_spread=None, bet_count_amount=None, play_strategy='Basic',
-            bet_strategy='Flat', count_strategy=None, true_count_accuracy=None, insurance_count=None,
+            bet_strategy='Flat', count_strategy=None, true_count_accuracy=None, insurance=None,
             back_counting=False, back_counting_entry_exit=None
     ):
         """
@@ -39,9 +39,7 @@ class Player(object):
         count_strategy : str, optional
             Name of the balanced or unbalanced card counting strategy used by the player (default is
             None, which implies the player does not count cards)
-        true_count_accuracy : float, optional
-            Accuracy of the balanced card counting strategy (default is None)
-        insurance_count : float, optional
+        insurance : float, optional
             Minimum running or true count at which a player will purchase insurance, if
             available (default is None)
         back_counting : bool, optional
@@ -92,13 +90,6 @@ class Player(object):
             if count_strategy not in ['Hi-Lo', 'Hi-Opt I', 'Hi-Opt II', 'Omega II', 'Halves', 'Zen Count', 'KO']:
                 raise ValueError('Count Strategy must be "Hi-Lo", "Hi-Opt I", "Hi-Opt II", "Omega II", '
                                  '"Halves", "Zen Count", or "KO".')
-        if true_count_accuracy is None and count_strategy in ['Hi-Lo', 'Hi-Opt I', 'Hi-Opt II', 'Omega II', 'Halves',
-                                                              'Zen Count']:
-            raise ValueError('True count accuracy cannot be None while using a balanced card counting system.')
-        if true_count_accuracy is not None and count_strategy == 'KO':
-            raise ValueError('True count accuracy must be None while using an unbalanced card counting system.')
-        if true_count_accuracy is not None and count_strategy is None:
-            raise ValueError('True count accuracy must be None if the player is not counting cards.')
         if back_counting and count_strategy is None:
             raise ValueError('Back counting requires a counting strategy.')
         if not back_counting and back_counting_entry_exit is not None:
@@ -124,11 +115,11 @@ class Player(object):
         self.play_strategy = PlayingStrategy(rules=rules, strategy=play_strategy)
         self._bet_strategy = bet_strategy
         self._count_strategy = count_strategy
-        self._true_count_accuracy = true_count_accuracy
-        self._insurance_count = insurance_count
+        self._insurance = insurance
         self._back_counting = back_counting
         self._back_counting_entry_exit = back_counting_entry_exit
-        self._count = 0
+        self._bet_count = 0
+        self._pre_insurance_count = None
         self._hands_dict = None
 
     @property
@@ -160,12 +151,8 @@ class Player(object):
         return self._count_strategy
 
     @property
-    def true_count_accuracy(self):
-        return self._true_count_accuracy
-
-    @property
-    def insurance_count(self):
-        return self._insurance_count
+    def insurance(self):
+        return self._insurance
 
     @property
     def back_counting(self):
@@ -180,12 +167,20 @@ class Player(object):
         return self._back_counting_entry_exit[1]
 
     @property
-    def count(self):
-        return self._count
+    def bet_count(self):
+        return self._bet_count
 
-    @count.setter
-    def count(self, value):
-        self._count = value
+    @bet_count.setter
+    def bet_count(self, value):
+        self._bet_count = value
+
+    @property
+    def pre_insurance_count(self):
+        return self._pre_insurance_count
+
+    @pre_insurance_count.setter
+    def pre_insurance_count(self, value):
+        self._pre_insurance_count = value
 
     @property
     def hands_dict(self):

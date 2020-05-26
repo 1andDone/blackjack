@@ -67,7 +67,7 @@ def format_title(
 
 
 def net_winnings_figure(
-        count, true_count_accuracy, net_winnings, name, shoe_size, penetration,
+        count, net_winnings, name, shoe_size, penetration,
         blackjack_payout, count_strategy, play_strategy, bet_strategy,
         bet_spread, initial_bankroll, min_bet, simulations
 ):
@@ -81,8 +81,6 @@ def net_winnings_figure(
     ----------
     count : array_like
         Current running or true count based on the player's counting strategy
-    true_count_accuracy : float
-        Accuracy of player's balanced card counting strategy
     net_winnings : array_like
         Amount of money a player has won or lost since starting
     name : str
@@ -111,11 +109,8 @@ def net_winnings_figure(
     """
     balanced_card_counting_systems = ['Hi-Lo', 'Hi-Opt I', 'Hi-Opt II', 'Omega II', 'Halves', 'Zen Count']
 
-    # format width to be 80% of true count accuracy
-    if true_count_accuracy == 0.5:
-        width = 0.4
-    else:
-        width = 0.8
+    # format width to be 80% of true count precision
+    width = 0.8
 
     fig, (ax1, ax2) = plt.subplots(
                                 nrows=2,

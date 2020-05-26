@@ -84,13 +84,11 @@ class PlayShoe(object):
             # create player key
             self.stats.create_player_key(player_key=p.name)
 
-            # add players (not including back counters) to table
-            if not p.back_counting:
-                t.add_player(player=p)
+            # add players to table
+            t.add_player(player=p)
 
         # balanced and unbalanced card counting systems
         balanced_card_counting_systems = ['Hi-Lo', 'Hi-Opt I', 'Hi-Opt II', 'Omega II', 'Halves', 'Zen Count']
-        unbalanced_card_counting_systems = ['KO']
 
         for sim in range(0, self.simulations):
 
@@ -105,53 +103,20 @@ class PlayShoe(object):
 
                 for p in self.players:
 
-                    # get true count
-                    if p.count_strategy in balanced_card_counting_systems:
+                    # compute true/running counts for betting decision
+                    if p.count_strategy is not None:
 
-                        count = cs.true_count(
-                            strategy=p.count_strategy,
-                            accuracy=p.true_count_accuracy
-                        )
+                        if p.count_strategy in balanced_card_counting_systems:
 
-                        if p.back_counting:
+                            p.bet_count = cs.true_count(strategy=p.count_strategy)
 
-                            if p in t.players:
-                                if count < p.back_counting_exit:
-                                    t.remove_player(player=p)
+                        else:
 
-                            else:
-                                if count >= p.back_counting_entry:
-                                    t.add_player(player=p)
-
-                        if p in t.players:
-                            p.count = count
-
-                    # get running count
-                    elif p.count_strategy in unbalanced_card_counting_systems:
-
-                        count = cs.running_count(
-                            strategy=p.count_strategy
-                        )
-
-                        if p.back_counting:
-
-                            if p in t.players:
-                                if count < p.back_counting_exit:
-                                    t.remove_player(player=p)
-
-                            else:
-                                if count >= p.back_counting_entry:
-                                    t.add_player(player=p)
-
-                        if p in t.players:
-                            p.count = count
-
-                    else:
-                        p.count = 0
+                            p.bet_count = cs.running_count(strategy=p.count_strategy)
 
                     # create count and outcome keys
-                    self.stats.create_count_key(player_key=p.name, count_key=p.count)
-                    self.stats.create_outcome_key(player_key=p.name, count_key=p.count)
+                    self.stats.create_count_key(player_key=p.name, count_key=p.bet_count)
+                    self.stats.create_outcome_key(player_key=p.name, count_key=p.bet_count)
 
                 # only deal hands if there are players
                 if len(t.players) > 0:
@@ -162,6 +127,24 @@ class PlayShoe(object):
                     # dealers cards
                     dealer_hole_card = dealer_hand[0]
                     dealer_up_card = dealer_hand[1]
+
+                    # re-compute true/running counts before insurance bet
+                    if self.rules.insurance:
+
+                        # update count and reset visible cards
+                        cs.update_running_count()
+                        c.visible_cards = []
+
+                        for p in self.players:
+
+                            if p.insurance is not None:
+
+                                if p.count_strategy in balanced_card_counting_systems:
+
+                                    p.pre_insurance_count = cs.true_count(strategy=p.count_strategy)
+
+                                else:
+                                    p.pre_insurance_count = cs.running_count(strategy=p.count_strategy)
 
                     # players play out each of their hands
                     # player and dealer blackjacks, player surrenders or busts are settled
@@ -303,7 +286,6 @@ class PlayShoe(object):
                         if p.count_strategy is not None:
                             net_winnings_figure(
                                 count=count,
-                                true_count_accuracy=p.true_count_accuracy,
                                 net_winnings=net_winnings,
                                 name=p.name,
                                 shoe_size=self.shoe_size,
