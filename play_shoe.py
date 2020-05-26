@@ -164,34 +164,36 @@ class PlayShoe(object):
                     dealer_up_card = dealer_hand[1]
 
                     # players play out each of their hands
+                    # player and dealer blackjacks, player surrenders or busts are settled
                     players_play_hands(
                         table=t,
                         rules=self.rules,
                         cards=c,
+                        stats=self.stats,
                         dealer_hand=dealer_hand,
                         dealer_up_card=dealer_up_card
                     )
 
                     # dealer acts if one or more players have a live hand
                     if dealer_turn(table=t):
-                        dealer_hand = dealer_plays_hand(
+                        dealer_total = dealer_plays_hand(
                             rules=self.rules,
                             cards=c,
                             dealer_hole_card=dealer_hole_card,
                             dealer_hand=dealer_hand
                         )
 
+                        # compare players hand(s) to dealer and pay out to players, house
+                        compare_hands(
+                            table=t,
+                            stats=self.stats,
+                            dealer_total=dealer_total
+                        )
+
                     # dealer reveals hole card when all players bust, surrender, or have natural 21
                     else:
                         if self.rules.dealer_shows_hole_card:
                             c.update_visible_cards(card=dealer_hole_card)
-
-                    # compare players hand(s) to dealer and pay out to players, house
-                    compare_hands(
-                        table=t,
-                        stats=self.stats,
-                        dealer_hand=dealer_hand
-                    )
 
                     # update count and reset visible cards
                     cs.update_running_count()

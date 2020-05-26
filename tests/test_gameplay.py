@@ -3,7 +3,6 @@ from table import Table
 from house_rules import HouseRules
 from player import Player
 from cards import Cards
-from counting_strategy import CountingStrategy
 from simulation_stats import SimulationStats
 from gameplay import deal_hands, players_play_hands, dealer_turn, dealer_plays_hand, compare_hands
 from helper import count_hand
@@ -44,9 +43,9 @@ def test_deal_hands():
     dealer_hand = deal_hands(table=t, cards=c)
 
     for player in p:
-        if player.get_name() == 'First to act':
+        if player.name == 'First to act':
             assert player.get_hand(key=1) == ['A', '10']
-        elif player.get_name() == 'Second to act':
+        elif player.name == 'Second to act':
             assert player.get_hand(key=1) == ['K', '9']
         else:
             assert player.get_hand(key=1) == ['Q', '8']
@@ -81,11 +80,11 @@ def setup_table():
             bankroll=100,
             min_bet=10
     )
-
     t.add_player(player=p)
+    p.set_hand()
     s = SimulationStats()
-    s.create_player_key(player_key=p.get_name())
-    s.create_count_key(player_key=p.get_name(), count_key=0)
+    s.create_player_key(player_key=p.name)
+    s.create_count_key(player_key=p.name, count_key=0)
     s.create_outcome_key(player_key='Player 1', count_key=0)
     return c, t, r, p, s
 
@@ -97,18 +96,33 @@ def setup_table():
                              (False, None, None, False),  # insurance not available
                          ])
 def test_players_play_hands_insurance(
-        setup_table, insurance, count, insurance_count, expected_insurance
+        insurance, count, insurance_count, expected_insurance
 ):
     """
     Tests the insurance option within the players_play_hands function.
 
     """
-    c, t, r, p, s = setup_table
-    r.insurance = insurance
+    c = Cards(shoe_size=4)
+    t = Table()
+    r = HouseRules(
+        bet_limits=[10, 500],
+        insurance=insurance
+    )
+    p = Player(
+        name='Player 1',
+        rules=r,
+        bankroll=100,
+        min_bet=10,
+        insurance_count=insurance_count
+    )
+    t.add_player(player=p)
+    s = SimulationStats()
+    s.create_player_key(player_key=p.name)
+    s.create_count_key(player_key=p.name, count_key=count)
+    s.create_outcome_key(player_key='Player 1', count_key=count)
 
-    p.set_count(count=count)
-    p.insurance_count = insurance_count
-    p.create_hand()
+    p.count = count
+    p.set_hand()
     p.hit(key=1, new_card='2')
     p.hit(key=1, new_card='2')
 
@@ -116,6 +130,7 @@ def test_players_play_hands_insurance(
         table=t,
         rules=r,
         cards=c,
+        stats=s,
         dealer_hand=['J', 'A'],
         dealer_up_card='A'
     )
@@ -138,7 +153,6 @@ def test_players_play_hands_21(
     """
     c, t, r, p, s = setup_table
 
-    p.create_hand()
     p.hit(key=1, new_card=player_cards[0])
     p.hit(key=1, new_card=player_cards[1])
 
@@ -146,6 +160,7 @@ def test_players_play_hands_21(
         table=t,
         rules=r,
         cards=c,
+        stats=s,
         dealer_hand=dealer_cards,
         dealer_up_card=dealer_cards[1]
     )
@@ -160,16 +175,31 @@ def test_players_play_hands_21(
                              (False, False, ['10', '6', 'A'])  # late surrender not available
                          ])
 def test_players_play_hands_surrender(
-        setup_table, late_surrender, expected_surrender, expected_hand
+        late_surrender, expected_surrender, expected_hand
 ):
     """
     Tests the late surrender option within the players_play_hands function.
 
     """
-    c, t, r, p, s = setup_table
-    r.late_surrender = late_surrender
+    c = Cards(shoe_size=4)
+    t = Table()
+    r = HouseRules(
+        bet_limits=[10, 500],
+        late_surrender=late_surrender
+    )
+    p = Player(
+        name='Player 1',
+        rules=r,
+        bankroll=100,
+        min_bet=10
+    )
+    t.add_player(player=p)
+    s = SimulationStats()
+    s.create_player_key(player_key=p.name)
+    s.create_count_key(player_key=p.name, count_key=0)
+    s.create_outcome_key(player_key='Player 1', count_key=0)
 
-    p.create_hand()
+    p.set_hand()
     p.hit(key=1, new_card='10')
     p.hit(key=1, new_card='6')
 
@@ -177,6 +207,7 @@ def test_players_play_hands_surrender(
         table=t,
         rules=r,
         cards=c,
+        stats=s,
         dealer_hand=['J', 'J'],
         dealer_up_card='J'
     )
@@ -185,26 +216,43 @@ def test_players_play_hands_surrender(
     assert p.get_hand(key=1) == expected_hand
 
 
-@pytest.mark.parametrize('resplit_aces, max_hands, player_cards, expected_split, expected_hands',
+@pytest.mark.parametrize('resplit_aces, max_hands, player_cards, fixed_deck, expected_split, expected_hands',
                          [
-                             (False, 4, ['2', '2'], True, [['2', 'A', 'K'], ['2', 'Q']]),  # split non-aces
-                             (False, 4, ['A', 'A'], True, [['A', 'A'], ['A', 'K']]),  # split aces, cannot re-split
-                             (True, 4, ['A', 'A'], True, [['A', 'K'], ['A', 'Q'], ['A', 'J']]),  # re-split aces
-                             (True, 2, ['A', 'A'], True, [['A', 'A', 'K'], ['A', 'Q']]),  # 2 max hands
+                             (False, 4, ['2', '2'], False, True, [['2', 'A', 'K'], ['2', 'Q']]),  # split non-aces
+                             (False, 4, ['A', 'A'], False, True, [['A', 'A'], ['A', 'K']]),  # cannot re-split aces
+                             (True, 4, ['A', 'A'], False, True, [['A', 'K'], ['A', 'Q'], ['A', 'J']]),  # re-split aces
+                             (True, 3, ['A', 'A'], True, True, [['A', 'K'], ['A', 'Q'], ['A', 'A']]),  # 3 max hands
                          ])
 def test_players_play_hands_split(
-        setup_table, resplit_aces, max_hands, player_cards, expected_split, expected_hands
+        resplit_aces, max_hands, player_cards, fixed_deck, expected_split, expected_hands
 ):
     """
     Tests the players_play_hands function when a player has the option to
     split or re-split their hand.
 
     """
-    c, t, r, p, s = setup_table
-    r.resplit_aces = resplit_aces
-    r.max_hands = max_hands
+    c = Cards(shoe_size=4)
+    if fixed_deck:
+        c.deck = ['8', 'A', 'Q', 'K', 'A']  # popping off end of the list
+    t = Table()
+    r = HouseRules(
+            bet_limits=[10, 500],
+            max_hands=max_hands,
+            resplit_aces=resplit_aces
+    )
+    p = Player(
+            name='Player 1',
+            rules=r,
+            bankroll=100,
+            min_bet=10
+    )
+    t.add_player(player=p)
+    s = SimulationStats()
+    s.create_player_key(player_key=p.name)
+    s.create_count_key(player_key=p.name, count_key=0)
+    s.create_outcome_key(player_key='Player 1', count_key=0)
 
-    p.create_hand()
+    p.set_hand()
     p.hit(key=1, new_card=player_cards[0])
     p.hit(key=1, new_card=player_cards[1])
 
@@ -212,11 +260,12 @@ def test_players_play_hands_split(
         table=t,
         rules=r,
         cards=c,
+        stats=s,
         dealer_hand=['J', '4'],
         dealer_up_card='4'
     )
 
-    for key in p.get_hands_dict().keys():
+    for key in p.hands_dict:
         assert p.get_split(key=key) is expected_split
         assert p.get_hand(key=key) == expected_hands[key - 1]
 
@@ -227,16 +276,31 @@ def test_players_play_hands_split(
                              (False, False, [['2', '2', 'A', 'K']])  # player cannot double after split
                          ])
 def test_players_play_hands_double_after_split(
-        setup_table, double_after_split, expected_split, expected_hands
+        double_after_split, expected_split, expected_hands
 ):
     """
     Tests the double after splitting option within the players_play_hands function.
 
     """
-    c, t, r, p, s = setup_table
-    r.double_after_split = double_after_split
+    c = Cards(shoe_size=4)
+    t = Table()
+    r = HouseRules(
+            bet_limits=[10, 500],
+            double_after_split=double_after_split
+    )
+    p = Player(
+            name='Player 1',
+            rules=r,
+            bankroll=100,
+            min_bet=10
+    )
+    t.add_player(player=p)
+    s = SimulationStats()
+    s.create_player_key(player_key=p.name)
+    s.create_count_key(player_key=p.name, count_key=0)
+    s.create_outcome_key(player_key='Player 1', count_key=0)
 
-    p.create_hand()
+    p.set_hand()
     p.hit(key=1, new_card='2')
     p.hit(key=1, new_card='2')
 
@@ -244,11 +308,12 @@ def test_players_play_hands_double_after_split(
         table=t,
         rules=r,
         cards=c,
+        stats=s,
         dealer_hand=['J', '2'],
         dealer_up_card='2'
     )
 
-    for key in p.get_hands_dict().keys():
+    for key in p.hands_dict:
         assert p.get_split(key=key) is expected_split
         assert p.get_hand(key=key) == expected_hands[key - 1]
 
@@ -258,17 +323,30 @@ def test_players_play_hands_double_after_split(
                              (True, True),  # player doubles down
                              (False, False),  # player cannot double down
                          ])
-def test_players_play_hands_double_down(
-        setup_table, double_down, expected
-):
+def test_players_play_hands_double_down(double_down, expected):
     """
     Tests the double down option within the players_play_hands function.
 
     """
-    c, t, r, p, s = setup_table
-    r.double_down = double_down
+    c = Cards(shoe_size=4)
+    t = Table()
+    r = HouseRules(
+            bet_limits=[10, 500],
+            double_down=double_down
+    )
+    p = Player(
+            name='Player 1',
+            rules=r,
+            bankroll=100,
+            min_bet=10
+    )
+    t.add_player(player=p)
+    s = SimulationStats()
+    s.create_player_key(player_key=p.name)
+    s.create_count_key(player_key=p.name, count_key=0)
+    s.create_outcome_key(player_key='Player 1', count_key=0)
 
-    p.create_hand()
+    p.set_hand()
     p.hit(key=1, new_card='6')
     p.hit(key=1, new_card='4')
 
@@ -276,6 +354,7 @@ def test_players_play_hands_double_down(
         table=t,
         rules=r,
         cards=c,
+        stats=s,
         dealer_hand=['J', '2'],
         dealer_up_card='2'
     )
@@ -290,7 +369,6 @@ def test_players_play_hands_stand(setup_table):
     """
     c, t, r, p, s = setup_table
 
-    p.create_hand()
     p.hit(key=1, new_card='K')
     p.hit(key=1, new_card='K')
 
@@ -298,6 +376,7 @@ def test_players_play_hands_stand(setup_table):
         table=t,
         rules=r,
         cards=c,
+        stats=s,
         dealer_hand=['J', 'J'],
         dealer_up_card='J'
     )
@@ -313,7 +392,6 @@ def test_players_play_hands_bust(setup_table):
     """
     c, t, r, p, s = setup_table
 
-    p.create_hand()
     p.hit(key=1, new_card='6')
     p.hit(key=1, new_card='6')
 
@@ -321,6 +399,7 @@ def test_players_play_hands_bust(setup_table):
         table=t,
         rules=r,
         cards=c,
+        stats=s,
         dealer_hand=['J', 'J'],
         dealer_up_card='J'
     )
@@ -329,35 +408,33 @@ def test_players_play_hands_bust(setup_table):
     assert count_hand(p.get_hand(key=1))[0] > 21
 
 
-@pytest.mark.parametrize('player_busted, player_surrender, player_natural_blackjack, expected',
+@pytest.mark.parametrize('player_busted, player_surrender, player_or_dealer_natural_blackjack, expected',
                          [
                              (True, False, False, False),  # player busts
                              (False, True, False, False),  # player surrenders
-                             (False, False, True, False),  # player has natural blackjack
-                             (False, False, False, True)  # player does not bust, surrender, or have a natural blackjack
+                             (False, False, True, False),  # player or dealer has natural blackjack
+                             (False, False, False, True)  # none of the above
                          ])
 def test_dealer_turn_bust(
-        setup_table, player_busted, player_surrender, player_natural_blackjack, expected
+        setup_table, player_busted, player_surrender, player_or_dealer_natural_blackjack, expected
 ):
     """
     Tests the dealer_turn function.
 
     """
-    c, t, r, p, s = setup_table
-
-    p.create_hand()
+    c, t, r, p, _ = setup_table
 
     if player_busted:
-        p.busted(key=1)
+        p.set_busted(key=1)
 
     elif player_surrender:
-        p.surrender()
+        p.set_surrender()
 
-    elif player_natural_blackjack:
-        p.natural_blackjack()
+    elif player_or_dealer_natural_blackjack:
+        p.set_settled_natural_blackjack()
 
     else:
-        p.stand(key=1)
+        p.set_stand(key=1)
 
     assert dealer_turn(table=t) is expected
 
@@ -367,14 +444,26 @@ def test_dealer_turn_bust(
                              (True, ['A', '6'], ['A', '6']),  # dealer stands on soft 17
                              (False, ['A', '6'], ['A', '6', 'A'])  # dealer hits on soft 17
                          ])
-def test_dealer_plays_hand(setup_table, s17, dealer_hand, expected_hand):
+def test_dealer_plays_hand(s17, dealer_hand, expected_hand):
     """
     Tests the dealer_plays_hand function when a dealer hits or stands
     on soft 17.
 
     """
-    c, t, r, p, s = setup_table
-    r.s17 = s17
+    c = Cards(shoe_size=4)
+    t = Table()
+    r = HouseRules(
+            bet_limits=[10, 500],
+            s17=s17
+    )
+    p = Player(
+            name='Player 1',
+            rules=r,
+            bankroll=100,
+            min_bet=10
+    )
+    t.add_player(player=p)
+    p.set_hand()
 
     dealer_hand = dealer_plays_hand(
                                 rules=r,
@@ -394,17 +483,32 @@ def test_dealer_plays_hand(setup_table, s17, dealer_hand, expected_hand):
                              (['2', '2'], ['8', 'A'], False, 'loss')   # no natural blackjack
                          ])
 def test_compare_hands_insurance(
-        setup_table, player_hand, dealer_hand, expected_natural_blackjack, expected_outcome
+        player_hand, dealer_hand, expected_natural_blackjack, expected_outcome
 ):
     """
     Tests the compare_hands function when a player buys insurance.
 
     """
-    c, t, r, p, s = setup_table
+    c = Cards(shoe_size=4)
+    t = Table()
+    r = HouseRules(
+        bet_limits=[10, 500]
+    )
+    p = Player(
+        name='Player 1',
+        rules=r,
+        bankroll=100,
+        min_bet=10,
+        insurance_count=0
+    )
+    t.add_player(player=p)
+    s = SimulationStats()
+    s.create_player_key(player_key=p.name)
+    s.create_count_key(player_key=p.name, count_key=0)
+    s.create_outcome_key(player_key='Player 1', count_key=0)
 
-    p.set_count(count=0)
-    p.insurance_count = 0
-    p.create_hand()
+    p.count = 0
+    p.set_hand()
     p.hit(key=1, new_card=player_hand[0])
     p.hit(key=1, new_card=player_hand[1])
 
@@ -412,6 +516,7 @@ def test_compare_hands_insurance(
         table=t,
         rules=r,
         cards=c,
+        stats=s,
         dealer_hand=dealer_hand,
         dealer_up_card=dealer_hand[1]
     )
@@ -431,7 +536,6 @@ def test_compare_hands_surrender(setup_table):
     """
     c, t, r, p, s = setup_table
 
-    p.create_hand()
     p.hit(key=1, new_card='10')
     p.hit(key=1, new_card='6')
 
@@ -439,6 +543,7 @@ def test_compare_hands_surrender(setup_table):
         table=t,
         rules=r,
         cards=c,
+        stats=s,
         dealer_hand=['J', 'J'],
         dealer_up_card='J'
     )
@@ -466,7 +571,6 @@ def test_compare_hands_natural_blackjack(
     """
     c, t, r, p, s = setup_table
 
-    p.create_hand()
     p.hit(key=1, new_card=player_hand[0])
     p.hit(key=1, new_card=player_hand[1])
 
@@ -474,6 +578,7 @@ def test_compare_hands_natural_blackjack(
         table=t,
         rules=r,
         cards=c,
+        stats=s,
         dealer_hand=dealer_hand,
         dealer_up_card=dealer_hand[1]
     )
@@ -496,17 +601,32 @@ def test_compare_hands_natural_blackjack(
                              (['6', '4'], None, False, 'push')  # both player and dealer have 3+ card 21, push
                          ])
 def test_compare_hands_player_three_plus_card_21(
-        setup_table, player_hand, new_player_hand, expected_natural_blackjack, expected_outcome
+        player_hand, new_player_hand, expected_natural_blackjack, expected_outcome
 ):
     """
     Tests the compare_hands function when either a player and/or dealer have
     a three or more card 21.
 
     """
-    c, t, r, p, s = setup_table
-    r.double_down = False  # necessary so that player doesn't double down on ['6', '4']
+    c = Cards(shoe_size=4)
+    t = Table()
+    r = HouseRules(
+        bet_limits=[10, 500],
+        double_down=False  # necessary so that player doesn't double down on ['6', '4']
+    )
+    p = Player(
+        name='Player 1',
+        rules=r,
+        bankroll=100,
+        min_bet=10
+    )
+    t.add_player(player=p)
+    s = SimulationStats()
+    s.create_player_key(player_key=p.name)
+    s.create_count_key(player_key=p.name, count_key=0)
+    s.create_outcome_key(player_key='Player 1', count_key=0)
 
-    p.create_hand()
+    p.set_hand()
     p.hit(key=1, new_card=player_hand[0])
     p.hit(key=1, new_card=player_hand[1])
 
@@ -518,10 +638,10 @@ def test_compare_hands_player_three_plus_card_21(
                  min_bet=10
         )
         t.add_player(player=new_p)
-        s.create_player_key(player_key=new_p.get_name())
-        s.create_count_key(player_key=new_p.get_name(), count_key=0)
-        s.create_outcome_key(player_key=new_p.get_name(), count_key=0)
-        new_p.create_hand()
+        s.create_player_key(player_key=new_p.name)
+        s.create_count_key(player_key=new_p.name, count_key=0)
+        s.create_outcome_key(player_key=new_p.name, count_key=0)
+        new_p.set_hand()
         new_p.hit(key=1, new_card=new_player_hand[0])
         new_p.hit(key=1, new_card=new_player_hand[1])
 
@@ -529,11 +649,11 @@ def test_compare_hands_player_three_plus_card_21(
         table=t,
         rules=r,
         cards=c,
+        stats=s,
         dealer_hand=['7', '7'],
         dealer_up_card='7'
     )
 
-    print(p.get_hands_dict())
     assert p.get_natural_blackjack() is expected_natural_blackjack
     assert count_hand(p.get_hand(key=1))[0] == 21
 
@@ -559,7 +679,6 @@ def test_compare_hands_bust(setup_table, player_hand, dealer_hand, expected_outc
     """
     c, t, r, p, s = setup_table
 
-    p.create_hand()
     p.hit(key=1, new_card=player_hand[0])
     p.hit(key=1, new_card=player_hand[1])
 
@@ -567,6 +686,7 @@ def test_compare_hands_bust(setup_table, player_hand, dealer_hand, expected_outc
         table=t,
         rules=r,
         cards=c,
+        stats=s,
         dealer_hand=dealer_hand,
         dealer_up_card=dealer_hand[1]
     )
@@ -583,7 +703,6 @@ def test_compare_hands_push(setup_table):
     """
     c, t, r, p, s = setup_table
 
-    p.create_hand()
     p.hit(key=1, new_card='J')
     p.hit(key=1, new_card='J')
 
@@ -605,7 +724,6 @@ def test_compare_hands_showdown(setup_table, player_hand, dealer_hand, expected_
     """
     c, t, r, p, s = setup_table
 
-    p.create_hand()
     p.hit(key=1, new_card=player_hand[0])
     p.hit(key=1, new_card=player_hand[1])
 

@@ -54,7 +54,6 @@ class TestCountingStrategy(object):
 
     @pytest.mark.parametrize('strategy, accuracy, expected',
                              [
-                                 ('Hi-Lo', 0.1, -17.3),
                                  ('Hi-Lo', 0.5, -17.5),
                                  ('Hi-Lo', 1, -17),
                                  ('Hi-Lo', 0.3, ValueError),
@@ -68,7 +67,7 @@ class TestCountingStrategy(object):
         """
         c, cs = setup_counting_strategy
         cs.update_running_count()
-        c.set_visible_cards()
+        c.visible_cards = []
 
         if type(expected) == type and issubclass(expected, Exception):
             with pytest.raises(ValueError):

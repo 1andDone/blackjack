@@ -199,8 +199,6 @@ class Player(object):
         self._hands_dict = {1: {}}
         self._hands_dict[1]['hand'] = []
         self._hands_dict[1]['total'] = 0
-        self._hands_dict[1]['hand length'] = 2
-        self._hands_dict[1]['hand type'] = None
         self._hands_dict[1]['insurance'] = False
         self._hands_dict[1]['stand'] = False
         self._hands_dict[1]['surrender'] = False
@@ -208,25 +206,13 @@ class Player(object):
         self._hands_dict[1]['double down'] = False
         self._hands_dict[1]['split'] = False
         self._hands_dict[1]['busted'] = False
-        #  self._hands_dict[1]['settled'] = False
+        self._hands_dict[1]['settled natural blackjack'] = False
 
     def get_total(self, key):
         return self._hands_dict[key]['total']
 
     def set_total(self, key, total):
-        self._hands_dict[key]['total'] += total
-
-    def get_hand_length(self, key):
-        return self._hands_dict[key]['hand length']
-
-    def set_hand_length(self, key, value):
-        self._hands_dict[key]['hand length'] += value
-
-    def get_hand_type(self, key):
-        return self._hands_dict[key]['hand type']
-
-    def set_hand_type(self, key, hand_type):
-        self._hands_dict[key]['hand type'] = hand_type
+        self._hands_dict[key]['total'] = total
 
     def get_insurance(self):
         return self._hands_dict[1]['insurance']
@@ -234,17 +220,18 @@ class Player(object):
     def set_insurance(self):
         self._hands_dict[1]['insurance'] = True
 
-    # def get_settled(self):
-    #     return self._hands_dict[1]['settled']
-    #
-    # def set_settled(self):
-    #     self._hands_dict[1]['settled'] = True
-
     def get_stand(self, key):
         return self._hands_dict[key]['stand']
 
     def set_stand(self, key):
         self._hands_dict[key]['stand'] = True
+
+    def get_settled_natural_blackjack(self):
+        return self._hands_dict[1]['settled natural blackjack']
+
+    def set_settled_natural_blackjack(self):
+        self._hands_dict[1]['settled natural blackjack'] = True
+        self.set_stand(key=1)
 
     def get_surrender(self):
         return self._hands_dict[1]['surrender']
@@ -274,7 +261,6 @@ class Player(object):
         self._hands_dict[key]['split'] = True
         self._hands_dict[new_key] = {}
         self._hands_dict[new_key]['hand'] = [self.get_hand(key=key).pop()]
-        self._hands_dict[new_key]['hand length'] = 1
         self._hands_dict[new_key]['stand'] = False
         self._hands_dict[new_key]['double down'] = False
         self._hands_dict[new_key]['split'] = True
@@ -290,17 +276,13 @@ class Player(object):
     def hit(self, key, new_card):
         self._hands_dict[key]['hand'].append(new_card)
 
-    def decision(self, rules, hand, num_hands, dealer_up_card):
-        if splittable(rules=rules, hand=hand, num_hands=num_hands):
+    def decision(self, total, hand, pair, soft_hand, dealer_up_card):
+        if pair:
             if hand[0] in ['10', 'J', 'Q', 'K']:
                 return self.play_strategy.splits()['10'][dealer_up_card]
             else:
                 return self.play_strategy.splits()[hand[0]][dealer_up_card]
+        elif soft_hand:
+            return self.play_strategy.soft()[total][dealer_up_card]
         else:
-            total, soft_hand = count_hand(hand=hand)
-            if soft_hand:
-                return self.play_strategy.soft()[total][dealer_up_card]
-            elif total <= 21:
-                return self.play_strategy.hard()[total][dealer_up_card]
-            else:  # player is busted
-                return 'B'
+            return self.play_strategy.hard()[total][dealer_up_card]

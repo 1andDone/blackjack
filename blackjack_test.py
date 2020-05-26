@@ -17,7 +17,7 @@ if __name__ == "__main__":
                 double_down=True,
                 split_unlike_tens=True,
                 double_after_split=True,
-                resplit_aces=True,
+                resplit_aces=False,
                 insurance=True,
                 late_surrender=True,
                 dealer_shows_hole_card=False

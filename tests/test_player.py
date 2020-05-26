@@ -43,7 +43,7 @@ class TestPlayer(object):
                     bankroll=100,
                     min_bet=10
                 )
-            assert p.get_name() == expected
+            assert p.name == expected
 
     @pytest.mark.parametrize('bankroll, expected',
                              [
@@ -71,7 +71,7 @@ class TestPlayer(object):
                     bankroll=bankroll,
                     min_bet=10
                 )
-            assert p.get_bankroll() == expected
+            assert p.bankroll == expected
 
     @pytest.mark.parametrize('min_bet, expected',
                              [
@@ -102,7 +102,7 @@ class TestPlayer(object):
                     bankroll=100,
                     min_bet=min_bet
                 )
-            assert p.get_min_bet() == expected
+            assert p.min_bet == expected
 
     @pytest.mark.parametrize('bet_spread, expected',
                              [
@@ -143,7 +143,7 @@ class TestPlayer(object):
                     count_strategy='Hi-Lo',
                     true_count_accuracy=0.5
             )
-            assert p.get_bet_spread() == expected
+            assert p.bet_spread == expected
 
     @pytest.mark.parametrize('bet_count_amount, expected',
                              [
@@ -233,7 +233,7 @@ class TestPlayer(object):
                     count_strategy=count_strategy,
                     true_count_accuracy=true_count_accuracy
             )
-            assert p.get_true_count_accuracy() == expected
+            assert p.true_count_accuracy == expected
 
     @pytest.mark.parametrize('count_strategy, back_counting, back_counting_entry_exit, expected',
                              [
@@ -282,18 +282,20 @@ class TestPlayer(object):
                     back_counting=back_counting,
                     back_counting_entry_exit=back_counting_entry_exit
             )
-            assert p.get_back_counting_entry_exit() == expected
+            assert p.back_counting_entry == expected[0]
+            assert p.back_counting_exit == expected[1]
 
-    def test_create_hand(self, setup_player):
+    def test_set_hand(self, setup_player):
         """
         Tests the create_hand method.
 
         """
         p = setup_player
-        assert p.get_hands_dict() == {}
-        p.create_hand()
-        assert p.get_hands_dict() == {
-            1: {
+        assert p.hands_dict is None
+        p.set_hand()
+        assert p.hands_dict == {
+            1:
+                {
                     'busted': False,
                     'double down': False,
                     'hand': [],
@@ -302,7 +304,7 @@ class TestPlayer(object):
                     'split': False,
                     'stand': False,
                     'surrender': False
-            }
+                }
         }
 
     def test_insurance(self, setup_player):
@@ -311,7 +313,7 @@ class TestPlayer(object):
 
         """
         p = setup_player
-        p.create_hand()
+        p.set_hand()
         assert p.get_insurance() is False
         p.insurance()
         assert p.get_insurance() is True
@@ -322,7 +324,7 @@ class TestPlayer(object):
 
         """
         p = setup_player
-        p.create_hand()
+        p.set_hand()
         assert p.get_hand(key=1) == []
         p.hit(key=1, new_card='K')
         p.hit(key=1, new_card='7')
@@ -334,7 +336,7 @@ class TestPlayer(object):
 
         """
         p = setup_player
-        p.create_hand()
+        p.set_hand()
         p.hit(key=1, new_card='A')
         p.hit(key=1, new_card='A')
         assert p.get_hand(key=1) == ['A', 'A']
@@ -348,7 +350,7 @@ class TestPlayer(object):
 
         """
         p = setup_player
-        p.create_hand()
+        p.set_hand()
         p.hit(key=1, new_card='6')
         p.hit(key=1, new_card='4')
         assert p.get_double_down(key=1) is False
