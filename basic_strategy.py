@@ -111,8 +111,11 @@ h17_splits_array = np.array([
     ["P",	"P",	"P",	"P",	"P",	"P",	"P",	"P",	"P",	"P",	"P",	"P",	"P"]
 ])
 
-cards_list = ['2', '3', '4', '5', '6', '7', '8', '9', '10', 'J', 'Q', 'K', 'A']
-splits_list = ['2', '3', '4', '5', '6', '7', '8', '9', '10', 'A']
+# cards list ranges from 2, 3, 4, 5, 6, 7, 8, 9, 10, J, Q, K, A
+cards_list = [2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 1]
+
+# splits list ranges from 2, 3, 4, 5, 6, 7, 8, 9, 10 (including J, Q, K), A
+splits_list = [2, 3, 4, 5, 6, 7, 8, 9, 10, 1]
 
 # Nested Dictionaries
 s17_hard = {}

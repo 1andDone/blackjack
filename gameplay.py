@@ -21,7 +21,7 @@ def deal_hands(table, cards):
     """
     for p in table.players:
         p.set_hand()
-        p.hit(key=1, new_card=cards.deal_card())
+        p.hit(key=1, new_card=cards.deal_card())  # hitting is effectively the same thing as dealing
 
     dealer_hand = [cards.deal_card(visible=False)]
 
@@ -47,8 +47,8 @@ def players_play_hands(table, rules, cards, stats, dealer_hand, dealer_up_card):
         Cards class instance
     stats : SimulationStats
         SimulationStats class instance
-    dealer_hand : list of str
-        List of string card elements representing the dealer's hand
+    dealer_hand : list of int
+        List of integer card elements representing the dealer's hand
     dealer_up_card : str
         Dealer's card that is face up after each player receives two cards
 
@@ -62,7 +62,7 @@ def players_play_hands(table, rules, cards, stats, dealer_hand, dealer_up_card):
         total, soft_hand = count_hand(hand=hand)
 
         # insurance option
-        if rules.insurance and dealer_up_card == 'A':
+        if rules.insurance and dealer_up_card == 1:
             if p.insurance_count is not None:
                 if p.count >= p.insurance_count:
                     p.set_insurance()
@@ -122,6 +122,7 @@ def players_play_hands(table, rules, cards, stats, dealer_hand, dealer_up_card):
                 )
                 continue
 
+        first_decision = True
         processed = set()
 
         # plays out each hand before moving onto next hand
@@ -138,8 +139,8 @@ def players_play_hands(table, rules, cards, stats, dealer_hand, dealer_up_card):
 
                     if len(p.get_hand(key=k)) == 1:  # hands of length 1 are hands that have just been split
                         p.hit(key=k, new_card=cards.deal_card())  # always hit after splitting
-                        if p.get_hand(key=k)[0] == 'A':
-                            if p.get_hand(key=k)[1] != 'A':  # when aces are split, only allowed 1 card, unless...
+                        if p.get_hand(key=k)[0] == 1:
+                            if p.get_hand(key=k)[1] != 1:  # when aces are split, only allowed 1 card, unless...
                                 p.set_stand(key=k)
                                 continue
                             else:
@@ -154,34 +155,39 @@ def players_play_hands(table, rules, cards, stats, dealer_hand, dealer_up_card):
                     hand = p.get_hand(key=k)
                     hand_length = len(hand)
 
-                    if hand_length == 2:
+                    if rules.late_surrender and first_decision:  # no need to re-compute earlier decision made
                         num_hands = max(p.hands_dict)
-                        pair = splittable(rules=rules, hand=hand, num_hands=num_hands)  # check for pair
-                        if not pair:
-                            total, soft_hand = count_hand(hand=hand)
+                        first_decision = False
 
                     else:
-                        pair = False
-                        total, soft_hand = count_hand(hand=hand)
-                        if total > 21:  # player busts
-                            p.set_busted(key=k)
-                            stats.other(
-                                player_key=p.name,
-                                count_key=p.count,
-                                outcome_key='loss',
-                                hand_key=k,
-                                double_down=p.get_double_down(key=k)
-                            )
-                            continue
+                        if hand_length == 2:
+                            num_hands = max(p.hands_dict)
+                            pair = splittable(rules=rules, hand=hand, num_hands=num_hands)  # check for pair
+                            if not pair:
+                                total, soft_hand = count_hand(hand=hand)
 
-                    # player makes decision
-                    decision = p.decision(
-                        total=total,
-                        hand=hand,
-                        pair=pair,
-                        soft_hand=soft_hand,
-                        dealer_up_card=dealer_up_card
-                    )
+                        else:
+                            pair = False
+                            total, soft_hand = count_hand(hand=hand)
+                            if total > 21:  # player busts
+                                p.set_busted(key=k)
+                                stats.other(
+                                    player_key=p.name,
+                                    count_key=p.count,
+                                    outcome_key='loss',
+                                    hand_key=k,
+                                    double_down=p.get_double_down(key=k)
+                                )
+                                continue
+
+                        # player makes decision
+                        decision = p.decision(
+                            total=total,
+                            hand=hand,
+                            pair=pair,
+                            soft_hand=soft_hand,
+                            dealer_up_card=dealer_up_card
+                        )
 
                     # split cards
                     if decision in ['P', 'Rp'] or (rules.double_after_split and decision == 'Ph'):
@@ -249,8 +255,8 @@ def dealer_plays_hand(rules, cards, dealer_hole_card, dealer_hand):
         Cards class instance
     dealer_hole_card : str
         Dealer's card that is face down after each player receives two cards
-    dealer_hand : list of str
-        List of string card elements representing the dealer's hand
+    dealer_hand : list of int
+        List of integer card elements representing the dealer's hand
 
     Return
     ------

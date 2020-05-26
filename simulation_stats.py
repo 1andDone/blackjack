@@ -28,7 +28,7 @@ class SimulationStats(object):
             for outcome_key in ['win', 'loss']:
                 self._stats_dict[player_key][count_key][outcome_key]['insurance'] = 0
             for outcome_key in ['win', 'loss', 'push']:
-                self._stats_dict[player_key][count_key][outcome_key]['number of hands'] = 0
+                self._stats_dict[player_key][count_key][outcome_key]['number of rounds'] = 0
                 self._stats_dict[player_key][count_key][outcome_key]['double down'] = 0
                 self._stats_dict[player_key][count_key][outcome_key]['double after split'] = 0
                 self._stats_dict[player_key][count_key][outcome_key]['split'] = 0
@@ -36,17 +36,17 @@ class SimulationStats(object):
 
     def natural_blackjack(self, player_key, count_key):
         self._stats_dict[player_key][count_key]['win']['natural blackjack'] += 1
-        self._stats_dict[player_key][count_key]['win']['number of hands'] += 1
+        self._stats_dict[player_key][count_key]['win']['number of rounds'] += 1
 
     def insurance(self, player_key, count_key, outcome_key):
         self._stats_dict[player_key][count_key][outcome_key]['insurance'] += 1
 
     def surrender(self, player_key, count_key):
         self._stats_dict[player_key][count_key]['loss']['surrender'] += 1
-        self._stats_dict[player_key][count_key]['loss']['number of hands'] += 1
+        self._stats_dict[player_key][count_key]['loss']['number of rounds'] += 1
 
     def other(self, player_key, count_key, outcome_key, hand_key=1, double_down=False):
-        self._stats_dict[player_key][count_key][outcome_key]['number of hands'] += 1
+        self._stats_dict[player_key][count_key][outcome_key]['number of rounds'] += 1
         if hand_key == 1:
             if double_down:
                 self._stats_dict[player_key][count_key][outcome_key]['double down'] += 1

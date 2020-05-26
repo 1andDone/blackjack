@@ -1,4 +1,3 @@
-from helper import count_hand, splittable
 from playing_strategy import PlayingStrategy
 from house_rules import HouseRules
 
@@ -278,8 +277,8 @@ class Player(object):
 
     def decision(self, total, hand, pair, soft_hand, dealer_up_card):
         if pair:
-            if hand[0] in ['10', 'J', 'Q', 'K']:
-                return self.play_strategy.splits()['10'][dealer_up_card]
+            if hand[0] >= 10:
+                return self.play_strategy.splits()[10][dealer_up_card]
             else:
                 return self.play_strategy.splits()[hand[0]][dealer_up_card]
         elif soft_hand:

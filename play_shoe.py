@@ -208,7 +208,7 @@ class PlayShoe(object):
             count = np.array([])
             net_winnings = np.array([])
             overall_bet = np.array([])
-            num_hands = np.array([])
+            num_rounds = np.array([])
             split_hands = np.array([])
 
             for count_key, count_values in sorted(player_values.items()):
@@ -249,11 +249,11 @@ class PlayShoe(object):
                     count_values['push']['split'] +
                     count_values['push']['other']
                 )
-                num_hands = np.append(
-                    num_hands,
-                    count_values['win']['number of hands'] +
-                    count_values['loss']['number of hands'] +
-                    count_values['push']['number of hands']
+                num_rounds = np.append(
+                    num_rounds,
+                    count_values['win']['number of rounds'] +
+                    count_values['loss']['number of rounds'] +
+                    count_values['push']['number of rounds']
                 )
                 split_hands = np.append(
                     split_hands,
@@ -283,12 +283,12 @@ class PlayShoe(object):
 
             net_winnings = net_winnings * initial_bet_count
             overall_bet = overall_bet * initial_bet_count
-            initial_bet = (num_hands * initial_bet_count) - (split_hands * initial_bet_count)
+            initial_bet = (num_rounds * initial_bet_count) - (split_hands * initial_bet_count)
 
             # overall statistics
-            print('Total hands:', np.sum(num_hands))
+            print('Total rounds:', np.sum(num_rounds))
             print('Split hands:', np.sum(split_hands))
-            if np.sum(num_hands) > 0:  # prevents divide by zero issues
+            if np.sum(num_rounds) > 0:  # prevents divide by zero issues
                 print('Total amount bet:', np.sum(overall_bet))
                 print('Total initial bet:', np.sum(initial_bet))
                 print('Total net winnings:', np.sum(net_winnings))

@@ -16,7 +16,7 @@ class Cards(object):
         if shoe_size not in [4, 6, 8]:
             raise ValueError('Shoe size must be 4, 6, or 8.')
         self.shoe_size = int(shoe_size)
-        self.deck = ['2', '3', '4', '5', '6', '7', '8', '9', '10', 'J', 'Q', 'K', 'A'] * 4 * int(shoe_size)
+        self.deck = [2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 1] * 4 * int(shoe_size)
         self.total_cards = 52 * shoe_size
         self._visible_cards = []
 
