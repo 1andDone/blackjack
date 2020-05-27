@@ -28,7 +28,7 @@ class Player(object):
         bet_count_amount : list of tuples, optional
             List of tuples in ascending order, where the first value of the tuple indicates
             the running or true count and the second value indicates the amount of money wagered
-            at that running or true count. These values are used to create a bet scale that
+            at that running or true count. These values are used to create a bet ramp that
             increments by a custom amount (default is None)
         play_strategy : str, optional
             Name of the play strategy used by the player (default is "Basic", which implies
@@ -106,12 +106,12 @@ class Player(object):
         self._min_bet = float(min_bet)
         self._bet_spread = bet_spread
         if bet_strategy == 'Spread' and bet_count_amount is not None:
-            bet_scale = {}
+            bet_ramp = {}
             for count, amount in bet_count_amount:
-                bet_scale[count] = round(amount, 2)
-            self._bet_scale = bet_scale
+                bet_ramp[count] = round(amount, 2)
+            self._bet_ramp = bet_ramp
         else:
-            self._bet_scale = None
+            self._bet_ramp = None
         self.play_strategy = PlayingStrategy(rules=rules, strategy=play_strategy)
         self._bet_strategy = bet_strategy
         self._count_strategy = count_strategy
@@ -139,8 +139,8 @@ class Player(object):
         return self._bet_spread
 
     @property
-    def bet_scale(self):
-        return self._bet_scale
+    def bet_ramp(self):
+        return self._bet_ramp
 
     @property
     def bet_strategy(self):

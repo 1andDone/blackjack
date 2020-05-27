@@ -28,7 +28,7 @@ count_array = np.array([
 
 count_array = count_array.T
 
-# # Balanced Card Counting Systems begin at a running count equal to 0
-# # Unbalanced Card Counting Systems (KO) begin at a running count equal to -4 * (shoe size - 1)
-# # The additional (shoe size - 1) factor will be added in counting_strategy.py
+# Balanced Card Counting Systems begin at a running count equal to 0
+# Unbalanced Card Counting Systems (KO) begin at a running count equal to -4 * (shoe size - 1)
+# The additional (shoe size - 1) factor will be added in counting_strategy.py
 starting_count_array = np.array([0, 0, 0, 0, 0, 0, -4])
