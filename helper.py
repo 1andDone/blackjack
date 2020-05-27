@@ -58,7 +58,7 @@ def add_card_to_total(total, soft_hand, card):
     return total, soft_hand
 
 
-def splittable(rules, hand, num_hands=1):
+def splittable(rules, hand, num_hands):
     """
     Determines if a hand is splittable or not.
 

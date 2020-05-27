@@ -25,7 +25,7 @@ class CountingStrategy(object):
         if strategy not in ['Hi-Lo', 'Hi-Opt I', 'Hi-Opt II', 'Omega II', 'Halves', 'Zen Count', 'KO']:
             raise ValueError('Strategy must be "Hi-Lo", "Hi-Opt I", "Hi-Opt II", "Omega II", "Halves", '
                              '"Zen Count", or "KO".')
-        rc_array = np.dot(self.cards.seen_cards(), count_array) + (starting_count_array * (self.cards.shoe_size - 1))
+        rc_array = np.dot(self.cards.seen_cards, count_array) + (starting_count_array * (self.cards.shoe_size - 1))
         return rc_array[count_dict[strategy]]
 
     def true_count(self, strategy):

@@ -5,7 +5,7 @@ from house_rules import HouseRules
 class PlayingStrategy(object):
     """
     PlayingStrategy is an object that represents the decisions a player will make when
-    faced with a split situation or a certain soft/hard count. Decisions are typically based
+    faced with a pair split situation or a certain soft/hard count. Decisions are based
     on whether or not a dealer stands or hits on a soft 17.
 
     """
@@ -29,10 +29,10 @@ class PlayingStrategy(object):
     def strategy(self):
         return self._strategy
 
-    def splits(self):
+    def pair(self):
         if self._strategy == 'Basic' and self.rules.s17:
-            return basic_strategy.s17_splits
-        return basic_strategy.h17_splits
+            return basic_strategy.s17_pair
+        return basic_strategy.h17_pair
 
     def soft(self):
         if self._strategy == 'Basic' and self.rules.s17:

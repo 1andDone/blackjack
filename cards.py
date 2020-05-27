@@ -16,13 +16,18 @@ class Cards(object):
         """
         if shoe_size not in [4, 6, 8]:
             raise ValueError('Shoe size must be 4, 6, or 8.')
-        self.shoe_size = int(shoe_size)
-        self.cards = [2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 1] * 4 * int(shoe_size)
+        self.shoe_size = shoe_size
+        self.cards = [2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 1] * 4 * shoe_size
         self.total_cards = 52 * shoe_size
         self._seen_cards = np.array([0] * 13)
 
+    @property
     def seen_cards(self):
         return self._seen_cards
+
+    @seen_cards.setter
+    def seen_cards(self, value):
+        self._seen_cards = value
 
     def add_to_seen_cards(self, card):
         self._seen_cards[card - 1] += 1
@@ -41,10 +46,11 @@ class Cards(object):
         return card
 
     def remaining_decks(self):
-        return round(len(self.cards)/52, 0)
+        # TODO counters usually only estimate this value +/- 1 deck
+        return len(self.cards)/52
 
     def cut_card_reached(self, penetration):
         if penetration < 0.5 or penetration > 0.9:
             raise ValueError('Penetration must be between 0.5 and 0.9.')
         used_cards = self.total_cards - len(self.cards)
-        return used_cards/self.total_cards >= float(penetration)
+        return used_cards/self.total_cards >= penetration

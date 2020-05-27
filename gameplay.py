@@ -64,7 +64,7 @@ def players_play_hands(table, rules, cards, stats, dealer_hand, dealer_up_card):
         # insurance option
         if rules.insurance and dealer_up_card == 1:
             if p.insurance is not None:
-                if p.pre_insurance_count >= p.insurance_count:
+                if p.pre_insurance_count >= p.insurance:
                     p.set_insurance()
                     if dealer_total == 21:  # dealer has natural blackjack
                         stats.insurance(
@@ -124,6 +124,7 @@ def players_play_hands(table, rules, cards, stats, dealer_hand, dealer_up_card):
 
         first_decision = True
         processed = set()
+        num_hands = 1
 
         # plays out each hand before moving onto next hand
         while True:
@@ -155,16 +156,12 @@ def players_play_hands(table, rules, cards, stats, dealer_hand, dealer_up_card):
                     hand = p.get_hand(key=k)
                     hand_length = len(hand)
 
-                    if rules.late_surrender and first_decision:  # no need to re-compute earlier decision made
-                        num_hands = max(p.hands_dict)
+                    if rules.late_surrender and first_decision:  # no need to re-compute earlier made decision
                         first_decision = False
 
                     else:
-                        if hand_length == 2:
-                            num_hands = max(p.hands_dict)
-                            pair = splittable(rules=rules, hand=hand, num_hands=num_hands)  # check for pair
-                            if not pair:
-                                total, soft_hand = count_hand(hand=hand)
+                        if splittable(rules=rules, hand=hand, num_hands=num_hands):  # check for pair
+                            pair = True
 
                         else:
                             pair = False
@@ -190,17 +187,14 @@ def players_play_hands(table, rules, cards, stats, dealer_hand, dealer_up_card):
                         )
 
                     # split cards
-                    if decision in ['P', 'Rp'] or (rules.double_after_split and decision == 'Ph'):
-                        p.set_split(key=k, new_key=num_hands + 1)
+                    if decision in ['P', 'Rp'] or (decision == 'Ph' and rules.double_after_split):
+                        num_hands += 1
+                        p.set_split(key=k, new_key=num_hands)
 
-                    # double down
-                    elif rules.double_down and decision in ['Dh', 'Ds'] and \
-                            hand_length == 2 and not p.get_split(key=k):
-                        p.set_double_down(key=k, new_card=cards.deal_card())
-
-                    # double after split
-                    elif rules.double_after_split and decision in ['Dh', 'Ds'] and \
-                            hand_length == 2 and p.get_split(key=k):
+                    # double down or double after split
+                    elif decision in ['Dh', 'Ds'] and hand_length == 2 and \
+                            ((rules.double_down and not p.get_split(key=k)) or
+                             (rules.double_after_split and p.get_split(key=k))):
                         p.set_double_down(key=k, new_card=cards.deal_card())
 
                     # hit

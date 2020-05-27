@@ -8,8 +8,8 @@ class Player(object):
 
     """
     def __init__(
-            self, name, rules, bankroll, min_bet, bet_spread=None, bet_count_amount=None, play_strategy='Basic',
-            bet_strategy='Flat', count_strategy=None, true_count_accuracy=None, insurance=None,
+            self, name, rules, bankroll, min_bet, bet_spread=None, bet_count_amount=None,
+            play_strategy='Basic', bet_strategy='Flat', count_strategy=None, insurance=None,
             back_counting=False, back_counting_entry_exit=None
     ):
         """
@@ -192,7 +192,6 @@ class Player(object):
     def set_hand(self):
         self._hands_dict = {1: {}}
         self._hands_dict[1]['hand'] = []
-        self._hands_dict[1]['total'] = 0
         self._hands_dict[1]['insurance'] = False
         self._hands_dict[1]['stand'] = False
         self._hands_dict[1]['surrender'] = False
@@ -201,12 +200,6 @@ class Player(object):
         self._hands_dict[1]['split'] = False
         self._hands_dict[1]['busted'] = False
         self._hands_dict[1]['settled natural blackjack'] = False
-
-    def get_total(self, key):
-        return self._hands_dict[key]['total']
-
-    def set_total(self, key, total):
-        self._hands_dict[key]['total'] = total
 
     def get_insurance(self):
         return self._hands_dict[1]['insurance']
@@ -273,9 +266,9 @@ class Player(object):
     def decision(self, total, hand, pair, soft_hand, dealer_up_card):
         if pair:
             if hand[0] >= 10:
-                return self.play_strategy.splits()[10][dealer_up_card]
+                return self.play_strategy.pair()[10][dealer_up_card]
             else:
-                return self.play_strategy.splits()[hand[0]][dealer_up_card]
+                return self.play_strategy.pair()[hand[0]][dealer_up_card]
         elif soft_hand:
             return self.play_strategy.soft()[total][dealer_up_card]
         else:

@@ -34,9 +34,8 @@ if __name__ == "__main__":
                 bet_count_amount=[(1, 10), (3, 50), (7, 75)],
                 play_strategy='Basic',
                 bet_strategy='Spread',
-                count_strategy='Halves',
-                true_count_accuracy=0.5,
-                insurance_count=5
+                count_strategy='Hi-Lo',
+                insurance=5
             ),
             Player(
                 name='Average',
@@ -57,7 +56,6 @@ if __name__ == "__main__":
                 play_strategy='Basic',
                 bet_strategy='Spread',
                 count_strategy='Hi-Lo',
-                true_count_accuracy=0.1,
                 back_counting=True,
                 back_counting_entry_exit=[5, 0]
             )
