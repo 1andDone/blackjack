@@ -23,7 +23,7 @@ def deal_hands(table, cards):
         p.set_hand()
         p.hit(key=1, new_card=cards.deal_card())  # hitting is effectively the same thing as dealing
 
-    dealer_hand = [cards.deal_card(visible=False)]
+    dealer_hand = [cards.deal_card(seen=False)]
 
     for p in table.players:
         p.hit(key=1, new_card=cards.deal_card())
@@ -265,7 +265,7 @@ def dealer_plays_hand(rules, cards, dealer_hole_card, dealer_hand):
 
     """
     total, soft_hand = count_hand(hand=dealer_hand)
-    cards.update_visible_cards(card=dealer_hole_card)  # add hole card to visible card list
+    cards.add_to_seen_cards(card=dealer_hole_card)  # add hole card to seen card list
 
     if rules.s17:  # dealer must stay on soft 17 (ace counted as 11)
 

@@ -131,10 +131,6 @@ class PlayShoe(object):
                     # re-compute true/running counts before insurance bet
                     if self.rules.insurance:
 
-                        # update count and reset visible cards
-                        cs.update_running_count()
-                        c.visible_cards = []
-
                         for p in self.players:
 
                             if p.insurance is not None:
@@ -176,11 +172,7 @@ class PlayShoe(object):
                     # dealer reveals hole card when all players bust, surrender, or have natural 21
                     else:
                         if self.rules.dealer_shows_hole_card:
-                            c.update_visible_cards(card=dealer_hole_card)
-
-                    # update count and reset visible cards
-                    cs.update_running_count()
-                    c.visible_cards = []
+                            c.add_to_seen_cards(card=dealer_hole_card)
 
         # unpack nested dictionary
         for player_key, player_values in self.stats.stats_dict.items():

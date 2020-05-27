@@ -1,120 +1,34 @@
+import numpy as np
+
 # Balanced Card Counting Systems: Hi-Lo, Hi-Opt I, Hi-Opt II, Omega II, Halves, Zen Count
 # Unbalanced Card Counting Systems: KO
 
-hi_lo = {'Hi-Lo': {
-    2: 1,
-    3: 1,
-    4: 1,
-    5: 1,
-    6: 1,
-    7: 0,
-    8: 0,
-    9: 0,
-    10: -1,
-    11: -1,
-    12: -1,
-    13: -1,
-    1: -1
-}}
+# Dictionary referencing row number of count_array
+count_dict = {
+    'Hi-Lo': 0,
+    'Hi-Opt I': 1,
+    'Hi-Opt II': 2,
+    'Omega II': 3,
+    'Halves': 4,
+    'Zen Count': 5,
+    'KO': 6
+}
 
-hi_opt_1 = {'Hi-Opt I': {
-    2: 0,
-    3: 1,
-    4: 1,
-    5: 1,
-    6: 1,
-    7: 0,
-    8: 0,
-    9: 0,
-    10: -1,
-    11: -1,
-    12: -1,
-    13: -1,
-    1: 0
-}}
+# Counts for each card
+count_array = np.array([
+    # A   2   3  4  5     6   7   8    9  10   J   Q   K
+    [-1,  1,  1, 1, 1,    1,  0,  0,   0, -1, -1, -1, -1],  # Hi-Lo
+    [0,   0,  1, 1, 1,    1,  0,  0,   0, -1, -1, -1, -1],  # Hi-Opt I
+    [0,   1,  1, 2, 2,    1,  1,  0,   0, -2, -2, -2, -2],  # Hi-Opt II
+    [0,   1,  1, 2, 2,    2,  1,  0,  -1, -2, -2, -2, -2],  # Omega II
+    [-1, .5,  1, 1, 1.5,  1, .5,  0, -.5, -1, -1, -1, -1],  # Halves
+    [-1,  1,  1, 2, 2,    2,  1,  0,   0, -2, -2, -2, -2],  # Zen Count
+    [-1,  1,  1, 1, 1,    1,  1,  0,   0, -1, -1, -1, -1]   # KO
+])
 
-hi_opt_2 = {'Hi-Opt II': {
-    2: 1,
-    3: 1,
-    4: 2,
-    5: 2,
-    6: 1,
-    7: 1,
-    8: 0,
-    9: 0,
-    10: -2,
-    11: -2,
-    12: -2,
-    13: -2,
-    1: 0
-}}
+count_array = count_array.T
 
-omega_2 = {'Omega II': {
-    2: 1,
-    3: 1,
-    4: 2,
-    5: 2,
-    6: 2,
-    7: 1,
-    8: 0,
-    9: -1,
-    10: -2,
-    11: -2,
-    12: -2,
-    13: -2,
-    1: 0
-}}
-
-halves = {'Halves': {
-    2: 0.5,
-    3: 1,
-    4: 1,
-    5: 1.5,
-    6: 1,
-    7: 0.5,
-    8: 0,
-    9: -0.5,
-    10: -1,
-    11: -1,
-    12: -1,
-    13: -1,
-    1: -1
-}}
-
-zen_count = {'Zen Count': {
-    2: 1,
-    3: 1,
-    4: 2,
-    5: 2,
-    6: 2,
-    7: 1,
-    8: 0,
-    9: 0,
-    10: -2,
-    11: -2,
-    12: -2,
-    13: -2,
-    1: -1
-}}
-
-ko = {'KO': {
-    2: 1,
-    3: 1,
-    4: 1,
-    5: 1,
-    6: 1,
-    7: 1,
-    8: 0,
-    9: 0,
-    10: -1,
-    11: -1,
-    12: -1,
-    13: -1,
-    1: -1
-}}
-
-# create a nested dictionary
-count_dict = {}
-for d in [hi_lo, hi_opt_1, hi_opt_2, omega_2, halves, zen_count, ko]:
-    for k, v in d.items():
-        count_dict[k] = v
+# # Balanced Card Counting Systems begin at a running count equal to 0
+# # Unbalanced Card Counting Systems (KO) begin at a running count equal to -4 * (shoe size - 1)
+# # The additional (shoe size - 1) factor will be added in counting_strategy.py
+starting_count_array = np.array([0, 0, 0, 0, 0, 0, -4])

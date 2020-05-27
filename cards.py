@@ -1,4 +1,5 @@
 import random
+import numpy as np
 
 
 class Cards(object):
@@ -16,48 +17,34 @@ class Cards(object):
         if shoe_size not in [4, 6, 8]:
             raise ValueError('Shoe size must be 4, 6, or 8.')
         self.shoe_size = int(shoe_size)
-        self.deck = [2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 1] * 4 * int(shoe_size)
+        self.cards = [2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 1] * 4 * int(shoe_size)
         self.total_cards = 52 * shoe_size
-        self._visible_cards = []
-        self._shoe_counter = 1
+        self._seen_cards = np.array([0] * 13)
 
-    @property
-    def shoe_counter(self):
-        return self._shoe_counter
+    def seen_cards(self):
+        return self._seen_cards
 
-    @shoe_counter.setter
-    def shoe_counter(self, value):
-        self._shoe_counter += value
-
-    @property
-    def visible_cards(self):
-        return self._visible_cards
-
-    @visible_cards.setter
-    def visible_cards(self, value):
-        self._visible_cards = value
+    def add_to_seen_cards(self, card):
+        self._seen_cards[card - 1] += 1
 
     def burn_card(self):
-        return self.deck.pop()
+        return self.cards.pop()
 
     def shuffle(self):
-        random.shuffle(self.deck)
+        random.shuffle(self.cards)
         self.burn_card()
 
-    def deal_card(self, visible=True):
-        card = self.deck.pop()
-        if visible:
-            self._visible_cards.append(card)
+    def deal_card(self, seen=True):
+        card = self.cards.pop()
+        if seen:
+            self._seen_cards[card - 1] += 1
         return card
 
-    def update_visible_cards(self, card):
-        self._visible_cards.append(card)
-
     def remaining_decks(self):
-        return round(len(self.deck)/52, 0)
+        return round(len(self.cards)/52, 0)
 
     def cut_card_reached(self, penetration):
         if penetration < 0.5 or penetration > 0.9:
             raise ValueError('Penetration must be between 0.5 and 0.9.')
-        remaining_cards = self.total_cards - len(self.deck)
-        return remaining_cards/self.total_cards >= float(penetration)
+        used_cards = self.total_cards - len(self.cards)
+        return used_cards/self.total_cards >= float(penetration)
