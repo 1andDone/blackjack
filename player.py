@@ -1,5 +1,6 @@
 from playing_strategy import PlayingStrategy
 from house_rules import HouseRules
+from simulation_stats import SimulationStats
 
 
 class Player(object):
@@ -121,6 +122,7 @@ class Player(object):
         self._bet_count = 0
         self._pre_insurance_count = None
         self._hands_dict = None
+        self._stats = SimulationStats()
 
     @property
     def name(self):
@@ -185,6 +187,10 @@ class Player(object):
     @property
     def hands_dict(self):
         return self._hands_dict
+
+    @property
+    def stats(self):
+        return self._stats
 
     def get_hand(self, key):
         return self._hands_dict[key]['hand']

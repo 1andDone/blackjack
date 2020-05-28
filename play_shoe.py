@@ -5,28 +5,8 @@ from house_rules import HouseRules
 from cards import Cards
 from counting_strategy import CountingStrategy
 from table import Table
-from simulation_stats import SimulationStats
 from gameplay import deal_hands, players_play_hands, dealer_turn, dealer_plays_hand, compare_hands
 from figures import net_winnings_figure
-import cProfile, pstats, io
-
-
-def profile(fnc):
-    """A decorator that uses cProfile to profile a function"""
-
-    def inner(*args, **kwargs):
-        pr = cProfile.Profile()
-        pr.enable()
-        retval = fnc(*args, **kwargs)
-        pr.disable()
-        s = io.StringIO()
-        sortby = 'cumulative'
-        ps = pstats.Stats(pr, stream=s).sort_stats(sortby)
-        ps.print_stats()
-        print(s.getvalue())
-        return retval
-
-    return inner
 
 
 class PlayShoe(object):
@@ -67,9 +47,7 @@ class PlayShoe(object):
         self.penetration = penetration
         self.simulations = simulations
         self.figures = figures
-        self.stats = SimulationStats()
 
-    @profile
     def main(self):
 
         # set seed to replicate results
@@ -79,13 +57,10 @@ class PlayShoe(object):
         # set up table
         t = Table()
 
+        # add players to table
         for p in self.players:
-
-            # create player key
-            self.stats.create_player_key(player_key=p.name)
-
-            # add players to table
-            t.add_player(player=p)
+            if not p.back_counting:
+                t.add_player(player=p)
 
         # balanced and unbalanced card counting systems
         balanced_card_counting_systems = ['Hi-Lo', 'Hi-Opt I', 'Hi-Opt II', 'Omega II', 'Halves', 'Zen Count']
@@ -105,18 +80,23 @@ class PlayShoe(object):
 
                     # compute true/running counts for betting decision
                     if p.count_strategy is not None:
-
                         if p.count_strategy in balanced_card_counting_systems:
-
                             p.bet_count = cs.true_count(strategy=p.count_strategy)
-
                         else:
-
                             p.bet_count = cs.running_count(strategy=p.count_strategy)
 
-                    # create count and outcome keys
-                    self.stats.create_count_key(player_key=p.name, count_key=p.bet_count)
-                    self.stats.create_outcome_key(player_key=p.name, count_key=p.bet_count)
+                    if p.back_counting:
+
+                        # add back counters
+                        if p.bet_count >= p.back_counting_entry and p not in t.players:
+                            t.add_player(player=p)
+
+                        # remove back counters
+                        if p.bet_count < p.back_counting_exit and p in t.players:
+                            t.remove_player(player=p)
+
+                    # non-card counters will have bet_count = 0
+                    p.stats.create_count_key(count_key=p.bet_count)
 
                 # only deal hands if there are players
                 if len(t.players) > 0:
@@ -132,15 +112,14 @@ class PlayShoe(object):
                     if self.rules.insurance:
 
                         for p in self.players:
-
                             if p.insurance is not None:
-
                                 if p.count_strategy in balanced_card_counting_systems:
-
                                     p.pre_insurance_count = cs.true_count(strategy=p.count_strategy)
-
                                 else:
                                     p.pre_insurance_count = cs.running_count(strategy=p.count_strategy)
+
+                                # create separate key for current count before making insurance bet
+                                p.stats.create_count_key(count_key=p.pre_insurance_count)
 
                     # players play out each of their hands
                     # player and dealer blackjacks, player surrenders or busts are settled
@@ -148,7 +127,6 @@ class PlayShoe(object):
                         table=t,
                         rules=self.rules,
                         cards=c,
-                        stats=self.stats,
                         dealer_hand=dealer_hand,
                         dealer_up_card=dealer_up_card
                     )
@@ -165,7 +143,6 @@ class PlayShoe(object):
                         # compare players hand(s) to dealer and pay out to players, house
                         compare_hands(
                             table=t,
-                            stats=self.stats,
                             dealer_total=dealer_total
                         )
 
@@ -174,120 +151,66 @@ class PlayShoe(object):
                         if self.rules.dealer_shows_hole_card:
                             c.add_to_seen_cards(card=dealer_hole_card)
 
-        # unpack nested dictionary
-        for player_key, player_values in self.stats.stats_dict.items():
-            print('Player:', player_key)
-            print('--------' + '-' * len(player_key))
+        # unpacked nested dictionary
+        for p in self.players:
 
-            # create arrays
+            # create empty arrays
             count = np.array([])
             net_winnings = np.array([])
             overall_bet = np.array([])
             num_rounds = np.array([])
             split_hands = np.array([])
 
-            for count_key, count_values in sorted(player_values.items()):
+            for count_key, count_values in sorted(p.stats.results_dict.items()):
                 count = np.append(count, count_key)
-
-                # net winnings and overall bet are in terms of initial bet
-                net_winnings = np.append(
-                    net_winnings,
-                    (count_values['win']['natural blackjack'] * self.rules.blackjack_payout) +
-                    (count_values['win']['insurance'] * 0.5) +
-                    (count_values['win']['double down'] * 2) +
-                    (count_values['win']['double after split'] * 2) +
-                    count_values['win']['split'] +
-                    count_values['win']['other'] +
-                    (count_values['loss']['surrender'] * -0.5) +
-                    (count_values['loss']['insurance'] * -0.5) +
-                    (count_values['loss']['double down'] * -2) +
-                    (count_values['loss']['double after split'] * -2) +
-                    (count_values['loss']['split'] * -1) +
-                    (count_values['loss']['other'] * -1)
-                )
-                overall_bet = np.append(
-                    overall_bet,
-                    count_values['win']['natural blackjack'] +
-                    (count_values['win']['insurance'] * 0.5) +
-                    (count_values['win']['double down'] * 2) +
-                    (count_values['win']['double after split'] * 2) +
-                    count_values['win']['split'] +
-                    count_values['win']['other'] +
-                    count_values['loss']['surrender'] +
-                    (count_values['loss']['insurance'] * 0.5) +
-                    (count_values['loss']['double down'] * 2) +
-                    (count_values['win']['double after split'] * 2) +
-                    count_values['loss']['split'] +
-                    count_values['loss']['other'] +
-                    (count_values['push']['double down'] * 2) +
-                    (count_values['push']['double after split'] * 2) +
-                    count_values['push']['split'] +
-                    count_values['push']['other']
-                )
-                num_rounds = np.append(
-                    num_rounds,
-                    count_values['win']['number of rounds'] +
-                    count_values['loss']['number of rounds'] +
-                    count_values['push']['number of rounds']
-                )
-                split_hands = np.append(
-                    split_hands,
-                    count_values['win']['double after split'] +
-                    count_values['win']['split'] +
-                    count_values['loss']['double after split'] +
-                    count_values['loss']['split'] +
-                    count_values['push']['double after split'] +
-                    count_values['push']['split']
-                )
+                net_winnings = np.append(net_winnings, count_values['net winnings'])
+                overall_bet = np.append(overall_bet, count_values['overall bet'])
+                num_rounds = np.append(num_rounds, count_values['number of rounds'])
+                split_hands = np.append(split_hands, count_values['number of split hands'])
 
             # get initial bet for each count played
             initial_bet_count = np.array([])
 
-            for p in self.players:
-                if p.name == player_key:
-                    if p.bet_strategy == 'Spread':
-                        for c in count:
-                            amount = p.bet_spread * p.min_bet
-                            for key, value in p.bet_scale.items():
-                                if c < key:
-                                    amount = value
-                                    break
-                            initial_bet_count = np.append(initial_bet_count, amount)
-                    else:
-                        initial_bet_count = p.min_bet
-
-            net_winnings = net_winnings * initial_bet_count
-            overall_bet = overall_bet * initial_bet_count
-            initial_bet = (num_rounds * initial_bet_count) - (split_hands * initial_bet_count)
+            if p.bet_strategy == 'Spread':
+                for c in count:
+                    amount = p.bet_spread * p.min_bet
+                    for key, value in p.bet_ramp.items():
+                        if c < key:
+                            amount = value
+                            break
+                    initial_bet_count = np.append(initial_bet_count, amount)
+            else:
+                initial_bet_count = p.min_bet
 
             # overall statistics
-            print('Total rounds:', np.sum(num_rounds))
+            print('Player:', p.name)
+            print('--------' + '-' * len(p.name))
+            print('Total rounds played:', np.sum(num_rounds))
             print('Split hands:', np.sum(split_hands))
             if np.sum(num_rounds) > 0:  # prevents divide by zero issues
-                print('Total amount bet:', np.sum(overall_bet))
-                print('Total initial bet:', np.sum(initial_bet))
-                print('Total net winnings:', np.sum(net_winnings))
-                print('House edge:', 100 * (np.sum(net_winnings) / np.sum(initial_bet)))
+                print('Total amount bet:', np.sum(overall_bet * initial_bet_count))
+                print('Total initial bet:', np.sum(num_rounds * initial_bet_count))
+                print('Total net winnings:', np.sum(net_winnings * initial_bet_count))
+                # both values below have numerators and denominators scaled by initial_bet_count
+                print('House edge:', 100 * (np.sum(net_winnings) / np.sum(num_rounds)))
                 print('Element of risk:', 100 * (np.sum(net_winnings) / np.sum(overall_bet)))
                 print('\n')
 
             # figures are only created for players that are counting cards
             if self.figures:
-                for p in self.players:
-                    if p.name == player_key:
-                        if p.count_strategy is not None:
-                            net_winnings_figure(
-                                count=count,
-                                net_winnings=net_winnings,
-                                name=p.name,
-                                shoe_size=self.shoe_size,
-                                penetration=self.penetration,
-                                blackjack_payout=self.rules.blackjack_payout,
-                                count_strategy=p.count_strategy,
-                                play_strategy=p.play_strategy.strategy,
-                                bet_strategy=p.bet_strategy,
-                                bet_spread=p.bet_spread,
-                                initial_bankroll=p.bankroll,
-                                min_bet=p.min_bet,
-                                simulations=self.simulations
-                            )
+                if p.count_strategy is not None:
+                    net_winnings_figure(
+                        count=count,
+                        net_winnings=net_winnings * initial_bet_count,
+                        name=p.name,
+                        shoe_size=self.shoe_size,
+                        penetration=self.penetration,
+                        blackjack_payout=self.rules.blackjack_payout,
+                        count_strategy=p.count_strategy,
+                        play_strategy=p.play_strategy.strategy,
+                        bet_strategy=p.bet_strategy,
+                        bet_spread=p.bet_spread,
+                        initial_bankroll=p.bankroll,
+                        min_bet=p.min_bet,
+                        simulations=self.simulations
+                    )

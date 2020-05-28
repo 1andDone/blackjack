@@ -2,10 +2,6 @@ from house_rules import HouseRules
 from player import Player
 from play_shoe import PlayShoe
 
-import time
-
-start = time.time()
-
 if __name__ == "__main__":
 
     # set table rules
@@ -41,13 +37,9 @@ if __name__ == "__main__":
             players=p,
             seed_number=78,
             simulations=10000,
-            shoe_size=6,
+            shoe_size=4,
             penetration=0.75,
             figures=True
     )
 
     ps.main()
-
-end = time.time()
-
-print('number of rounds per second:', 10000/(end-start))

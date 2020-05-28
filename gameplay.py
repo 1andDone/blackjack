@@ -1,4 +1,4 @@
-from helper import count_hand, splittable, add_card_to_total
+from helper import count_hand, splittable
 
 
 def deal_hands(table, cards):
@@ -33,7 +33,7 @@ def deal_hands(table, cards):
     return dealer_hand
 
 
-def players_play_hands(table, rules, cards, stats, dealer_hand, dealer_up_card):
+def players_play_hands(table, rules, cards, dealer_hand, dealer_up_card):
     """
     Players at the table play their individual hands.
 
@@ -67,38 +67,39 @@ def players_play_hands(table, rules, cards, stats, dealer_hand, dealer_up_card):
                 if p.pre_insurance_count >= p.insurance:
                     p.set_insurance()
                     if dealer_total == 21:  # dealer has natural blackjack
-                        stats.insurance(
-                            player_key=p.name,
+                        p.stats.update_results(
                             count_key=p.pre_insurance_count,
-                            outcome_key='win'
+                            net_winnings=0.5,
+                            overall_bet=0.5,
+                            increment=0
                         )
                     else:  # dealer does not have natural blackjack
-                        stats.insurance(
-                            player_key=p.name,
+                        p.stats.update_results(
                             count_key=p.pre_insurance_count,
-                            outcome_key='loss'
+                            net_winnings=-0.5,
+                            overall_bet=0.5,
+                            increment=0
                         )
 
         # players and dealer check for natural blackjack
         if total == 21 or dealer_total == 21:
-            if total == 21 and dealer_total == 21:
-                p.set_natural_blackjack()
-                stats.other(
-                    player_key=p.name,
+            if total == 21 and dealer_total == 21:  # push
+                p.stats.update_results(
                     count_key=p.bet_count,
-                    outcome_key='push'
+                    overall_bet=1
                 )
-            elif total == 21:
+            elif total == 21:  # player natural blackjack
                 p.set_natural_blackjack()
-                stats.natural_blackjack(
-                    player_key=p.name,
-                    count_key=p.bet_count
-                )
-            else:
-                stats.other(
-                    player_key=p.name,
+                p.stats.update_results(
                     count_key=p.bet_count,
-                    outcome_key='loss'
+                    net_winnings=rules.blackjack_payout,
+                    overall_bet=1
+                )
+            else:  # dealer natural blackjack
+                p.stats.update_results(
+                    count_key=p.bet_count,
+                    net_winnings=-1,
+                    overall_bet=1
                 )
             p.set_settled_natural_blackjack()  # settle all bets when dealer has natural blackjack
             continue
@@ -116,9 +117,10 @@ def players_play_hands(table, rules, cards, stats, dealer_hand, dealer_up_card):
 
             if decision in ['Rh', 'Rs', 'Rp']:
                 p.set_surrender()
-                stats.surrender(
-                    player_key=p.name,
-                    count_key=p.bet_count
+                p.stats.update_results(
+                    count_key=p.bet_count,
+                    net_winnings=-0.5,
+                    overall_bet=1
                 )
                 continue
 
@@ -168,12 +170,11 @@ def players_play_hands(table, rules, cards, stats, dealer_hand, dealer_up_card):
                             total, soft_hand = count_hand(hand=hand)
                             if total > 21:  # player busts
                                 p.set_busted(key=k)
-                                stats.other(
-                                    player_key=p.name,
+                                p.stats.update_results(
                                     count_key=p.bet_count,
-                                    outcome_key='loss',
                                     hand_key=k,
-                                    double_down=p.get_double_down(key=k)
+                                    net_winnings=-2 if p.get_double_down(key=k) else -1,
+                                    overall_bet=2 if p.get_double_down(key=k) else 1
                                 )
                                 continue
 
@@ -264,21 +265,19 @@ def dealer_plays_hand(rules, cards, dealer_hole_card, dealer_hand):
     if rules.s17:  # dealer must stay on soft 17 (ace counted as 11)
 
         while total < 17:
-            card = cards.deal_card()
-            dealer_hand.append(card)
-            total, soft_hand = add_card_to_total(total=total, soft_hand=soft_hand, card=card)
+            dealer_hand.append(cards.deal_card())
+            total, soft_hand = count_hand(hand=dealer_hand)
 
     else:  # dealer must hit on soft 17
 
         while total < 17 or (total == 17 and soft_hand):
-            card = cards.deal_card()
-            dealer_hand.append(card)
-            total, soft_hand = add_card_to_total(total=total, soft_hand=soft_hand, card=card)
+            dealer_hand.append(cards.deal_card())
+            total, soft_hand = count_hand(hand=dealer_hand)
 
     return total
 
 
-def compare_hands(table, stats, dealer_total):
+def compare_hands(table, dealer_total):
     """
     Players compare remaining hands against the dealer. Instances where the player
     beats the dealer are paid out 1:1. Pushes allow the player to re-coup their
@@ -304,28 +303,24 @@ def compare_hands(table, stats, dealer_total):
                 continue
 
             elif dealer_total > 21 or (total > dealer_total):  # dealer busts or player beats dealer
-                stats.other(
-                    player_key=p.name,
+                p.stats.update_results(
                     count_key=p.bet_count,
-                    outcome_key='win',
                     hand_key=k,
-                    double_down=p.get_double_down(key=k)
+                    net_winnings=2 if p.get_double_down(key=k) else 1,
+                    overall_bet=2 if p.get_double_down(key=k) else 1
                 )
 
             elif total == dealer_total:  # push
-                stats.other(
-                    player_key=p.name,
+                p.stats.update_results(
                     count_key=p.bet_count,
-                    outcome_key='push',
                     hand_key=k,
-                    double_down=p.get_double_down(key=k)
+                    overall_bet=2 if p.get_double_down(key=k) else 1
                 )
 
             else:  # dealer beats player
-                stats.other(
-                    player_key=p.name,
+                p.stats.update_results(
                     count_key=p.bet_count,
-                    outcome_key='loss',
                     hand_key=k,
-                    double_down=p.get_double_down(key=k)
+                    net_winnings=-2 if p.get_double_down(key=k) else -1,
+                    overall_bet=2 if p.get_double_down(key=k) else 1
                 )

@@ -2,9 +2,6 @@ from house_rules import HouseRules
 from player import Player
 from play_shoe import PlayShoe
 
-import time
-
-start = time.time()
 
 if __name__ == "__main__":
 
@@ -34,7 +31,7 @@ if __name__ == "__main__":
                 bet_count_amount=[(1, 10), (3, 50), (7, 75)],
                 play_strategy='Basic',
                 bet_strategy='Spread',
-                count_strategy='Hi-Lo',
+                count_strategy='Halves',
                 insurance=5
             ),
             Player(
@@ -57,7 +54,7 @@ if __name__ == "__main__":
                 bet_strategy='Spread',
                 count_strategy='Hi-Lo',
                 back_counting=True,
-                back_counting_entry_exit=[5, 0]
+                back_counting_entry_exit=[5, 1]
             )
     ]
 
@@ -66,7 +63,7 @@ if __name__ == "__main__":
             rules=r,
             players=p,
             seed_number=78,
-            simulations=1,
+            simulations=10000,
             shoe_size=6,
             penetration=0.75,
             figures=True
@@ -74,6 +71,3 @@ if __name__ == "__main__":
 
     ps.main()
 
-end = time.time()
-
-print('time elapsed:', end-start)
