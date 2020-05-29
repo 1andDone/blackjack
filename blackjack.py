@@ -7,6 +7,7 @@ if __name__ == "__main__":
 
     # set table rules
     r = HouseRules(
+                shoe_size=6,
                 bet_limits=[10, 500],
                 s17=True,
                 blackjack_payout=1.5,
@@ -17,7 +18,7 @@ if __name__ == "__main__":
                 resplit_aces=False,
                 insurance=True,
                 late_surrender=True,
-                dealer_shows_hole_card=False
+                dealer_shows_hole_card=True
     )
 
     # players that will be added to table
@@ -32,8 +33,7 @@ if __name__ == "__main__":
                 play_strategy='Basic',
                 bet_strategy='Spread',
                 count_strategy='Halves',
-                true_count_accuracy=0.5,
-                insurance_count=5
+                insurance=5
             ),
             Player(
                 name='Average',
@@ -54,9 +54,8 @@ if __name__ == "__main__":
                 play_strategy='Basic',
                 bet_strategy='Spread',
                 count_strategy='Hi-Lo',
-                true_count_accuracy=0.1,
                 back_counting=True,
-                back_counting_entry_exit=[5, 0]
+                back_counting_entry_exit=[5, 1]
             )
     ]
 
@@ -66,9 +65,9 @@ if __name__ == "__main__":
             players=p,
             seed_number=78,
             simulations=10000,
-            shoe_size=6,
             penetration=0.75,
             figures=True
     )
 
     ps.main()
+

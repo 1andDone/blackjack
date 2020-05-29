@@ -4,13 +4,6 @@ from house_rules import HouseRules
 import basic_strategy
 
 
-@pytest.fixture()
-def setup_playing_strategy():
-    r = HouseRules(bet_limits=[10, 500])
-    ps = PlayingStrategy(rules=r, strategy='Basic')
-    return r, ps
-
-
 class TestPlayingStrategy(object):
 
     @pytest.mark.parametrize('strategy, expected',
@@ -23,7 +16,10 @@ class TestPlayingStrategy(object):
         Tests the strategy parameter of the __init__ method.
 
         """
-        r = HouseRules(bet_limits=[10, 500])
+        r = HouseRules(
+            shoe_size=4,
+            bet_limits=[10, 500]
+        )
 
         if type(expected) == type and issubclass(expected, Exception):
             with pytest.raises(ValueError):
@@ -31,34 +27,48 @@ class TestPlayingStrategy(object):
 
         else:
             ps = PlayingStrategy(rules=r, strategy=strategy)
-            assert ps.get_strategy() == strategy
+            assert ps.strategy == strategy
 
     @pytest.mark.parametrize('s17, expected',
                              [
-                                 (True, basic_strategy.s17_splits),
-                                 (False, basic_strategy.h17_splits)
+                                 (True, basic_strategy.s17_pair),
+                                 (False, basic_strategy.h17_pair)
                              ])
-    def test_splits(self, setup_playing_strategy, s17, expected):
+    def test_pair(self, s17, expected):
         """
-        Tests the splits method.
+        Tests the pair method.
 
         """
-        r, ps = setup_playing_strategy
-        r.s17 = s17
-        assert ps.splits() == expected
+        r = HouseRules(
+            shoe_size=4,
+            bet_limits=[10, 500],
+            s17=s17
+        )
+        ps = PlayingStrategy(
+            rules=r,
+            strategy='Basic'
+        )
+        assert ps.pair() == expected
 
     @pytest.mark.parametrize('s17, expected',
                              [
                                  (True, basic_strategy.s17_soft),
                                  (False, basic_strategy.h17_soft)
                              ])
-    def test_soft(self, setup_playing_strategy, s17, expected):
+    def test_soft(self, s17, expected):
         """
         Tests the soft method.
 
         """
-        r, ps = setup_playing_strategy
-        r.s17 = s17
+        r = HouseRules(
+            shoe_size=4,
+            bet_limits=[10, 500],
+            s17=s17
+        )
+        ps = PlayingStrategy(
+            rules=r,
+            strategy='Basic'
+        )
         assert ps.soft() == expected
 
     @pytest.mark.parametrize('s17, expected',
@@ -66,11 +76,18 @@ class TestPlayingStrategy(object):
                                  (True, basic_strategy.s17_hard),
                                  (False, basic_strategy.h17_hard)
                              ])
-    def test_hard(self, setup_playing_strategy, s17, expected):
+    def test_hard(self, s17, expected):
         """
         Tests the hard method.
 
         """
-        r, ps = setup_playing_strategy
-        r.s17 = s17
+        r = HouseRules(
+            shoe_size=4,
+            bet_limits=[10, 500],
+            s17=s17
+        )
+        ps = PlayingStrategy(
+            rules=r,
+            strategy='Basic'
+        )
         assert ps.hard() == expected

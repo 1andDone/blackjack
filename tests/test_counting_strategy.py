@@ -1,35 +1,23 @@
 import pytest
 from counting_strategy import CountingStrategy
 from cards import Cards
+from house_rules import HouseRules
 
 
 @pytest.fixture()
 def setup_counting_strategy():
-    c = Cards(shoe_size=4)
+    r = HouseRules(
+            shoe_size=4,
+            bet_limits=[10, 500]
+    )
+    c = Cards(rules=r)
     c.burn_card()
-    c.update_visible_cards(card='A')
-    cs = CountingStrategy(cards=c)
+    c.add_to_seen_cards(card=1)
+    cs = CountingStrategy(rules=r, cards=c)
     return c, cs
 
 
 class TestCountingStrategy(object):
-
-    def test_update_running_count(self, setup_counting_strategy):
-        """
-        Tests the update_running_count method.
-
-        """
-        c, cs = setup_counting_strategy
-        cs.update_running_count()
-        assert cs.running_count_dict == {
-                'Halves': -1,
-                'Hi-Lo': -1,
-                'Hi-Opt I': 0,
-                'Hi-Opt II': 0,
-                'KO': -13,
-                'Omega II': 0,
-                'Zen Count': -1
-            }
 
     @pytest.mark.parametrize('strategy, expected',
                              [
@@ -43,7 +31,6 @@ class TestCountingStrategy(object):
 
         """
         c, cs = setup_counting_strategy
-        cs.update_running_count()
 
         if type(expected) == type and issubclass(expected, Exception):
             with pytest.raises(ValueError):
@@ -52,36 +39,29 @@ class TestCountingStrategy(object):
         else:
             assert cs.running_count(strategy=strategy) == expected
 
-    @pytest.mark.parametrize('strategy, accuracy, expected',
+    @pytest.mark.parametrize('strategy, expected',
                              [
-                                 ('Hi-Lo', 0.1, -17.3),
-                                 ('Hi-Lo', 0.5, -17.5),
-                                 ('Hi-Lo', 1, -17),
-                                 ('Hi-Lo', 0.3, ValueError),
-                                 ('KO', None, ValueError),
-                                 ('No Strategy', None, ValueError)
+                                 ('Hi-Lo', -18),
+                                 ('KO', ValueError),
+                                 ('No Strategy', ValueError)
                              ])
-    def test_true_count(self, setup_counting_strategy, strategy, accuracy, expected):
+    def test_true_count(self, setup_counting_strategy, strategy, expected):
         """
         Tests the true_count method.
 
         """
         c, cs = setup_counting_strategy
-        cs.update_running_count()
-        c.set_visible_cards()
 
         if type(expected) == type and issubclass(expected, Exception):
             with pytest.raises(ValueError):
-                cs.true_count(strategy=strategy, accuracy=accuracy)
+                cs.true_count(strategy=strategy)
 
         else:
             # one Ace was already taken out in the setup
-            # 51 additional Ace equivalent cards are added to visible cards
+            # 51 additional Ace equivalent cards are added to seen cards
             # exactly three decks remain
             for i in range(0, 51):
                 c.burn_card()
-                c.update_visible_cards(card='A')
-
-            cs.update_running_count()
-            assert cs.true_count(strategy=strategy, accuracy=accuracy) == expected
+                c.add_to_seen_cards(card=1)
+            assert cs.true_count(strategy=strategy) == expected
 

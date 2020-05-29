@@ -1,8 +1,6 @@
-import card_values as cv
-from helper import count_hand, splittable
 from playing_strategy import PlayingStrategy
-from betting_strategy import BettingStrategy
 from house_rules import HouseRules
+from simulation_stats import SimulationStats
 
 
 class Player(object):
@@ -11,8 +9,8 @@ class Player(object):
 
     """
     def __init__(
-            self, name, rules, bankroll, min_bet, bet_spread=None, bet_count_amount=None, play_strategy='Basic',
-            bet_strategy='Flat', count_strategy=None, true_count_accuracy=None, insurance_count=None,
+            self, name, rules, bankroll, min_bet, bet_spread=None, bet_count_amount=None,
+            play_strategy='Basic', bet_strategy='Flat', count_strategy=None, insurance=None,
             back_counting=False, back_counting_entry_exit=None
     ):
         """
@@ -31,7 +29,7 @@ class Player(object):
         bet_count_amount : list of tuples, optional
             List of tuples in ascending order, where the first value of the tuple indicates
             the running or true count and the second value indicates the amount of money wagered
-            at that running or true count. These values are used to create a bet scale that
+            at that running or true count. These values are used to create a bet ramp that
             increments by a custom amount (default is None)
         play_strategy : str, optional
             Name of the play strategy used by the player (default is "Basic", which implies
@@ -42,9 +40,7 @@ class Player(object):
         count_strategy : str, optional
             Name of the balanced or unbalanced card counting strategy used by the player (default is
             None, which implies the player does not count cards)
-        true_count_accuracy : float, optional
-            Accuracy of the balanced card counting strategy (default is None)
-        insurance_count : float, optional
+        insurance : float, optional
             Minimum running or true count at which a player will purchase insurance, if
             available (default is None)
         back_counting : bool, optional
@@ -84,9 +80,9 @@ class Player(object):
             raise ValueError('Bet count amount must be sorted from least to greatest amounts.')
         if bet_count_amount is not None and bet_count_amount[0][1] != min_bet:
             raise ValueError('First amount in bet count amount must be the minimum player bet.')
-        if bet_count_amount is not None and bet_spread is not None and \
-                bet_count_amount[len(bet_count_amount) - 1][1] > min_bet * bet_spread:
-            raise ValueError('Last amount in bet count amount must be less than the maximum player bet.')
+        if bet_count_amount is not None and bet_spread is not None:
+            if bet_count_amount[len(bet_count_amount) - 1][1] > min_bet * bet_spread:
+                raise ValueError('Last amount in bet count amount must be less than the maximum player bet.')
         if play_strategy not in ['Basic']:
             raise ValueError('Playing strategy must be "Basic".')
         if bet_strategy not in ['Flat', 'Spread']:
@@ -95,13 +91,6 @@ class Player(object):
             if count_strategy not in ['Hi-Lo', 'Hi-Opt I', 'Hi-Opt II', 'Omega II', 'Halves', 'Zen Count', 'KO']:
                 raise ValueError('Count Strategy must be "Hi-Lo", "Hi-Opt I", "Hi-Opt II", "Omega II", '
                                  '"Halves", "Zen Count", or "KO".')
-        if true_count_accuracy is None and count_strategy in ['Hi-Lo', 'Hi-Opt I', 'Hi-Opt II', 'Omega II', 'Halves',
-                                                              'Zen Count']:
-            raise ValueError('True count accuracy cannot be None while using a balanced card counting system.')
-        if true_count_accuracy is not None and count_strategy == 'KO':
-            raise ValueError('True count accuracy must be None while using an unbalanced card counting system.')
-        if true_count_accuracy is not None and count_strategy is None:
-            raise ValueError('True count accuracy must be None if the player is not counting cards.')
         if back_counting and count_strategy is None:
             raise ValueError('Back counting requires a counting strategy.')
         if not back_counting and back_counting_entry_exit is not None:
@@ -110,181 +99,190 @@ class Player(object):
             raise ValueError('Back counting entry/exit point cannot be None.')
         if back_counting and not all(isinstance(x, (int, float)) for x in back_counting_entry_exit):
             raise ValueError('Back counting entry/exit points must be either integers or floating points.')
+        if back_counting and back_counting_entry_exit[0] < back_counting_entry_exit[1]:
+            raise ValueError('Back counting exit point must be less than entry point.')
         if back_counting and len(back_counting_entry_exit) != 2:
             raise ValueError('Back counting entry/exit point must be a list of two values.')
-        self.name = str(name)
-        self.rules = rules
-        self.bankroll = float(bankroll)
-        self.min_bet = float(min_bet)
-        self.bet_spread = bet_spread
-        if bet_strategy == 'Flat':
-            self.bet_scale = None
+        if back_counting_entry_exit is not None and insurance is not None and back_counting_entry_exit[1] > insurance:
+            raise ValueError('Back counting exit point must be lower for player to take insurance bet.')
+        self._name = name
+        self._bankroll = bankroll
+        self._min_bet = min_bet
+        self._bet_spread = bet_spread
         if bet_strategy == 'Spread' and bet_count_amount is not None:
-            bet_scale = {}
+            bet_ramp = {}
             for count, amount in bet_count_amount:
-                bet_scale[count] = round(amount, 2)
-            self.bet_scale = bet_scale
-        self.play_strategy = PlayingStrategy(rules=rules, strategy=play_strategy)
-        self.bet_strategy = BettingStrategy(strategy=bet_strategy)
-        self.count_strategy = count_strategy
-        self.true_count_accuracy = true_count_accuracy
-        self.insurance_count = insurance_count
-        self.back_counting = back_counting
-        self.back_counting_entry_exit = back_counting_entry_exit
-        self.count = 0
-        self.hands_dict = {}
+                bet_ramp[count] = round(amount, 2)
+            self._bet_ramp = bet_ramp
+        else:
+            self._bet_ramp = None
+        self._play_strategy = PlayingStrategy(rules=rules, strategy=play_strategy)
+        self._bet_strategy = bet_strategy
+        self._count_strategy = count_strategy
+        self._insurance = insurance
+        self._back_counting = back_counting
+        self._back_counting_entry_exit = back_counting_entry_exit
+        self._bet_count = 0
+        self._pre_insurance_count = None
+        self._hands_dict = None
+        self._stats = SimulationStats()
 
-    def get_name(self):
-        return self.name
+    @property
+    def name(self):
+        return self._name
 
-    def get_bankroll(self):
-        return self.bankroll
+    @property
+    def bankroll(self):
+        return self._bankroll
 
-    def get_min_bet(self):
-        return self.min_bet
+    @property
+    def min_bet(self):
+        return self._min_bet
 
-    def get_bet_spread(self):
-        return self.bet_spread
+    @property
+    def bet_spread(self):
+        return self._bet_spread
 
-    def get_bet_scale(self):
-        return self.bet_scale
+    @property
+    def bet_ramp(self):
+        return self._bet_ramp
 
-    def get_count_strategy(self):
-        return self.count_strategy
+    @property
+    def play_strategy(self):
+        return self._play_strategy
 
-    def get_true_count_accuracy(self):
-        return self.true_count_accuracy
+    @property
+    def bet_strategy(self):
+        return self._bet_strategy
 
-    def get_insurance_count(self):
-        return self.insurance_count
+    @property
+    def count_strategy(self):
+        return self._count_strategy
 
-    def get_back_counting(self):
-        return self.back_counting
+    @property
+    def insurance(self):
+        return self._insurance
 
-    def get_back_counting_entry_exit(self):
-        return self.back_counting_entry_exit
+    @property
+    def back_counting(self):
+        return self._back_counting
 
-    def get_count(self):
-        return self.count
+    @property
+    def back_counting_entry(self):
+        return self._back_counting_entry_exit[0]
 
-    def get_hands_dict(self):
-        return self.hands_dict
+    @property
+    def back_counting_exit(self):
+        return self._back_counting_entry_exit[1]
 
-    def set_bankroll(self, amount):
-        self.bankroll = amount
+    @property
+    def bet_count(self):
+        return self._bet_count
 
-    def set_count(self, count):
-        self.count = count
+    @bet_count.setter
+    def bet_count(self, value):
+        self._bet_count = value
 
-    def increment_bankroll(self, amount):
-        self.bankroll = self.bankroll + amount
+    @property
+    def pre_insurance_count(self):
+        return self._pre_insurance_count
 
-    def sufficient_funds(self, amount):
-        if amount < 0:
-            raise ValueError('Amount needs to be a positive value.')
-        return self.bankroll - amount >= 0
+    @pre_insurance_count.setter
+    def pre_insurance_count(self, value):
+        self._pre_insurance_count = value
 
-    def create_hand(self, amount):
-        self.hands_dict = {1: {}}
-        self.hands_dict[1]['hand'] = []
-        self.hands_dict[1]['initial bet'] = amount
-        self.hands_dict[1]['insurance bet'] = 0
-        self.hands_dict[1]['bet'] = amount
-        self.hands_dict[1]['insurance'] = False
-        self.hands_dict[1]['natural blackjack'] = False
-        self.hands_dict[1]['surrender'] = False
-        self.hands_dict[1]['busted'] = False
-        self.hands_dict[1]['split'] = False
-        self.hands_dict[1]['stand'] = False
+    @property
+    def hands_dict(self):
+        return self._hands_dict
 
-    def initial_bet(self, amount):
-        if amount < self.rules.min_bet:
-            raise ValueError('Initial bet must exceed table minimum.')
-        if amount > self.rules.max_bet:
-            raise ValueError('Initial bet must not exceed table maximum.')
-        self.increment_bankroll(amount=-amount)
-        self.create_hand(amount=amount)
+    @property
+    def stats(self):
+        return self._stats
 
     def get_hand(self, key):
-        return self.hands_dict[key]['hand']
+        return self._hands_dict[key]['hand']
 
-    def get_initial_bet(self):
-        return self.hands_dict[1]['initial bet']
-
-    def get_insurance_bet(self):
-        return self.hands_dict[1]['insurance bet']
-
-    def get_bet(self, key):
-        return self.hands_dict[key]['bet']
+    def set_hand(self):
+        self._hands_dict = {1: {}}
+        self._hands_dict[1]['hand'] = []
+        self._hands_dict[1]['insurance'] = False
+        self._hands_dict[1]['stand'] = False
+        self._hands_dict[1]['surrender'] = False
+        self._hands_dict[1]['natural blackjack'] = False
+        self._hands_dict[1]['double down'] = False
+        self._hands_dict[1]['split'] = False
+        self._hands_dict[1]['busted'] = False
+        self._hands_dict[1]['settled natural blackjack'] = False
 
     def get_insurance(self):
-        return self.hands_dict[1]['insurance']
+        return self._hands_dict[1]['insurance']
 
-    def get_natural_blackjack(self):
-        return self.hands_dict[1]['natural blackjack']
-
-    def get_surrender(self):
-        return self.hands_dict[1]['surrender']
-
-    def get_busted(self, key):
-        return self.hands_dict[key]['busted']
-
-    def get_split(self, key):
-        return self.hands_dict[key]['split']
+    def set_insurance(self):
+        self._hands_dict[1]['insurance'] = True
 
     def get_stand(self, key):
-        return self.hands_dict[key]['stand']
+        return self._hands_dict[key]['stand']
 
-    def insurance(self):
-        self.hands_dict[1]['insurance'] = True
-        self.hands_dict[1]['insurance bet'] = 0.5 * self.get_initial_bet()
+    def set_stand(self, key):
+        self._hands_dict[key]['stand'] = True
 
-    def natural_blackjack(self):
-        self.hands_dict[1]['natural blackjack'] = True
+    def get_settled_natural_blackjack(self):
+        return self._hands_dict[1]['settled natural blackjack']
 
-    def surrender(self):
-        self.hands_dict[1]['surrender'] = True
+    def set_settled_natural_blackjack(self):
+        self._hands_dict[1]['settled natural blackjack'] = True
+        self.set_stand(key=1)
 
-    def stand(self, key):
-        self.hands_dict[key]['stand'] = True
+    def get_surrender(self):
+        return self._hands_dict[1]['surrender']
 
-    def busted(self, key):
-        self.hands_dict[key]['busted'] = True
-        self.stand(key=key)
+    def set_surrender(self):
+        self._hands_dict[1]['surrender'] = True
+        self.set_stand(key=1)
+
+    def get_natural_blackjack(self):
+        return self._hands_dict[1]['natural blackjack']
+
+    def set_natural_blackjack(self):
+        self._hands_dict[1]['natural blackjack'] = True
+
+    def get_double_down(self, key):
+        return self._hands_dict[key]['double down']
+
+    def set_double_down(self, key, new_card):
+        self._hands_dict[key]['double down'] = True
+        self.hit(key=key, new_card=new_card)
+        self.set_stand(key=key)
+
+    def get_split(self, key):
+        return self._hands_dict[key]['split']
+
+    def set_split(self, key, new_key):
+        self._hands_dict[key]['split'] = True
+        self._hands_dict[new_key] = {}
+        self._hands_dict[new_key]['hand'] = [self.get_hand(key=key).pop()]
+        self._hands_dict[new_key]['stand'] = False
+        self._hands_dict[new_key]['double down'] = False
+        self._hands_dict[new_key]['split'] = True
+        self._hands_dict[new_key]['busted'] = False
+
+    def get_busted(self, key):
+        return self._hands_dict[key]['busted']
+
+    def set_busted(self, key):
+        self._hands_dict[key]['busted'] = True
+        self.set_stand(key=key)
 
     def hit(self, key, new_card):
-        self.hands_dict[key]['hand'].append(new_card)
+        self._hands_dict[key]['hand'].append(new_card)
 
-    def split(self, amount, key, new_key):
-        if splittable(rules=self.rules, hand=self.hands_dict[key]['hand']):
-            self.hands_dict[key]['split'] = True
-            self.hands_dict[new_key] = {}
-            self.hands_dict[new_key]['hand'] = [self.get_hand(key=key).pop()]
-            self.hands_dict[new_key]['bet'] = amount
-            self.hands_dict[new_key]['busted'] = False
-            self.hands_dict[new_key]['split'] = True
-            self.hands_dict[new_key]['stand'] = False
-
-    def double_down(self, key, new_card):
-        self.hands_dict[key]['bet'] = 2 * self.hands_dict[key]['bet']
-        self.hit(key=key, new_card=new_card)
-        self.stand(key=key)
-
-    def decision(self, hand, dealer_up_card, num_hands, amount):
-        if len(hand) == 1:  # if card is split, first action is always to hit
-            return 'H'
-        elif splittable(rules=self.rules, hand=hand) and num_hands < self.rules.max_hands \
-                and self.sufficient_funds(amount=amount):
-            if hand[0] == 'A':
-                return self.play_strategy.splits()[hand[0]][dealer_up_card]
-            elif cv.card_values[hand[0]] == 10:
-                return self.play_strategy.splits()['10'][dealer_up_card]
-            return self.play_strategy.splits()[hand[0]][dealer_up_card]
+    def decision(self, total, hand, pair, soft_hand, dealer_up_card):
+        if pair:
+            if hand[0] >= 10:
+                return self._play_strategy.pair()[10][dealer_up_card]
+            else:
+                return self._play_strategy.pair()[hand[0]][dealer_up_card]
+        elif soft_hand:
+            return self._play_strategy.soft()[total][dealer_up_card]
         else:
-            soft_total, hard_total = count_hand(hand=hand)
-            if soft_total > hard_total and 12 <= soft_total <= 21:  # must contain an Ace
-                return self.play_strategy.soft()[soft_total][dealer_up_card]
-            elif 2 <= hard_total <= 21:
-                return self.play_strategy.hard()[hard_total][dealer_up_card]
-            else:  # player is busted
-                return 'B'
+            return self._play_strategy.hard()[total][dealer_up_card]

@@ -1,13 +1,14 @@
 import pytest
 from house_rules import HouseRules
-from helper import count_hand, max_count_hand, splittable
+from helper import count_hand, splittable
 
 
 @pytest.mark.parametrize('hand, expected',
                          [
-                             (['K', '5', 'J'], (25, 25)),  # no ace
-                             (['A', '2', '4', '6'], (23, 13)),  # single ace
-                             (['A', 'A', 'Q', '3', '7'], (32, 22))  # multiple aces
+                             ([13, 5, 11], (25, False)),  # no ace, soft and hard totals are equivalent
+                             ([1, 2, 4, 6], (13, False)),  # single ace, soft hand is larger than 21
+                             ([1, 2, 4], (17, True)),  # single ace, soft hand is less than 21
+                             ([1, 1, 4, 3], (19, True))  # multiple aces, one treated as 11, the other as 1
                          ])
 def test_count_hand(hand, expected):
     """
@@ -17,34 +18,27 @@ def test_count_hand(hand, expected):
     assert count_hand(hand=hand) == expected
 
 
-@pytest.mark.parametrize('hand, expected',
+@pytest.mark.parametrize('split_unlike_tens, hand, num_hands, expected',
                          [
-                             (['A', 'A', '5', '3'], 20),  # both hard and soft totals less than or equal to 21
-                             (['A', 'A', 'K'], 12)  # soft total greater than 21
+                             (True, [2, 2], 1, True),  # split
+                             (True, [2, 2], 4, False),  # reached max hands limit
+                             (True, [2, 3], 1, False),  # not a split
+                             (False, [2, 2], 1, True),  # split
+                             (False, [2, 3], 1, False),  # not a split
+                             (True, [11, 10], 1, True),  # split unlike tens
+                             (True, [13, 12], 1, True),  # split unlike tens
+                             (False, [11, 10], 1, False),  # cannot split unlike tens
+                             (False, [13, 12], 1, False)  # cannot split unlike tens
                          ])
-def test_max_count_hand(hand, expected):
-    """
-    Tests the max_count_hand function.
-
-    """
-    assert max_count_hand(hand=hand) == expected
-
-
-@pytest.mark.parametrize('split_unlike_tens, hand, expected',
-                         [
-                             (True, ['2', '2'], True),  # split
-                             (True, ['2', '3'], False),  # not a split
-                             (False, ['2', '2'], True),  # split
-                             (False, ['2', '3'], False),  # not a split
-                             (True, ['J', '10'], True),  # split unlike tens
-                             (True, ['K', 'Q'], True),  # split unlike tens
-                             (False, ['J', '10'], False),  # cannot split unlike tens
-                             (False, ['K', 'Q'], False)  # cannot split unlike tens
-                         ])
-def test_splittable(split_unlike_tens, hand, expected):
+def test_splittable(split_unlike_tens, hand, num_hands, expected):
     """
     Tests the splittable function.
 
     """
-    rules = HouseRules(bet_limits=[10, 500], split_unlike_tens=split_unlike_tens)
-    assert splittable(rules=rules, hand=hand) is expected
+    rules = HouseRules(
+        shoe_size=4,
+        bet_limits=[10, 500],
+        split_unlike_tens=split_unlike_tens,
+        max_hands=4
+    )
+    assert splittable(rules=rules, hand=hand, num_hands=num_hands) is expected
