@@ -4,19 +4,6 @@ from player import Player
 from house_rules import HouseRules
 
 
-@pytest.fixture()
-def setup_table():
-    t = Table()
-    r = HouseRules(bet_limits=[10, 500])
-    p = Player(
-            name='Player 1',
-            rules=r,
-            bankroll=100,
-            min_bet=10
-    )
-    return t, p
-
-
 class TestTable(object):
 
     @pytest.mark.parametrize('size_limit, expected',
@@ -44,7 +31,10 @@ class TestTable(object):
                                  (2,
                                   Player(
                                      name='Player 1',
-                                     rules=HouseRules(bet_limits=[10, 500]),
+                                     rules=HouseRules(
+                                         shoe_size=4,
+                                         bet_limits=[10, 500]
+                                     ),
                                      bankroll=100,
                                      min_bet=10),
                                   ValueError),
@@ -53,7 +43,10 @@ class TestTable(object):
                                  (2,
                                   [Player(
                                      name='Player 1',
-                                     rules=HouseRules(bet_limits=[10, 500]),
+                                     rules=HouseRules(
+                                         shoe_size=4,
+                                         bet_limits=[10, 500]
+                                     ),
                                      bankroll=100,
                                      min_bet=10)],
                                   TypeError),
@@ -62,22 +55,34 @@ class TestTable(object):
                                  (1,
                                   Player(
                                       name='Player 2',
-                                      rules=HouseRules(bet_limits=[10, 500]),
+                                      rules=HouseRules(
+                                          shoe_size=4,
+                                          bet_limits=[10, 500]
+                                      ),
                                       bankroll=100,
                                       min_bet=10),
                                   ValueError)
                              ])
-    def test_add_player(self, setup_table, size_limit, player, expected):
+    def test_add_player(self, size_limit, player, expected):
         """
         Tests the add_player method.
 
         """
-        t, p = setup_table
-        t.size_limit = size_limit
+        t = Table(size_limit=size_limit)
+        r = HouseRules(
+            shoe_size=4,
+            bet_limits=[10, 500]
+        )
+        p = Player(
+            name='Player 1',
+            rules=r,
+            bankroll=100,
+            min_bet=10
+        )
 
-        assert len(t.get_players()) == 0
+        assert len(t.players) == 0
         t.add_player(player=p)
-        assert len(t.get_players()) == 1
+        assert len(t.players) == 1
 
         if type(expected) == type and issubclass(expected, Exception):
             with pytest.raises(tuple([TypeError, ValueError])):
@@ -88,19 +93,32 @@ class TestTable(object):
                                   # remove player not at table
                                   (Player(
                                      name='Player 2',
-                                     rules=HouseRules(bet_limits=[10, 500]),
+                                     rules=HouseRules(
+                                         shoe_size=4,
+                                         bet_limits=[10, 500]
+                                     ),
                                      bankroll=100,
                                      min_bet=10),
                                    ValueError)
                              ])
-    def test_remove_player(self, setup_table, player, expected):
+    def test_remove_player(self, player, expected):
         """
         Tests the remove_player method.
 
         """
-        t, p = setup_table
+        t = Table()
+        r = HouseRules(
+            shoe_size=4,
+            bet_limits=[10, 500]
+        )
+        p = Player(
+            name='Player 1',
+            rules=r,
+            bankroll=100,
+            min_bet=10
+        )
         t.add_player(player=p)
-        assert len(t.get_players()) == 1
+        assert len(t.players) == 1
 
         if type(expected) == type and issubclass(expected, Exception):
             with pytest.raises(ValueError):

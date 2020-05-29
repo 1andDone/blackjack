@@ -16,7 +16,10 @@ class TestPlayingStrategy(object):
         Tests the strategy parameter of the __init__ method.
 
         """
-        r = HouseRules(bet_limits=[10, 500])
+        r = HouseRules(
+            shoe_size=4,
+            bet_limits=[10, 500]
+        )
 
         if type(expected) == type and issubclass(expected, Exception):
             with pytest.raises(ValueError):
@@ -28,15 +31,16 @@ class TestPlayingStrategy(object):
 
     @pytest.mark.parametrize('s17, expected',
                              [
-                                 (True, basic_strategy.s17_splits),
-                                 (False, basic_strategy.h17_splits)
+                                 (True, basic_strategy.s17_pair),
+                                 (False, basic_strategy.h17_pair)
                              ])
-    def test_splits(self, s17, expected):
+    def test_pair(self, s17, expected):
         """
-        Tests the splits method.
+        Tests the pair method.
 
         """
         r = HouseRules(
+            shoe_size=4,
             bet_limits=[10, 500],
             s17=s17
         )
@@ -44,7 +48,7 @@ class TestPlayingStrategy(object):
             rules=r,
             strategy='Basic'
         )
-        assert ps.splits() == expected
+        assert ps.pair() == expected
 
     @pytest.mark.parametrize('s17, expected',
                              [
@@ -57,6 +61,7 @@ class TestPlayingStrategy(object):
 
         """
         r = HouseRules(
+            shoe_size=4,
             bet_limits=[10, 500],
             s17=s17
         )
@@ -77,6 +82,7 @@ class TestPlayingStrategy(object):
 
         """
         r = HouseRules(
+            shoe_size=4,
             bet_limits=[10, 500],
             s17=s17
         )

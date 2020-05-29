@@ -73,9 +73,9 @@ def net_winnings_figure(
 ):
     """
     Creates two sub-plots based on the player's counting strategy. The top sub-plot shows
-    the individual net winnings of a player for each running or true count value for which
+    the individual net winnings of a player at each running or true count at which
     they played a hand. The bottom sub-plot shows the cumulative net winnings of a player
-    as the running or true count increased.
+    as the running or true count increases.
 
     Parameters
     ----------

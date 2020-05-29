@@ -4,6 +4,32 @@ from house_rules import HouseRules
 
 class TestHouseRules(object):
 
+    @pytest.mark.parametrize('shoe_size, expected',
+                             [
+                                 (4, 4),
+                                 (6, 6),
+                                 (8, 8),
+                                 (10, ValueError)
+                             ])
+    def test_shoe_size(self, shoe_size, expected):
+        """
+        Tests the shoe_size parameter of the __init__ method.
+
+        """
+        if type(expected) == type and issubclass(expected, Exception):
+            with pytest.raises(ValueError):
+                HouseRules(
+                    shoe_size=shoe_size,
+                    bet_limits=[10, 500]
+                )
+
+        else:
+            r = HouseRules(
+                    shoe_size=shoe_size,
+                    bet_limits=[10, 500]
+                )
+            assert r.shoe_size == expected
+
     @pytest.mark.parametrize('bet_limits, expected',
                              [
                                  ([-5, -1], ValueError),  # negative bet limits
@@ -20,10 +46,16 @@ class TestHouseRules(object):
         """
         if type(expected) == type and issubclass(expected, Exception):
             with pytest.raises(tuple([TypeError, ValueError])):
-                HouseRules(bet_limits=bet_limits)
+                HouseRules(
+                    shoe_size=4,
+                    bet_limits=bet_limits
+                )
 
         else:
-            rules = HouseRules(bet_limits=bet_limits)
+            rules = HouseRules(
+                        shoe_size=4,
+                        bet_limits=bet_limits
+            )
             assert rules.min_bet == expected[0]
             assert rules.max_bet == expected[1]
 
@@ -40,10 +72,18 @@ class TestHouseRules(object):
         """
         if type(expected) == type and issubclass(expected, Exception):
             with pytest.raises(ValueError):
-                HouseRules(bet_limits=[10, 500], blackjack_payout=blackjack_payout)
+                HouseRules(
+                    shoe_size=4,
+                    bet_limits=[10, 500],
+                    blackjack_payout=blackjack_payout
+                )
 
         else:
-            rules = HouseRules(bet_limits=[10, 500], blackjack_payout=blackjack_payout)
+            rules = HouseRules(
+                        shoe_size=4,
+                        bet_limits=[10, 500],
+                        blackjack_payout=blackjack_payout
+            )
             assert rules.blackjack_payout == expected
 
     @pytest.mark.parametrize('resplit_aces, max_hands, expected',
@@ -61,10 +101,20 @@ class TestHouseRules(object):
         """
         if type(expected) == type and issubclass(expected, Exception):
             with pytest.raises(ValueError):
-                HouseRules(bet_limits=[10, 500], resplit_aces=resplit_aces, max_hands=max_hands)
+                HouseRules(
+                    shoe_size=4,
+                    bet_limits=[10, 500],
+                    resplit_aces=resplit_aces,
+                    max_hands=max_hands
+                )
 
         else:
-            rules = HouseRules(bet_limits=[10, 500], resplit_aces=resplit_aces, max_hands=max_hands)
+            rules = HouseRules(
+                shoe_size=4,
+                bet_limits=[10, 500],
+                resplit_aces=resplit_aces,
+                max_hands=max_hands
+            )
             assert rules.max_hands == expected
 
 

@@ -35,7 +35,7 @@ def deal_hands(table, cards):
 
 def players_play_hands(table, rules, cards, dealer_hand, dealer_up_card):
     """
-    Players at the table play their individual hands.
+    Players at the table play out their individual hands.
 
     Parameters
     ----------
@@ -45,11 +45,9 @@ def players_play_hands(table, rules, cards, dealer_hand, dealer_up_card):
         HouseRules class instance
     cards : Cards
         Cards class instance
-    stats : SimulationStats
-        SimulationStats class instance
     dealer_hand : list of int
         List of integer card elements representing the dealer's hand
-    dealer_up_card : str
+    dealer_up_card : int
         Dealer's card that is face up after each player receives two cards
 
     """
@@ -84,6 +82,7 @@ def players_play_hands(table, rules, cards, dealer_hand, dealer_up_card):
         # players and dealer check for natural blackjack
         if total == 21 or dealer_total == 21:
             if total == 21 and dealer_total == 21:  # push
+                p.set_natural_blackjack()
                 p.stats.update_results(
                     count_key=p.bet_count,
                     overall_bet=1
@@ -212,7 +211,7 @@ def players_play_hands(table, rules, cards, dealer_hand, dealer_up_card):
 
 def dealer_turn(table):
     """
-    Determines whether or not a dealer needs to take their turn. If any player at the table
+    Determines whether or not a dealer needs to take their turn. If a player at the table
     does not have a natural blackjack and does not surrender their hand or bust, the dealer
     will need to play out their turn in its entirety, so long as the dealer does not have
     a natural blackjack.
@@ -248,7 +247,7 @@ def dealer_plays_hand(rules, cards, dealer_hole_card, dealer_hand):
         HouseRules class instance
     cards : Cards
         Cards class instance
-    dealer_hole_card : str
+    dealer_hole_card : int
         Dealer's card that is face down after each player receives two cards
     dealer_hand : list of int
         List of integer card elements representing the dealer's hand
@@ -279,16 +278,12 @@ def dealer_plays_hand(rules, cards, dealer_hole_card, dealer_hand):
 
 def compare_hands(table, dealer_total):
     """
-    Players compare remaining hands against the dealer. Instances where the player
-    beats the dealer are paid out 1:1. Pushes allow the player to re-coup their
-    initial wager.
+    Players compare remaining unsettled hands against the dealer.
 
     Parameters
     ----------
     table : Table
         Table class instance
-    stats : SimulationStats
-        SimulationStats class instance
     dealer_total : int
         Dealer's soft or hard hand total
 

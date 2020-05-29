@@ -4,13 +4,15 @@ class HouseRules(object):
 
     """
     def __init__(
-            self, bet_limits, s17=True, blackjack_payout=1.5, max_hands=4,
-            double_down=True, split_unlike_tens=True, double_after_split=True, resplit_aces=False,
-            insurance=True, late_surrender=True, dealer_shows_hole_card=False
+            self, shoe_size, bet_limits, s17=True, blackjack_payout=1.5, max_hands=4,
+            double_down=True, split_unlike_tens=True, double_after_split=True,
+            resplit_aces=False, insurance=True, late_surrender=True, dealer_shows_hole_card=False
     ):
         """
         Parameters
         ----------
+        shoe_size: int
+            Number of decks used during a blackjack game
         bet_limits : list
             List containing the minimum and maximum bet allowed at the table
         s17 : bool, optional
@@ -36,9 +38,11 @@ class HouseRules(object):
             True if the dealer shows his hole card regardless of whether or not all players bust,
             surrender, or have natural 21, false otherwise (default is False)
         """
+        if shoe_size not in [4, 6, 8]:
+            raise ValueError('Shoe size must be 4, 6, or 8.')
         if len(bet_limits) != 2:
             raise ValueError('Bet limits should be a list of 2 integers.')
-        if not all(isinstance(x, int) for x in bet_limits):
+        if not all(isinstance(bet, int) for bet in bet_limits):
             raise TypeError('Bet limits need to be integer values.')
         if bet_limits[0] < 0:
             raise ValueError('Minimum bet at table must be an integer greater than 0.')
@@ -50,11 +54,12 @@ class HouseRules(object):
             raise ValueError('Maximum number of hands must be 2, 3, or 4.')
         if resplit_aces and max_hands == 2:
             raise ValueError('Max hands must be greater than 2 if re-splitting aces is allowed.')
-        self._min_bet = int(bet_limits[0])
-        self._max_bet = int(bet_limits[1])
+        self._shoe_size = shoe_size
+        self._min_bet = bet_limits[0]
+        self._max_bet = bet_limits[1]
         self._s17 = s17
-        self._blackjack_payout = float(blackjack_payout)
-        self._max_hands = int(max_hands)
+        self._blackjack_payout = blackjack_payout
+        self._max_hands = max_hands
         self._double_down = double_down
         self._split_unlike_tens = split_unlike_tens
         self._double_after_split = double_after_split
@@ -62,6 +67,20 @@ class HouseRules(object):
         self._insurance = insurance
         self._late_surrender = late_surrender
         self._dealer_shows_hole_card = dealer_shows_hole_card
+
+    def __str__(self):
+        return '{shoe_size} decks,{s17} {blackjack_payout}{double_after_split}{resplit_aces}{late_surrender}'.format(
+                shoe_size=self._shoe_size,
+                s17=' S17,' if self._s17 else 'H17,',
+                blackjack_payout=str(self._blackjack_payout) + 'x BJ,',
+                double_after_split=' DAS,' if self._double_after_split else '',
+                resplit_aces=' RSA,' if self._resplit_aces else '',
+                late_surrender=' LS' if self._late_surrender else ''
+        )
+
+    @property
+    def shoe_size(self):
+        return self._shoe_size
 
     @property
     def min_bet(self):

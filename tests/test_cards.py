@@ -1,34 +1,37 @@
 import random
 import pytest
+import numpy as np
 from cards import Cards
+from house_rules import HouseRules
 
 
 @pytest.fixture(autouse=True)
 def setup_cards():
-    return [Cards(shoe_size=4), Cards(shoe_size=6), Cards(shoe_size=8)]
+    cards_list = []
+    for shoe_size in [4, 6, 8]:
+        r = HouseRules(
+                shoe_size=shoe_size,
+                bet_limits=[10, 500]
+        )
+        cards_list.append(Cards(rules=r))
+
+    return cards_list
 
 
 class TestCards(object):
 
-    @pytest.mark.parametrize('shoe_size, expected',
-                             [
-                                 (4, 4),
-                                 (6, 6),
-                                 (8, 8),
-                                 (10, ValueError)
-                             ])
-    def test_shoe_size(self, shoe_size, expected):
+    def test_add_to_seen_cards(self, setup_cards):
         """
-        Tests the shoe_size parameter of the __init__ method.
+        Tests the add_to_seen_cards method.
 
         """
-        if type(expected) == type and issubclass(expected, Exception):
-            with pytest.raises(ValueError):
-                Cards(shoe_size=shoe_size)
-
-        else:
-            c = Cards(shoe_size=shoe_size)
-            assert c.shoe_size == expected
+        for c in setup_cards:
+            assert c.seen_cards[0] == 0
+            assert c.seen_cards[12] == 0
+            c.add_to_seen_cards(card=1)
+            c.add_to_seen_cards(card=13)
+            assert c.seen_cards[0] == 1
+            assert c.seen_cards[12] == 1
 
     def test_burn_card(self, setup_cards):
         """
@@ -36,8 +39,8 @@ class TestCards(object):
 
         """
         for c in setup_cards:
-            assert c.burn_card() == 'A'
-            assert c.burn_card() == 'K'
+            assert c.burn_card() == 1
+            assert c.burn_card() == 13
 
     def test_shuffle(self, setup_cards):
         """
@@ -46,46 +49,45 @@ class TestCards(object):
         """
         random.seed(1)
         for c in setup_cards:
-            assert c.deck[-1] == 'A'
-            assert c.deck[-2] == 'K'
+            assert c.cards[-1] == 1
+            assert c.cards[-2] == 13
             c.shuffle()
-            assert c.deck[-1] != 'A'
-            assert c.deck[-2] != 'K'
+            assert c.cards[-1] != 1
+            assert c.cards[-2] != 13
 
-    @pytest.mark.parametrize('visible, expected',
+    @pytest.mark.parametrize('seen, expected',
                              [
-                                 (False, []),
-                                 (True, ['A'])
+                                 (False, 0),
+                                 (True, 1)
                              ])
-    def test_deal_card(self, setup_cards, visible, expected):
+    def test_deal_card(self, setup_cards, seen, expected):
         """
         Tests the deal_card method.
 
         """
         for c in setup_cards:
-            deck_before_dealing = c.deck.copy()
-            c.deal_card(visible=visible)
-            assert c.visible_cards == expected
-            assert len(c.deck) == len(deck_before_dealing) - 1
+            cards_before_dealing = c.cards.copy()
+            c.deal_card(seen=seen)
+            assert c.seen_cards[0] == expected
+            assert len(c.cards) == len(cards_before_dealing) - 1
 
-    def test_update_visible_cards(self, setup_cards):
-        """
-        Tests the update_visible_cards method.
-
-        """
-        for c in setup_cards:
-            assert c.visible_cards == []
-            c.update_visible_cards(card='2')
-            assert c.visible_cards == ['2']
-
-    def test_remaining_decks(self, setup_cards):
+    def test_remaining_decks(self):
         """
         Tests the remaining_decks method.
 
         """
-        for c in setup_cards:
+        for shoe_size in [4, 6, 8]:
+            r = HouseRules(
+                shoe_size=shoe_size,
+                bet_limits=[10, 500]
+            )
+            c = Cards(rules=r)
+            # burn within 1 card of changing remaining decks amount (rounded to the nearest integer)
+            for i in range(0, 26):  # half a deck of cards
+                c.burn_card()
+                assert c.remaining_decks() == r.shoe_size
             c.burn_card()
-            assert c.remaining_decks() == ((c.shoe_size * 52) - 1) / 52
+            assert c.remaining_decks() == r.shoe_size - 1
 
     @pytest.mark.parametrize('penetration, expected',
                              [
@@ -94,18 +96,23 @@ class TestCards(object):
                                  (0.75, True),
                                  (1, ValueError)
                              ])
-    def test_cut_card_reached(self, setup_cards, penetration, expected):
+    def test_cut_card_reached(self, penetration, expected):
         """
         Tests the cut_card_reached method.
 
         """
-        for c in setup_cards:
+        for shoe_size in [4, 6, 8]:
+            r = HouseRules(
+                shoe_size=shoe_size,
+                bet_limits=[10, 500]
+            )
+            c = Cards(rules=r)
             if penetration < 0.5 or penetration > 0.9:
                 with pytest.raises(ValueError):
                     c.cut_card_reached(penetration=penetration)
             else:
                 # burn within 1 card of reaching desired penetration
-                for i in range(0, int(c.shoe_size * penetration * 52) - 1):
+                for i in range(0, int(r.shoe_size * penetration * 52) - 1):
                     c.burn_card()
                 assert c.cut_card_reached(penetration=penetration) is not expected
 

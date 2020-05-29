@@ -5,7 +5,10 @@ from house_rules import HouseRules
 
 @pytest.fixture
 def setup_player():
-    r = HouseRules(bet_limits=[10, 500])
+    r = HouseRules(
+        shoe_size=4,
+        bet_limits=[10, 500]
+    )
     p = Player(
             name='Player 1',
             rules=r,
@@ -31,7 +34,10 @@ class TestPlayer(object):
             with pytest.raises(TypeError):
                 Player(
                     name=name,
-                    rules=HouseRules(bet_limits=[10, 500]),
+                    rules=HouseRules(
+                        shoe_size=4,
+                        bet_limits=[10, 500]
+                    ),
                     bankroll=100,
                     min_bet=10
                 )
@@ -39,7 +45,10 @@ class TestPlayer(object):
         else:
             p = Player(
                     name=name,
-                    rules=HouseRules(bet_limits=[10, 500]),
+                    rules=HouseRules(
+                        shoe_size=4,
+                        bet_limits=[10, 500]
+                    ),
                     bankroll=100,
                     min_bet=10
                 )
@@ -59,7 +68,10 @@ class TestPlayer(object):
             with pytest.raises(ValueError):
                 Player(
                     name='Player 1',
-                    rules=HouseRules(bet_limits=[10, 500]),
+                    rules=HouseRules(
+                        shoe_size=4,
+                        bet_limits=[10, 500]
+                    ),
                     bankroll=bankroll,
                     min_bet=10
                 )
@@ -67,7 +79,10 @@ class TestPlayer(object):
         else:
             p = Player(
                     name='Player 1',
-                    rules=HouseRules(bet_limits=[10, 500]),
+                    rules=HouseRules(
+                        shoe_size=4,
+                        bet_limits=[10, 500]
+                    ),
                     bankroll=bankroll,
                     min_bet=10
                 )
@@ -84,7 +99,10 @@ class TestPlayer(object):
         Tests the min_bet parameter of the __init__ method.
 
         """
-        r = HouseRules(bet_limits=[10, 500])
+        r = HouseRules(
+            shoe_size=4,
+            bet_limits=[10, 500]
+        )
 
         if type(expected) == type and issubclass(expected, Exception):
             with pytest.raises(ValueError):
@@ -115,7 +133,10 @@ class TestPlayer(object):
         Tests the bet_spread parameter of the __init__ method.
 
         """
-        r = HouseRules(bet_limits=[10, 500])
+        r = HouseRules(
+            shoe_size=4,
+            bet_limits=[10, 500]
+        )
 
         if type(expected) == type and issubclass(expected, Exception):
             with pytest.raises(ValueError):
@@ -127,8 +148,7 @@ class TestPlayer(object):
                     bet_count_amount=[(1, 20), (2, 50)],
                     bet_spread=bet_spread,
                     bet_strategy='Spread',
-                    count_strategy='Hi-Lo',
-                    true_count_accuracy=0.5
+                    count_strategy='Hi-Lo'
                 )
 
         else:
@@ -140,8 +160,7 @@ class TestPlayer(object):
                     bet_count_amount=[(1, 20), (2, 50)],
                     bet_spread=bet_spread,
                     bet_strategy='Spread',
-                    count_strategy='Hi-Lo',
-                    true_count_accuracy=0.5
+                    count_strategy='Hi-Lo'
             )
             assert p.bet_spread == expected
 
@@ -159,7 +178,10 @@ class TestPlayer(object):
         Tests the bet_count_amount of the __init__ method.
 
         """
-        r = HouseRules(bet_limits=[10, 500])
+        r = HouseRules(
+            shoe_size=4,
+            bet_limits=[10, 500]
+        )
 
         if type(expected) == type and issubclass(expected, Exception):
             with pytest.raises(ValueError):
@@ -171,8 +193,7 @@ class TestPlayer(object):
                     bet_count_amount=bet_count_amount,
                     bet_spread=10,
                     bet_strategy='Spread',
-                    count_strategy='Hi-Lo',
-                    true_count_accuracy=0.5
+                    count_strategy='Hi-Lo'
                 )
 
         else:
@@ -184,73 +205,34 @@ class TestPlayer(object):
                     bet_count_amount=bet_count_amount,
                     bet_spread=10,
                     bet_strategy='Spread',
-                    count_strategy='Hi-Lo',
-                    true_count_accuracy=0.5
+                    count_strategy='Hi-Lo'
             )
-            assert p.bet_scale == expected
+            assert p.bet_ramp == expected
 
-    @pytest.mark.parametrize('bet_strategy, count_strategy, true_count_accuracy, expected',
+    @pytest.mark.parametrize('count_strategy, insurance, back_counting, back_counting_entry_exit, expected',
                              [
-                                 ('Spread', 'Hi-Lo', 1, 1),
-                                 ('Spread', 'Hi-Lo', 0.5, 0.5),
-                                 ('Spread', 'Hi-Lo', 0.1, 0.1),
-                                 ('Spread', 'Hi-Lo', None, ValueError),
-                                 ('Spread', 'KO', None, None),
-                                 ('Spread', 'KO', 1, ValueError),
-                                 ('Flat', None, None, None),
-                                 ('Flat', None, 0.5, ValueError)
+                                 ('Hi-Lo', None, True, [2, 1], [2, 1]),
+                                 ('Hi-Lo', None, True, [2.2, -1.7], [2.2, -1.7]),
+                                 ('Hi-Lo', None, True, [1, 2], ValueError),  # exit point is greater than entry point
+                                 ('Hi-Lo', None, True, [3, 2, 1], ValueError),  # needs to be a list of length 2
+                                 ('Hi-Lo', None, True, ['6', '5'], ValueError),  # needs to be int or float
+                                 ('Hi-Lo', None, False, [2, 1], ValueError),  # no back counting
+                                 ('Hi-Lo', None, True, None, ValueError),  # no back counting
+                                 (None, None, True, [2, 1], ValueError),  # back counting requires a count strategy
+                                 ('Hi-Lo', 1, True, [3, 2], ValueError),  # exit point needs to be <= to insurance
+                                 ('Hi-Lo', 1, True, [3, 0], [3, 0])
                              ])
-    def test_true_count_accuracy(self, bet_strategy, count_strategy, true_count_accuracy, expected):
-        """
-        Tests the true_count_accuracy of the __init__ method.
-
-        """
-        r = HouseRules(bet_limits=[10, 500])
-
-        if type(expected) == type and issubclass(expected, Exception):
-            with pytest.raises(ValueError):
-                Player(
-                    name='Player 1',
-                    rules=r,
-                    bankroll=100,
-                    min_bet=10,
-                    bet_count_amount=[(1, 10), (2, 50)],
-                    bet_spread=10,
-                    bet_strategy=bet_strategy,
-                    count_strategy=count_strategy,
-                    true_count_accuracy=true_count_accuracy
-                )
-
-        else:
-            p = Player(
-                    name='Player 1',
-                    rules=r,
-                    bankroll=100,
-                    min_bet=10,
-                    bet_count_amount=[(1, 10), (2, 50)],
-                    bet_spread=10,
-                    bet_strategy=bet_strategy,
-                    count_strategy=count_strategy,
-                    true_count_accuracy=true_count_accuracy
-            )
-            assert p.true_count_accuracy == expected
-
-    @pytest.mark.parametrize('count_strategy, back_counting, back_counting_entry_exit, expected',
-                             [
-                                 ('Hi-Lo', True, [1, 2], [1, 2]),
-                                 ('Hi-Lo', True, [2.2, -1.7], [2.2, -1.7]),
-                                 ('Hi-Lo', True, [1, 2, 3], ValueError),  # entry/exit needs to be a list of length 2
-                                 ('Hi-Lo', True, ['6', '5'], ValueError),  # entry/exit needs to be int or float
-                                 ('Hi-Lo', False, [1, 2], ValueError),  # no back counting
-                                 ('Hi-Lo', True, None, ValueError),  # no back counting
-                                 (None, True, [1, 2], ValueError)  # back counting requires a count strategy
-                             ])
-    def test_back_counting_entry_exit(self, count_strategy, back_counting, back_counting_entry_exit, expected):
+    def test_back_counting_entry_exit(
+            self, count_strategy, insurance, back_counting, back_counting_entry_exit, expected
+    ):
         """
         Tests the back_counting of the __init__ method.
 
         """
-        r = HouseRules(bet_limits=[10, 500])
+        r = HouseRules(
+            shoe_size=4,
+            bet_limits=[10, 500]
+        )
 
         if type(expected) == type and issubclass(expected, Exception):
             with pytest.raises(ValueError):
@@ -263,7 +245,7 @@ class TestPlayer(object):
                     bet_spread=10,
                     bet_strategy='Spread',
                     count_strategy=count_strategy,
-                    true_count_accuracy=0.5,
+                    insurance=insurance,
                     back_counting=back_counting,
                     back_counting_entry_exit=back_counting_entry_exit
                 )
@@ -278,7 +260,7 @@ class TestPlayer(object):
                     bet_spread=10,
                     bet_strategy='Spread',
                     count_strategy=count_strategy,
-                    true_count_accuracy=0.5,
+                    insurance=insurance,
                     back_counting=back_counting,
                     back_counting_entry_exit=back_counting_entry_exit
             )
@@ -287,7 +269,7 @@ class TestPlayer(object):
 
     def test_set_hand(self, setup_player):
         """
-        Tests the create_hand method.
+        Tests the set_hand method.
 
         """
         p = setup_player
@@ -301,22 +283,11 @@ class TestPlayer(object):
                     'hand': [],
                     'insurance': False,
                     'natural blackjack': False,
+                    'settled natural blackjack': False,
                     'split': False,
                     'stand': False,
-                    'surrender': False
-                }
+                    'surrender': False}
         }
-
-    def test_insurance(self, setup_player):
-        """
-        Tests the insurance method.
-
-        """
-        p = setup_player
-        p.set_hand()
-        assert p.get_insurance() is False
-        p.insurance()
-        assert p.get_insurance() is True
 
     def test_hit(self, setup_player):
         """
@@ -326,56 +297,69 @@ class TestPlayer(object):
         p = setup_player
         p.set_hand()
         assert p.get_hand(key=1) == []
-        p.hit(key=1, new_card='K')
-        p.hit(key=1, new_card='7')
-        assert p.get_hand(key=1) == ['K', '7']
+        p.hit(key=1, new_card=13)
+        p.hit(key=1, new_card=7)
+        assert p.get_hand(key=1) == [13, 7]
 
-    def test_split(self, setup_player):
+    def test_set_split(self, setup_player):
         """
-        Tests the split method.
+        Tests the set_split method.
 
         """
         p = setup_player
         p.set_hand()
-        p.hit(key=1, new_card='A')
-        p.hit(key=1, new_card='A')
-        assert p.get_hand(key=1) == ['A', 'A']
-        p.split(key=1, new_key=2)
+        p.hit(key=1, new_card=1)
+        p.hit(key=1, new_card=1)
+        assert p.get_hand(key=1) == [1, 1]
+        p.set_split(key=1, new_key=2)
         for key in [1, 2]:
-            assert p.get_hand(key=key) == ['A']
+            assert p.get_hand(key=key) == [1]
 
-    def test_double_down(self, setup_player):
+    def test_set_double_down(self, setup_player):
         """
-        Tests the double_down method.
+        Tests the set_double_down method.
 
         """
         p = setup_player
         p.set_hand()
-        p.hit(key=1, new_card='6')
-        p.hit(key=1, new_card='4')
+        p.hit(key=1, new_card=6)
+        p.hit(key=1, new_card=4)
         assert p.get_double_down(key=1) is False
-        p.double_down(key=1, new_card='A')
+        p.set_double_down(key=1, new_card=1)
         assert p.get_double_down(key=1) is True
 
-    @pytest.mark.parametrize('hand, num_hands, expected',
+    @pytest.mark.parametrize('total, hand, pair, soft_hand, expected',
                              [
-                                 (['8'], 1, 'H'),  # hand of length 1
-                                 (['8', '8'], 1, 'P'),  # number of hands is less than max hands
-                                 (['8', '8'], 4, 'Rh'),  # number of hands is not less than max hands
-                                 (['A', '7'], 1, 'H'),  # soft total
-                                 (['8', 'J'], 1, 'S'),  # hard total
-                                 (['J', '6', 'K'], 1, 'B')  # busted
+                                 (8, [8], False, False, 'H'),  # hand of length 1
+                                 (16, [8, 8], True, False, 'P'),  # number of hands is less than max hands
+                                 (16, [8, 8], False, False, 'Rh'),  # number of hands is not less than max hands
+                                 (18, [1, 7], False, True, 'H'),  # soft total
+                                 (19, [8, 11], False, False, 'S'),  # hard total
+                                 (26, [11, 6, 13], False, False, KeyError)  # busted hands are not in table
                              ])
-    def test_decision(self, setup_player, hand, num_hands, expected):
+    def test_decision(self, setup_player, total, hand, pair, soft_hand, expected):
         """
         Tests the decision method.
 
         """
         p = setup_player
-        decision = p.decision(
-                        hand=hand,
-                        dealer_up_card='J',
-                        num_hands=num_hands
-        )
-        assert decision == expected
+
+        if type(expected) == type and issubclass(expected, Exception):
+            with pytest.raises(KeyError):
+                decision = p.decision(
+                                total=total,
+                                hand=hand,
+                                pair=pair,
+                                soft_hand=soft_hand,
+                                dealer_up_card=11
+                )
+        else:
+            decision = p.decision(
+                total=total,
+                hand=hand,
+                pair=pair,
+                soft_hand=soft_hand,
+                dealer_up_card=11
+            )
+            assert decision == expected
 

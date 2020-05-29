@@ -1,9 +1,9 @@
 import numpy as np
 
-# Balanced Card Counting Systems: Hi-Lo, Hi-Opt I, Hi-Opt II, Omega II, Halves, Zen Count
-# Unbalanced Card Counting Systems: KO
+# balanced card counting systems: Hi-Lo, Hi-Opt I, Hi-Opt II, Omega II, Halves, Zen Count
+# unbalanced card counting systems: KO
 
-# Dictionary referencing row number of count_array
+# dictionary referencing row number of count_array
 count_dict = {
     'Hi-Lo': 0,
     'Hi-Opt I': 1,
@@ -14,7 +14,7 @@ count_dict = {
     'KO': 6
 }
 
-# Counts for each card
+# counts for each card
 count_array = np.array([
     # A   2   3  4  5     6   7   8    9  10   J   Q   K
     [-1,  1,  1, 1, 1,    1,  0,  0,   0, -1, -1, -1, -1],  # Hi-Lo
@@ -26,9 +26,11 @@ count_array = np.array([
     [-1,  1,  1, 1, 1,    1,  1,  0,   0, -1, -1, -1, -1]   # KO
 ])
 
+# transpose of count_array
+# count_array is transformed from a m x 13 matrix into a 13 x m matrix
 count_array = count_array.T
 
-# Balanced Card Counting Systems begin at a running count equal to 0
-# Unbalanced Card Counting Systems (KO) begin at a running count equal to -4 * (shoe size - 1)
-# The additional (shoe size - 1) factor will be added in counting_strategy.py
+# balanced card counting systems begin at a running count equal to 0
+# unbalanced card counting systems (KO) begin at a running count equal to -4 * (shoe size - 1)
+# the additional (shoe size - 1) factor for KO will be added in counting_strategy.py
 starting_count_array = np.array([0, 0, 0, 0, 0, 0, -4])

@@ -1,18 +1,18 @@
 import numpy as np
 
 # basic strategy key
-# H : hit
-# S : stand
+# H  : hit
+# S  : stand
 # Dh : double if allowed, otherwise hit
 # Ds : double if allowed, otherwise stand
-# P : split
+# P  : split
 # Ph : split if double after split allowed, otherwise hit
 # Rh : surrender if allowed, otherwise hit
 # Rs : surrender if allowed, otherwise stand
 # Rp : surrender if allowed, otherwise split
 # source: https://wizardofodds.com/games/blackjack/strategy/4-decks/
 
-# arrays of player's hand (y-axis) vs. dealers up card (x-axis)
+# arrays of player's hand (y-axis) vs. dealer up card (x-axis)
 
 s17_hard_array = np.array([
     # 2      3       4       5       6       7       8       9      10       J       Q       K       A

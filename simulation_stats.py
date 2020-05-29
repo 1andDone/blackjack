@@ -12,7 +12,7 @@ class SimulationStats(object):
         return self._results_dict
 
     def create_count_key(self, count_key):
-        if count_key not in self._results_dict:
+        if count_key not in self.results_dict:
             self._results_dict[count_key] = {}
             self._results_dict[count_key]['net winnings'] = 0
             self._results_dict[count_key]['overall bet'] = 0

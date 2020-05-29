@@ -12,7 +12,7 @@ def count_hand(hand):
     -------
     tuple of int, bool
         Maximum hard or soft total for a given hand and an indicator
-        of whether or not it is a soft hand
+        of whether or not the hand is soft
 
     """
     total = 0

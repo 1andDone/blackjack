@@ -99,12 +99,15 @@ class Player(object):
             raise ValueError('Back counting entry/exit point cannot be None.')
         if back_counting and not all(isinstance(x, (int, float)) for x in back_counting_entry_exit):
             raise ValueError('Back counting entry/exit points must be either integers or floating points.')
+        if back_counting and back_counting_entry_exit[0] < back_counting_entry_exit[1]:
+            raise ValueError('Back counting exit point must be less than entry point.')
         if back_counting and len(back_counting_entry_exit) != 2:
             raise ValueError('Back counting entry/exit point must be a list of two values.')
-        self._name = str(name)
-        self.rules = rules
-        self._bankroll = float(bankroll)
-        self._min_bet = float(min_bet)
+        if back_counting_entry_exit is not None and insurance is not None and back_counting_entry_exit[1] > insurance:
+            raise ValueError('Back counting exit point must be lower for player to take insurance bet.')
+        self._name = name
+        self._bankroll = bankroll
+        self._min_bet = min_bet
         self._bet_spread = bet_spread
         if bet_strategy == 'Spread' and bet_count_amount is not None:
             bet_ramp = {}
@@ -113,7 +116,7 @@ class Player(object):
             self._bet_ramp = bet_ramp
         else:
             self._bet_ramp = None
-        self.play_strategy = PlayingStrategy(rules=rules, strategy=play_strategy)
+        self._play_strategy = PlayingStrategy(rules=rules, strategy=play_strategy)
         self._bet_strategy = bet_strategy
         self._count_strategy = count_strategy
         self._insurance = insurance
@@ -143,6 +146,10 @@ class Player(object):
     @property
     def bet_ramp(self):
         return self._bet_ramp
+
+    @property
+    def play_strategy(self):
+        return self._play_strategy
 
     @property
     def bet_strategy(self):
@@ -272,10 +279,10 @@ class Player(object):
     def decision(self, total, hand, pair, soft_hand, dealer_up_card):
         if pair:
             if hand[0] >= 10:
-                return self.play_strategy.pair()[10][dealer_up_card]
+                return self._play_strategy.pair()[10][dealer_up_card]
             else:
-                return self.play_strategy.pair()[hand[0]][dealer_up_card]
+                return self._play_strategy.pair()[hand[0]][dealer_up_card]
         elif soft_hand:
-            return self.play_strategy.soft()[total][dealer_up_card]
+            return self._play_strategy.soft()[total][dealer_up_card]
         else:
-            return self.play_strategy.hard()[total][dealer_up_card]
+            return self._play_strategy.hard()[total][dealer_up_card]
