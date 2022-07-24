@@ -105,8 +105,7 @@ from blackjack import Blackjack
 
 blackjack = Blackjack(
     rules=rules,
-    table=table,
-    dealer=dealer
+    table=table
 )
 
 blackjack.simulate(penetration=0.75, number_of_shoes=100, seed=1)
