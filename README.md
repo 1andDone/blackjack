@@ -14,39 +14,29 @@ pip install .
 
 ## Usage
 
-Begin by setting up the house rules.
+Begin by setting up the `Blackjack` class object with certain house rules.
 
 ```python
-from blackjack import HouseRules
+from blackjack import Blackjack
 
-rules = HouseRules(
-    shoe_size=6,
+blackjack = Blackjack(
     min_bet=10,
     max_bet=500,
     s17=True,
     blackjack_payout=1.5,
     max_hands=4,
     double_down=True,
-    split_unlike_tens=True,
-    double_after_split=True,
+    split_unlike_tens=False,
+    double_after_split=False,
     resplit_aces=False,
     insurance=True,
     late_surrender=True,
-    dealer_shows_hole_card=False,
-    dealer_shows_burn_card=False
+    dealer_shows_hole_card=False
 )
 ```
 
-Next, set up the table where each player will play.
-
-```python
-from blackjack import Table
-
-table = Table(rules=rules)
-```
-
-Create each player and add them to the table. There are several different card
-counting systems (both balanced and unbalanced) available for each `CardCounter`
+Next, create each player that will be added to the table. There are several different
+card counting systems (both balanced and unbalanced) available for each `CardCounter`
 and `BackCounter` class instance.
 
 
@@ -87,28 +77,20 @@ player3 = BackCounter(
         4: 120,
         5: 150
     },
-    insurance=2,
+    insurance=10,
     partner=player2,
     entry_point=3,
     exit_point=0
 )
-
-table.add_player(player=player1)
-table.add_player(player=player2)
-table.add_player(player=player3)
 ```
 
-Finally, create the blackjack table and simulate.
+Finally, add all players and simulate.
 
 ```python
-from blackjack import Blackjack
-
-blackjack = Blackjack(
-    rules=rules,
-    table=table
-)
-
-blackjack.simulate(penetration=0.75, number_of_shoes=100, seed=1)
+blackjack.add_player(player=player1)
+blackjack.add_player(player=player2)
+blackjack.add_player(player=player3)
+blackjack.simulate(penetration=0.75, number_of_shoes=1000, shoe_size=6, seed=1)
 ```
 
 ## Results
@@ -116,17 +98,19 @@ blackjack.simulate(penetration=0.75, number_of_shoes=100, seed=1)
 Summary statistics are available after each run by using the `stats` method.
 
 ```python
-player3.stats
-```
+print(player3.stats)
 
-```
->> Amount wagered: $20,785.00 
->> Hands lost: 203 
->> Hands played: 411 
->> Amount earned: $312.50 
->> Hands won: 176 
->> Hands pushed: 32 
->> Element of Risk: 1.5% 
+>> Amount wagered: $369,950.00 
+>> Hands lost: 1,975 
+>> Hands played: 4,097 
+>> Amount earned: $3,097.50 
+>> Hands won: 1,746 
+>> Hands pushed: 376 
+>> Insurance amount wagered: $660.00 
+>> Insurance amount earned: -$210.00 
+>> Total amount earned: $2,887.50 
+>> Total amount wagered: $370,610.00 
+>> Element of Risk: 0.84% 
 ```
 
 If desired, the statistics at each count can be accessed as well.
