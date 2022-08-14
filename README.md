@@ -99,7 +99,9 @@ Summary statistics are available after each run by using the `stats` method.
 
 ```python
 print(player3.stats)
+```
 
+```
 >> Amount wagered: $369,950.00 
 >> Hands lost: 1,975 
 >> Hands played: 4,097 
