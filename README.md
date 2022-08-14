@@ -37,7 +37,7 @@ blackjack = Blackjack(
 
 Next, create each player that will be added to the table. There are several different
 card counting systems (both balanced and unbalanced) available for each `CardCounter`
-and `BackCounter` class instance.
+and `BackCounter` class instance. `Player` class instances do not count cards.
 
 
 ```python
