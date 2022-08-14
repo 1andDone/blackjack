@@ -8,12 +8,6 @@ def test_up_card(setup_dealer_with_hand):
     assert setup_dealer_with_hand.up_card() == '6'
 
 
-def test_hit(setup_dealer_with_hand):
-    """Tests the hit method within the Dealer class."""
-    setup_dealer_with_hand.hit(card='3')
-    assert setup_dealer_with_hand.hand.cards == ['8', '6', '3']
-
-
 def test_deal_card(setup_dealer_with_hand, setup_shoe):
     """Tests the deal_card method within the Dealer class."""
     assert setup_dealer_with_hand.deal_card(shoe=setup_shoe, seen=True) == 'A'

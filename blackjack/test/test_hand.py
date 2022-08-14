@@ -33,6 +33,8 @@ def test_side_bet(setup_hand_with_ace):
     """
     setup_hand_with_ace.side_bet = 10
     assert setup_hand_with_ace.side_bet == 10
+    setup_hand_with_ace.side_bet = 10
+    assert setup_hand_with_ace.side_bet == 20
 
 
 def test_add_cards(setup_hand_with_ace):

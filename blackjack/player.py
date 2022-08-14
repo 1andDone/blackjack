@@ -59,16 +59,12 @@ class Player:
     def has_sufficient_bankroll(self, amount):
         return amount <= self._bankroll
     
-    def split(self, hand):
-        self._hands.append(hand.split())
-    
-    def hit(self, hand, card):
-        hand.add_card(card=card)
-    
     def _can_split(self, hand, rules):
-        return (hand.number_of_cards() == 2 and len(self._hands) < rules.max_hands) and \
-            (hand.cards[0] == hand.cards[1]) or (rules.split_unlike_tens and \
-            all(card in {'10', 'J', 'Q', 'K'} for card in hand.cards))
+        if self.has_sufficient_bankroll(amount=hand.total_bet):
+            return hand.number_of_cards() == 2 and ((hand.cards[0] == hand.cards[1]) or 
+                (rules.split_unlike_tens and all(card in {'10', 'J', 'Q', 'K'} for card in hand.cards))) and \
+                len(self._hands) < rules.max_hands
+        return False
     
     def decision(self, hand, dealer_up_card, rules):
         playing_strategy = PlayingStrategy(s17=rules.s17)

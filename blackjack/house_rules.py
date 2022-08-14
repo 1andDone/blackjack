@@ -5,26 +5,22 @@ class HouseRules:
     """
     def __init__(
             self,
-            shoe_size,
             min_bet,
             max_bet,
             s17=True,
             blackjack_payout=1.5,
             max_hands=4,
             double_down=True,
-            split_unlike_tens=True,
-            double_after_split=True,
+            split_unlike_tens=False,
+            double_after_split=False,
             resplit_aces=False,
             insurance=True,
             late_surrender=True,
-            dealer_shows_hole_card=False,
-            dealer_shows_burn_card=False
+            dealer_shows_hole_card=False
     ):
         """
         Parameters
         ----------
-        shoe_size: int
-            Number of decks used during a blackjack game
         min_bet: int
             Minimum bet allowed at the table
         max_bet: int
@@ -52,8 +48,6 @@ class HouseRules:
             not all players bust, surrender, or have natural 21, false otherwise
         
         """
-        if shoe_size not in {4, 6, 8}:
-            raise ValueError('Shoe size must be 4, 6, or 8.')
         if min_bet <= 0:
             raise ValueError('Minimum bet at table must be greater than $0.')
         if max_bet <= min_bet:
@@ -62,9 +56,10 @@ class HouseRules:
             raise ValueError('Blackjack payout must be at least 1.')
         if max_hands < 2:
             raise ValueError('Maximum hands must be greater than or equal to 2.')
+        if not double_down and double_after_split:
+            raise ValueError("Cannot double after splitting if doubling down isn't allowed.")
         if resplit_aces and max_hands <= 2:
             raise ValueError('Max hands must be greater than 2 if re-splitting aces is allowed.')
-        self._shoe_size = shoe_size
         self._min_bet = min_bet
         self._max_bet = max_bet
         self._s17 = s17
@@ -77,10 +72,6 @@ class HouseRules:
         self._insurance = insurance
         self._late_surrender = late_surrender
         self._dealer_shows_hole_card = dealer_shows_hole_card
-        
-    @property
-    def shoe_size(self):
-        return self._shoe_size
     
     @property
     def min_bet(self):

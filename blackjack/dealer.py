@@ -19,9 +19,6 @@ class Dealer:
     def up_card(self):
         return self._hand.cards[1]
     
-    def hit(self, card):
-        self._hand.add_card(card=card)
-        
     def deal_card(self, shoe, seen=True):
         card = shoe.cards.pop()
         if seen:

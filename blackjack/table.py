@@ -53,7 +53,8 @@ class Table:
 
     def remove_back_counter(self, player):
         self._players.remove(player)
-        self._waiting_players.append(player)
+        if player.has_sufficient_bankroll(amount=player.max_bet_ramp):
+            self._waiting_players.append(player)
         
     def add_back_counter(self, player):
         self._waiting_players.remove(player)

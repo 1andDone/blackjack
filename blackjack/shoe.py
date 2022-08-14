@@ -136,17 +136,19 @@ class Shoe:
     Represents a shoe of cards.
 
     """
-    def __init__(self, size):
+    def __init__(self, shoe_size):
         """
         Parameters
         ----------
-        size: int
+        shoe_size: int
             Number of decks used during a blackjack game
         
         """
-        self._size = size
-        self._cards = ['2', '3', '4', '5', '6', '7', '8', '9', '10', 'J', 'Q', 'K', 'A'] * 4 * self._size
-        self._total_cards = 52 * self._size
+        if not 1 <= shoe_size <=8 :
+            raise ValueError('Shoe size must be between 1 and 8 decks.')
+        self._shoe_size = shoe_size
+        self._cards = ['2', '3', '4', '5', '6', '7', '8', '9', '10', 'J', 'Q', 'K', 'A'] * 4 * self._shoe_size
+        self._total_cards = 52 * self._shoe_size
         self._seen_cards = {
             '2': 0,
             '3': 0,
@@ -184,7 +186,12 @@ class Shoe:
         return self._seen_cards
         
     def remaining_decks(self):
-        return round(len(self._cards)/52, 0)
+        ratio = len(self._cards)/52
+        if ratio >= 0.75:
+            return round(ratio, 0)
+        elif 0.25 < ratio < 0.75:
+            return 0.5
+        return 0.25
     
     def cut_card_reached(self, penetration):
         used_cards = self._total_cards - len(self._cards)
@@ -192,7 +199,7 @@ class Shoe:
     
     def running_count(self, strategy):
         running_count = sum(count_dict[strategy][k] * self._seen_cards[k] for k in self._seen_cards)
-        starting_count = starting_count_dict[strategy] * (self._size - 1)
+        starting_count = starting_count_dict[strategy] * (self._shoe_size - 1)
         return running_count + starting_count
 
     def true_count(self, strategy):
