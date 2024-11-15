@@ -36,6 +36,7 @@ h17_hard_array = [
 
 h17_soft_array = [
     # 2      3       4       5       6       7       8       9      10       J       Q       K       A
+    ['P',	'P',	'P',	'P',	'P',	'P',	'P',	'P',	'P',	'P',	'P',	'P',	'P'],  # 12
     ['H',	'H',	'H',	'Dh',	'Dh',	'H',	'H',	'H',	'H',	'H',	'H',	'H',	'H'],  # 13
     ['H',	'H',	'H',	'Dh',	'Dh',	'H',	'H',	'H',	'H',	'H',	'H',	'H',	'H'],  # 14
     ['H',	'H',	'Dh',	'Dh',	'Dh',	'H',	'H',	'H',	'H',	'H',	'H',	'H',	'H'],  # 15
@@ -91,6 +92,7 @@ s17_hard_array = [
 
 s17_soft_array = [
     # 2      3       4       5       6       7       8       9      10       J       Q       K       A
+    ['P',	'P',	'P',	'P',	'P',	'P',	'P',	'P',	'P',	'P',	'P',	'P',	'P'],  # 12
     ['H',	'H',	'H',	'Dh',	'Dh',	'H',	'H',	'H',	'H',	'H',	'H',	'H',	'H'],  # 13
     ['H',	'H',	'H',	'Dh',	'Dh',	'H',	'H',	'H',	'H',	'H',	'H',	'H',	'H'],  # 14
     ['H',	'H',	'Dh',	'Dh',	'Dh',	'H',	'H',	'H',	'H',	'H',	'H',	'H',	'H'],  # 15
@@ -131,7 +133,7 @@ for row_ix, i in enumerate(range(4, 22)):
 
 
 h17_soft = {}
-for row_ix, i in enumerate(range(13, 22)):
+for row_ix, i in enumerate(range(12, 22)):
     h17_soft[i] = {}
     for col_ix, j in enumerate(cards_list):
         h17_soft[i][j] = h17_soft_array[row_ix][col_ix]
@@ -153,7 +155,7 @@ for row_ix, i in enumerate(range(4, 22)):
 
 
 s17_soft = {}
-for row_ix, i in enumerate(range(13, 22)):
+for row_ix, i in enumerate(range(12, 22)):
     s17_soft[i] = {}
     for col_ix, j in enumerate(cards_list):
         s17_soft[i][j] = s17_soft_array[row_ix][col_ix]
