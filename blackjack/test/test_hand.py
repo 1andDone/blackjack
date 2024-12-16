@@ -1,4 +1,4 @@
-from blackjack.hand import HandStatus
+from blackjack.enums import HandStatus
 
 
 def test_cards(setup_hand_with_ace):

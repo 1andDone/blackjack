@@ -1,5 +1,6 @@
 import pytest
-from blackjack import BackCounter, CountingStrategy
+from blackjack.back_counter import BackCounter
+from blackjack.enums import CountingStrategy
 
 
 def test_init_partner_not_card_counter(setup_player):

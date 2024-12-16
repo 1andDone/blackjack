@@ -1,5 +1,6 @@
 import pytest
-from blackjack import CardCounter, CountingStrategy
+from blackjack.card_counter import CardCounter
+from blackjack.enums import CountingStrategy
 
 
 def test_init_bet_ramp_maximum_exceeds_bankroll():

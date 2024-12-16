@@ -1,6 +1,6 @@
 import pytest
-from blackjack import Player
 from blackjack.house_rules import HouseRules
+from blackjack.player import Player
 
 
 def test_init_insufficient_bankroll():

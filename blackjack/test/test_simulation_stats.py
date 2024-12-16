@@ -1,4 +1,5 @@
-from blackjack.simulation_stats import StatsCategory, StatsKey
+from blackjack.enums import StatsCategory
+from blackjack.simulation_stats import StatsKey
 
 
 def test_add_hand(setup_simulation_stats):
@@ -15,4 +16,4 @@ def test_add_amount(setup_simulation_stats):
 
 def test_str(setup_simulation_stats):
     """Tests the __str__ method within the SimulationStats class."""
-    assert str(setup_simulation_stats) == 'Hands lost: 2 \nHands played: 2 \nAmount wagered: $30.43 \nAmount earned: -$30.43 \nTotal amount earned: -$30.43 \nTotal amount wagered: $30.43 \nElement of Risk: -100.0% \n'
+    assert str(setup_simulation_stats) == 'HANDS LOST: 2 \nHANDS PLAYED: 2 \nAMOUNT WAGERED: $30.43 \nAMOUNT EARNED: -$30.43 \nTOTAL AMOUNT EARNED: -$30.43 \nTOTAL AMOUNT WAGERED: $30.43 \nELEMENT OF RISK: -100.0% \n'

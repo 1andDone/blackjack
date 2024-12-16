@@ -1,6 +1,6 @@
 import random
 import pytest
-from blackjack import CountingStrategy
+from blackjack.enums import CountingStrategy
 from blackjack.shoe import Shoe
 
 

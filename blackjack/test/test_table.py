@@ -1,5 +1,7 @@
 import pytest
-from blackjack import Player, CardCounter, CountingStrategy
+from blackjack.card_counter import CardCounter
+from blackjack.enums import CountingStrategy
+from blackjack.player import Player
 from blackjack.house_rules import HouseRules
 from blackjack.table import Table
 

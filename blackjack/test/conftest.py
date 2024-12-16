@@ -1,12 +1,14 @@
 import pytest
-from blackjack import CardCounter, BackCounter, CountingStrategy
-from blackjack import Player
+from blackjack.back_counter import BackCounter
+from blackjack.card_counter import CardCounter
 from blackjack.dealer import Dealer
+from blackjack.enums import CountingStrategy
 from blackjack.hand import Hand
 from blackjack.house_rules import HouseRules
+from blackjack.player import Player
+from blackjack.playing_strategy import PlayingStrategy
 from blackjack.shoe import Shoe
 from blackjack.table import Table
-from blackjack.playing_strategy import PlayingStrategy
 from blackjack.simulation_stats import StatsCategory, SimulationStats
 
 
