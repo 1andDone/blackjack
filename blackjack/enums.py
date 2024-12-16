@@ -1,0 +1,28 @@
+from enum import Enum
+
+
+class CountingStrategy(Enum):
+    HI_LO = 'HI-LO'
+    HI_OPT_I = 'HI-OPT I'
+    HI_OPT_II = 'HI-OPT II'
+    OMEGA_II = 'OMEGA II'
+    HALVES = 'HALVES'
+    ZEN_COUNT = 'ZEN COUNT'
+    KO = 'KO'
+
+
+class HandStatus(Enum):
+    IN_PLAY = 'IN PLAY'
+    SETTLED = 'SETTLED'
+    SHOWDOWN = 'SHOWDOWN'
+
+
+class StatsCategory(Enum):
+    HANDS_LOST = 'HANDS LOST'
+    HANDS_PUSHED = 'HANDS PUSHED'
+    HANDS_WON = 'HANDS WON'
+    HANDS_PLAYED = 'HANDS PLAYED'
+    AMOUNT_EARNED = 'AMOUNT EARNED'
+    AMOUNT_WAGERED = 'AMOUNT WAGERED'
+    INSURANCE_AMOUNT_EARNED = 'INSURANCE AMOUNT EARNED'
+    INSURANCE_AMOUNT_WAGERED = 'INSURANCE AMOUNT WAGERED'
