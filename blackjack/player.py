@@ -1,5 +1,7 @@
+from typing import Any
 from blackjack.hand import Hand
 from blackjack.playing_strategy import PlayingStrategy
+from blackjack.house_rules import HouseRules
 from blackjack.simulation_stats import SimulationStats
 
 
@@ -9,15 +11,15 @@ class Player:
     table that bets a flat amount.
 
     """
-    def __init__(self, name, bankroll, min_bet):
+    def __init__(self, name: str, bankroll: float | int, min_bet: float | int):
         """
         Parameters
         ----------
-        name: str
+        name
             Name of the player
-        bankroll: float
+        bankroll
             Amount of money a player starts out with at a table
-        min_bet: float
+        min_bet
             Amount of money a player wagers when playing a hand
         
         """
@@ -31,42 +33,43 @@ class Player:
         self._stats = SimulationStats()
     
     @property
-    def name(self):
+    def name(self) -> str:
         return self._name
     
     @property
-    def bankroll(self):
+    def bankroll(self) -> float | int:
         return self._bankroll
     
-    def initial_wager(self, **kwargs):
+    def initial_wager(self, **kwargs: Any) -> float | int:
         return self._min_bet
     
     @property
-    def hands(self):
+    def hands(self) -> list[Hand]:
         return self._hands
     
     @property
-    def stats(self):
+    def stats(self) -> SimulationStats:
         return self._stats
     
     @property
-    def first_hand(self):
+    def first_hand(self) -> Hand:
         return self._hands[0]
     
-    def edit_bankroll(self, amount):
+    # TODO: change to increase?
+    def edit_bankroll(self, amount: float | int) -> None:
         self._bankroll += amount
     
-    def has_sufficient_bankroll(self, amount):
+    def has_sufficient_bankroll(self, amount: float | int) -> bool:
         return amount <= self._bankroll
     
-    def _can_split(self, hand, rules):
+    def _can_split(self, hand: Hand, rules: HouseRules) -> bool:
         if self.has_sufficient_bankroll(amount=hand.total_bet):
             return hand.number_of_cards() == 2 and ((hand.cards[0] == hand.cards[1]) or 
                 (rules.split_unlike_tens and all(card in {'10', 'J', 'Q', 'K'} for card in hand.cards))) and \
                 len(self._hands) < rules.max_hands
         return False
     
-    def decision(self, hand, dealer_up_card, rules):
+    def decision(self, hand: Hand, dealer_up_card: str, rules: HouseRules) -> str:
         playing_strategy = PlayingStrategy(s17=rules.s17)
         if self._can_split(hand=hand, rules=rules):
             return playing_strategy.pair(card=hand.cards[0], dealer_up_card=dealer_up_card)
@@ -74,5 +77,5 @@ class Player:
             return playing_strategy.soft(total=hand.total(), dealer_up_card=dealer_up_card)
         return playing_strategy.hard(total=hand.total(), dealer_up_card=dealer_up_card)
     
-    def reset_hands(self):
+    def reset_hands(self) -> None:
         self._hands = [Hand()]

@@ -1,5 +1,5 @@
-from blackjack.source.basic_strategy import s17_hard, s17_soft, s17_pair
-from blackjack.source.basic_strategy import h17_hard, h17_soft, h17_pair
+from blackjack.source.basic_strategy import H17_HARD_DICT, H17_SOFT_DICT, H17_PAIR_DICT
+from blackjack.source.basic_strategy import S17_HARD_DICT, S17_SOFT_DICT, S17_PAIR_DICT
 
 
 class PlayingStrategy:
@@ -9,27 +9,27 @@ class PlayingStrategy:
     use of basic strategy.
 
     """
-    def __init__(self, s17):
+    def __init__(self, s17: bool):
         """
         Parameters
         ----------
-        s17: bool
+        s17
             True if dealer stands on a soft 17, false otherwise
         
         """
         self._s17 = s17
 
-    def hard(self, total, dealer_up_card):
+    def hard(self, total: int, dealer_up_card: str) -> str:
         if self._s17:
-            return s17_hard[total][dealer_up_card]
-        return h17_hard[total][dealer_up_card]
+            return S17_HARD_DICT[total][dealer_up_card]
+        return H17_HARD_DICT[total][dealer_up_card]
 
-    def soft(self, total, dealer_up_card):
+    def soft(self, total: int, dealer_up_card: str) -> str:
         if self._s17:
-            return s17_soft[total][dealer_up_card]
-        return h17_soft[total][dealer_up_card]
+            return S17_SOFT_DICT[total][dealer_up_card]
+        return H17_SOFT_DICT[total][dealer_up_card]
 
-    def pair(self, card, dealer_up_card):
+    def pair(self, card: str, dealer_up_card: str) -> str:
         if self._s17:
-            return s17_pair[card][dealer_up_card]
-        return h17_pair[card][dealer_up_card]
+            return S17_PAIR_DICT[card][dealer_up_card]
+        return H17_PAIR_DICT[card][dealer_up_card]

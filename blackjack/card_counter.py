@@ -1,5 +1,8 @@
 from math import ceil, floor
-from blackjack import Player, CountingStrategy
+from typing import Any
+from typing_extensions import override
+from blackjack.enums import CountingStrategy
+from blackjack.player import Player
 
 
 class CardCounter(Player):
@@ -8,17 +11,23 @@ class CardCounter(Player):
     counts cards according to a counting strategy.
     
     """
-    def __init__(self, counting_strategy, bet_ramp, insurance=None, **kwargs):
+    def __init__(
+        self,
+        counting_strategy: CountingStrategy,
+        bet_ramp: dict[float | int, float | int],
+        insurance: float | int | None = None,
+        **kwargs: Any
+    ):
         """
         Parameters
         ----------
-        counting_strategy: CountingStrategy
+        counting_strategy
             Card counting strategy used by the player
-        bet_ramp: dict
+        bet_ramp
             Dictionary where each key value is the running or
             true count and each value indicates the amount of money
             wagered at that running or true count
-        insurance: int or float
+        insurance
             Minimum running or true count at which a player will
             purchase insurance, if desired, and if available
         
@@ -33,7 +42,7 @@ class CardCounter(Player):
         self.min_count = min(count for count, _ in bet_ramp.items())
         self.max_count = max(count for count, _ in bet_ramp.items())
         
-        counts_to_check = [count for count in range(ceil(self.min_count), floor(self.max_count) + 1)]
+        counts_to_check: list[float | int] = [count for count in range(ceil(self.min_count), floor(self.max_count) + 1)]
         if counting_strategy == CountingStrategy.HALVES:
             counts_to_check.extend([count + 0.5 for count in range(floor(self.min_count), floor(self.max_count))])
         
@@ -48,10 +57,14 @@ class CardCounter(Player):
         self._insurance = insurance
     
     @property
-    def counting_strategy(self):
+    def counting_strategy(self) -> CountingStrategy:
         return self._counting_strategy
     
-    def initial_wager(self, count):
+    @override
+    def initial_wager(self, **kwargs: Any) -> float | int:
+        if 'count' not in kwargs:
+            raise Exception('"count" needs to be included in kwargs.')
+        count = kwargs['count']
         if count < self.min_count:
             return self._min_bet
         elif count >= self.max_count:
@@ -60,5 +73,5 @@ class CardCounter(Player):
             return self._bet_ramp[count]
 
     @property
-    def insurance(self):
+    def insurance(self) -> float | int | None:
         return self._insurance
