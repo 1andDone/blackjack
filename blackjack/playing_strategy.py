@@ -15,7 +15,7 @@ class PlayingStrategy:
         ----------
         s17
             True if dealer stands on a soft 17, false otherwise
-        
+
         """
         self._s17 = s17
 

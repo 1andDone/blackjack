@@ -15,7 +15,7 @@ class Table:
         ----------
         rules: HouseRules
             HouseRules class instance
-        
+
         """
         self._rules = rules
         self._players: list[Player] = []
@@ -24,15 +24,15 @@ class Table:
     @property
     def players(self):
         return self._players
-    
+
     @property
     def waiting_players(self) -> list[Player]:
         return self._waiting_players
-    
+
     def _validate_player(self, player: Player) -> None:
         if not isinstance(player, Player):
             raise TypeError('Expected a Player object instance.')
-        elif isinstance(player, CardCounter):
+        if isinstance(player, CardCounter):
             if (player.min_bet_ramp < self._rules.min_bet) or (player.max_bet_ramp > self._rules.max_bet):
                 raise ValueError("The player's desired bet is not allowed according to the table rules.")
             if not self._rules.insurance and player.insurance:
@@ -40,14 +40,14 @@ class Table:
         else:
             if (player.initial_wager() < self._rules.min_bet) or (player.initial_wager() > self._rules.max_bet):
                 raise ValueError("The player's desired bet is not allowed according to the table rules.")
-    
+
     def add_player(self, player: Player) -> None:
         self._validate_player(player=player)
         if isinstance(player, BackCounter):
             self._waiting_players.append(player)
         else:
             self._players.append(player)
-    
+
     def remove_player(self, player: Player) -> None:
         if player not in self._players:
             raise ValueError('The player is neither seated at the table or an out of play back counter.')
@@ -57,7 +57,7 @@ class Table:
         self._players.remove(player)
         if isinstance(player, CardCounter) and player.has_sufficient_bankroll(amount=player.max_bet_ramp):
             self._waiting_players.append(player)
-        
+
     def add_back_counter(self, player: Player) -> None:
         self._waiting_players.remove(player)
         self._players.append(player)

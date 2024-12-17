@@ -23,7 +23,7 @@ class BackCounter(CardCounter):
         exit_point
             Running or true count at which the back counter will stop
             playing hands at the table
-        
+
         """
         super().__init__(**kwargs)
         self._partner = partner
@@ -38,7 +38,7 @@ class BackCounter(CardCounter):
             raise ValueError('Exit point must be lower for player to take insurance bet.')
         self._entry_point = entry_point
         self._exit_point = exit_point
-    
+
     @property
     def partner(self) -> CardCounter:
         return self._partner
@@ -46,13 +46,13 @@ class BackCounter(CardCounter):
     @property
     def entry_point(self) -> float | int:
         return self._entry_point
-    
+
     def can_enter(self, count: float | int) -> bool:
         return count >= self._entry_point
 
     @property
     def exit_point(self) -> float | int:
         return self._exit_point
-    
+
     def can_exit(self, count: float | int) -> bool:
         return self._exit_point >= count

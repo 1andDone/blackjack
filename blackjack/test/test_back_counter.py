@@ -110,7 +110,7 @@ def test_init_exit_point_gt_insurance(setup_card_counter):
             entry_point=5,
             exit_point=3
         )
-    
+
 
 @pytest.mark.parametrize(
     'test_count, expected',
@@ -123,7 +123,7 @@ def test_init_exit_point_gt_insurance(setup_card_counter):
 def test_can_enter(setup_back_counter, test_count, expected):
     """Tests the can_enter method within the BackCounter class."""
     assert setup_back_counter.can_enter(count=test_count) is expected
-    
+
 
 @pytest.mark.parametrize(
     'test_count, expected',
@@ -135,4 +135,4 @@ def test_can_enter(setup_back_counter, test_count, expected):
 )
 def test_can_exit(setup_back_counter, test_count, expected):
     """Tests the can_exit method within the BackCounter class."""
-    assert setup_back_counter.can_exit(count=test_count) is expected 
+    assert setup_back_counter.can_exit(count=test_count) is expected

@@ -18,8 +18,8 @@ def test_edit_bankroll(setup_player):
     assert setup_player.bankroll == 1010
     setup_player.edit_bankroll(amount=-20)
     assert setup_player.bankroll == 990
-    
-    
+
+
 def test_has_sufficient_bankroll(setup_player):
     """Tests the has_sufficient_bankroll method within the Player class."""
     assert setup_player.has_sufficient_bankroll(amount=999)
@@ -100,7 +100,7 @@ def test_decision_busted(setup_player, setup_rules):
     setup_player.first_hand.total_bet = 10
     with pytest.raises(KeyError):
         setup_player.decision(hand=setup_player.first_hand, dealer_up_card='J', rules=setup_rules)
-        
+
 
 def test_decision_pair(setup_player, setup_rules):
     """

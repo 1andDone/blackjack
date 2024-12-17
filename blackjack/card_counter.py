@@ -9,7 +9,7 @@ class CardCounter(Player):
     """
     Represents an individual player at a table that
     counts cards according to a counting strategy.
-    
+
     """
     def __init__(
         self,
@@ -30,47 +30,47 @@ class CardCounter(Player):
         insurance
             Minimum running or true count at which a player will
             purchase insurance, if desired, and if available
-        
+
         """
         super().__init__(**kwargs)
-        self.max_bet_ramp = max(bet for _, bet in bet_ramp.items())
+
+        self.max_bet_ramp = max(bet_ramp.values())
+        self.min_bet_ramp = min(bet_ramp.values())
 
         if self.max_bet_ramp > self.bankroll:
             raise ValueError('Maximum bet in the "bet_ramp" exceeds the bankroll.')
-        
-        self.min_bet_ramp = min(bet for _, bet in bet_ramp.items())
-        self.min_count = min(count for count, _ in bet_ramp.items())
-        self.max_count = max(count for count, _ in bet_ramp.items())
-        
-        counts_to_check: list[float | int] = [count for count in range(ceil(self.min_count), floor(self.max_count) + 1)]
+
+        self.min_count = min(bet_ramp)
+        self.max_count = max(bet_ramp)
+
+        counts_to_check: list[float | int] = list(range(ceil(self.min_count), floor(self.max_count) + 1))
         if counting_strategy == CountingStrategy.HALVES:
             counts_to_check.extend([count + 0.5 for count in range(floor(self.min_count), floor(self.max_count))])
-        
+
+        inferred_wager = None
         for count in counts_to_check:
-            try:
-                bet_ramp[count]
-            except:
-                raise KeyError('Count does not exist in "bet_ramp".')
+            if count not in bet_ramp:
+                bet_ramp[count] = inferred_wager
+            inferred_wager = bet_ramp[count]
 
         self._bet_ramp = bet_ramp
         self._counting_strategy = counting_strategy
         self._insurance = insurance
-    
+
     @property
     def counting_strategy(self) -> CountingStrategy:
         return self._counting_strategy
-    
+
     @override
     def initial_wager(self, **kwargs: Any) -> float | int:
         if 'count' not in kwargs:
-            raise Exception('"count" needs to be included in kwargs.')
+            raise TypeError('"count" needs to be included in kwargs.')
         count = kwargs['count']
         if count < self.min_count:
             return self._min_bet
-        elif count >= self.max_count:
+        if count >= self.max_count:
             return self.max_bet_ramp
-        else:
-            return self._bet_ramp[count]
+        return self._bet_ramp[count]
 
     @property
     def insurance(self) -> float | int | None:

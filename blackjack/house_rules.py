@@ -46,7 +46,7 @@ class HouseRules:
         dealer_shows_hole_card
             True if the dealer shows his hole card regardless of whether or
             not all players bust, surrender, or have natural 21, false otherwise
-        
+
         """
         if min_bet <= 0:
             raise ValueError('Minimum bet at table must be greater than $0.')
@@ -72,51 +72,51 @@ class HouseRules:
         self._insurance = insurance
         self._late_surrender = late_surrender
         self._dealer_shows_hole_card = dealer_shows_hole_card
-    
+
     @property
     def min_bet(self) -> float | int:
         return self._min_bet
-    
+
     @property
     def max_bet(self) -> float | int:
         return self._max_bet
-    
+
     @property
     def s17(self) -> bool:
         return self._s17
-    
+
     @property
     def blackjack_payout(self) -> float | int:
         return self._blackjack_payout
-    
+
     @property
     def max_hands(self) -> int:
         return self._max_hands
-    
+
     @property
     def double_down(self) -> bool:
         return self._double_down
-    
+
     @property
     def split_unlike_tens(self) -> bool:
         return self._split_unlike_tens
-    
+
     @property
     def double_after_split(self) -> bool:
         return self._double_after_split
-    
+
     @property
     def resplit_aces(self) -> bool:
         return self._resplit_aces
-    
+
     @property
     def insurance(self) -> bool:
         return self._insurance
-    
+
     @property
     def late_surrender(self) -> bool:
         return self._late_surrender
-    
+
     @property
     def dealer_shows_hole_card(self) -> bool:
         return self._dealer_shows_hole_card

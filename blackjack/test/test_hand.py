@@ -56,7 +56,7 @@ def test_total(setup_hand_with_ace):
     assert setup_hand_with_ace.total() == 17
     setup_hand_with_ace.add_card(card='9')
     assert setup_hand_with_ace.total() == 16
-    
+
 
 def test_is_soft_with_ace(setup_hand_with_ace):
     """
@@ -95,7 +95,7 @@ def test_split(setup_hand_split):
     assert setup_hand_split.is_current_hand_split
     assert new_hand.cards == ['7']
     assert not new_hand.is_current_hand_split
-    
+
 
 def test_is_blackjack(setup_hand_blackjack):
     """
@@ -137,7 +137,7 @@ def test_is_blackjack_previous_hand_split(setup_hand_blackjack):
     setup_hand_blackjack._is_current_hand_split = False
     assert setup_hand_blackjack.total() == 21
     assert not setup_hand_blackjack.is_blackjack()
-    
+
 
 def test_is_blackjack_previous_current_hand_split(setup_hand_blackjack):
     """

@@ -43,7 +43,7 @@ def test_burn_card_seen(setup_shoe):
     setup_shoe.burn_card(seen=True)
     assert len(setup_shoe._cards) == 51
     assert setup_shoe.seen_cards[burn_card] == 1
-    
+
 
 def test_shuffle(setup_shoe):
     """Tests the shuffle method within the Shoe class."""
@@ -54,7 +54,7 @@ def test_shuffle(setup_shoe):
     after_shuffle = setup_shoe._cards
     assert len(after_shuffle) == 51
     assert before_shuffle[0] != after_shuffle[0]
-    
+
 
 def test_add_to_seen_cards(setup_shoe):
     """Tests the add_to_seen_cards method within the Shoe class."""
@@ -70,11 +70,11 @@ def test_remaining_decks(setup_shoe):
     """Tests the remaining_decks method within the Shoe class."""
     assert setup_shoe.remaining_decks() == 1
     # burn half a deck
-    for i in range(0, 26):
+    for _ in range(0, 26):
         setup_shoe.burn_card(seen=False)
     assert setup_shoe.remaining_decks() == 0.5
     # burn a quarter of a deck
-    for i in range(0, 13):
+    for _ in range(0, 13):
         setup_shoe.burn_card(seen=False)
     assert setup_shoe.remaining_decks() == 0.25
 
@@ -82,13 +82,13 @@ def test_remaining_decks(setup_shoe):
 def test_cut_card_reached(setup_shoe):
     """Tests the cut_card_reached method within the Shoe class."""
     # burn one card away from half the shoe
-    for i in range(0, 25):
+    for _ in range(0, 25):
         setup_shoe.burn_card(seen=False)
-        
-    assert 1 - (len(setup_shoe._cards)/52) < 0.5
+
+    assert 1 - (len(setup_shoe._cards) / 52) < 0.5
     assert not setup_shoe.cut_card_reached(penetration=0.5)
     setup_shoe.burn_card(seen=False)
-    assert 1 - (len(setup_shoe._cards)/52) >= 0.5
+    assert 1 - (len(setup_shoe._cards) / 52) >= 0.5
     assert setup_shoe.cut_card_reached(penetration=0.5)
 
 
@@ -115,7 +115,7 @@ def test_true_count():
         shoe.add_to_seen_cards(card='K')
     assert shoe.true_count(strategy=CountingStrategy.HI_LO) == -10
     assert shoe.true_count(strategy=CountingStrategy.HI_OPT_II) == -21
-    
+
 
 def test_true_count_unbalanced_counting_system(setup_shoe):
     """

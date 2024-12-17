@@ -7,13 +7,13 @@ HI_LO = {
     '2': 1,
     '3': 1,
     '4': 1,
-    '5': 1, 
-    '6': 1, 
-    '7': 0, 
-    '8': 0, 
-    '9': 0, 
-    '10-J-Q-K': -1, 
-    'A': -1,  
+    '5': 1,
+    '6': 1,
+    '7': 0,
+    '8': 0,
+    '9': 0,
+    '10-J-Q-K': -1,
+    'A': -1,
 }
 
 
@@ -21,13 +21,13 @@ HI_OPT_I = {
     '2': 0,
     '3': 1,
     '4': 1,
-    '5': 1, 
-    '6': 1, 
-    '7': 0, 
-    '8': 0, 
-    '9': 0, 
-    '10-J-Q-K': -1, 
-    'A': 0,  
+    '5': 1,
+    '6': 1,
+    '7': 0,
+    '8': 0,
+    '9': 0,
+    '10-J-Q-K': -1,
+    'A': 0,
 }
 
 
@@ -35,13 +35,13 @@ HI_OPT_II = {
     '2': 1,
     '3': 1,
     '4': 2,
-    '5': 2, 
-    '6': 1, 
-    '7': 1, 
-    '8': 0, 
-    '9': 0, 
-    '10-J-Q-K': -2, 
-    'A': 0,  
+    '5': 2,
+    '6': 1,
+    '7': 1,
+    '8': 0,
+    '9': 0,
+    '10-J-Q-K': -2,
+    'A': 0,
 }
 
 
@@ -49,13 +49,13 @@ OMEGA_II = {
     '2': 1,
     '3': 1,
     '4': 2,
-    '5': 2, 
-    '6': 2, 
-    '7': 1, 
-    '8': 0, 
-    '9': -1, 
-    '10-J-Q-K': -2, 
-    'A': 0,  
+    '5': 2,
+    '6': 2,
+    '7': 1,
+    '8': 0,
+    '9': -1,
+    '10-J-Q-K': -2,
+    'A': 0,
 }
 
 
@@ -63,13 +63,13 @@ HALVES = {
     '2': 0.5,
     '3': 1,
     '4': 1,
-    '5': 1.5, 
-    '6': 1, 
-    '7': 0.5, 
-    '8': 0, 
-    '9': -0.5, 
-    '10-J-Q-K': -1, 
-    'A': -1,  
+    '5': 1.5,
+    '6': 1,
+    '7': 0.5,
+    '8': 0,
+    '9': -0.5,
+    '10-J-Q-K': -1,
+    'A': -1,
 }
 
 
@@ -77,13 +77,13 @@ ZEN_COUNT = {
     '2': 1,
     '3': 1,
     '4': 2,
-    '5': 2, 
-    '6': 2, 
-    '7': 1, 
-    '8': 0, 
-    '9': 0, 
-    '10-J-Q-K': -2, 
-    'A': -1,  
+    '5': 2,
+    '6': 2,
+    '7': 1,
+    '8': 0,
+    '9': 0,
+    '10-J-Q-K': -2,
+    'A': -1,
 }
 
 
@@ -91,13 +91,13 @@ KO = {
     '2': 1,
     '3': 1,
     '4': 1,
-    '5': 1, 
-    '6': 1, 
-    '7': 1, 
-    '8': 0, 
-    '9': 0, 
-    '10-J-Q-K': -1, 
-    'A': -1,  
+    '5': 1,
+    '6': 1,
+    '7': 1,
+    '8': 0,
+    '9': 0,
+    '10-J-Q-K': -1,
+    'A': -1,
 }
 
 
@@ -139,7 +139,7 @@ class Shoe:
         ----------
         shoe_size
             Number of decks used during a blackjack game
-        
+
         """
         if not 1 <= shoe_size <= 8 :
             raise ValueError('Shoe size must be between 1 and 8 decks.')
@@ -156,47 +156,47 @@ class Shoe:
             '8': 0,
             '9': 0,
             '10-J-Q-K': 0,
-            'A': 0 
+            'A': 0
         }
-    
+
     @property
     def cards(self) -> list[str]:
         return self._cards
-    
+
     def burn_card(self, seen: bool = False) -> None:
         card = self._cards.pop()
         if seen:
             self.add_to_seen_cards(card=card)
-    
+
     def shuffle(self) -> None:
         random.shuffle(self._cards)
         self.burn_card()
-    
+
     def add_to_seen_cards(self, card: str) -> None:
         if card in {'10', 'J', 'Q', 'K'}:
             self._seen_cards['10-J-Q-K'] += 1
         else:
             self._seen_cards[card] += 1
-    
+
     @property
     def seen_cards(self) -> dict[str, int]:
         return self._seen_cards
-    
+
     # TODO: change how this is estimated...
     def remaining_decks(self) -> float | int:
         ratio = len(self._cards) / 52
         if ratio >= 0.75:
             return round(ratio, 0)
-        elif 0.25 < ratio < 0.75:
+        if 0.25 < ratio < 0.75:
             return 0.5
         return 0.25
-    
+
     def cut_card_reached(self, penetration: float) -> bool:
         used_cards = self._total_cards - len(self._cards)
         return used_cards/self._total_cards >= penetration
-    
+
     def running_count(self, strategy: CountingStrategy) -> float | int:
-        running_count = sum(COUNT_DICT[strategy][k] * self._seen_cards[k] for k in self._seen_cards)
+        running_count = sum(COUNT_DICT[strategy][card] * self._seen_cards[card] for card in self._seen_cards)
         starting_count = STARTING_COUNT_DICT[strategy] * (self._shoe_size - 1)
         return running_count + starting_count
 

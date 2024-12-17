@@ -78,7 +78,7 @@ def test_add_player_bet_ramp_maximum_exceeds_table_maximum(setup_table):
     with pytest.raises(ValueError):
         setup_table.add_player(player=player)
 
-        
+
 def test_add_player_no_insurance():
     """
     Tests the add_player method within the Table class
@@ -165,7 +165,7 @@ def test_remove_back_counter_insufficient_bankroll(setup_table, setup_back_count
     setup_table.remove_back_counter(player=setup_back_counter)
     assert setup_back_counter not in setup_table.players
     assert setup_back_counter not in setup_table.waiting_players
-    
+
 
 def test_add_back_counter(setup_table, setup_back_counter):
     """Tests the back_counter_is_waiting method within the Table class."""

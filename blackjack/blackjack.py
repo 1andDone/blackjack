@@ -11,7 +11,7 @@ class Blackjack:
     """
     Represents the simulation of one or more
     games of blackjack.
-    
+
     """
     def __init__(
             self,
@@ -56,7 +56,7 @@ class Blackjack:
         dealer_shows_hole_card
             True if the dealer shows his hole card regardless of whether or
             not all players bust, false otherwise
-        
+
         """
         self._rules = HouseRules(
             min_bet=min_bet,
@@ -74,24 +74,24 @@ class Blackjack:
         )
         self._table = Table(rules=self._rules)
         self._dealer = Dealer()
-    
+
     def add_player(self, player: Player) -> None:
         return self._table.add_player(player=player)
-    
+
     def play_shoe(self, penetration: float, shoe_size: int) -> None:
         if penetration > 0.9:
             raise ValueError('Penetration must be less than or equal to 0.9')
-        
+
         shoe = Shoe(shoe_size=shoe_size)
         shoe.shuffle()
-        
+
         while not shoe.cut_card_reached(penetration=penetration) and self._table.players:
             play_round(table=self._table, dealer=self._dealer, rules=self._rules, shoe=shoe)
-        
+
     def simulate(self, penetration: float, number_of_shoes: int, shoe_size: int, seed: int | None = None) -> None:
         if seed:
             random.seed(seed)
-        
+
         for _ in range(number_of_shoes):
             if not self._table.players:
                 break
