@@ -38,7 +38,7 @@ class CardCounter(Player):
         self.min_bet_ramp = min(bet_ramp.values())
 
         if self.max_bet_ramp > self.bankroll:
-            raise ValueError('Maximum bet in the "bet_ramp" exceeds the bankroll.')
+            raise ValueError(f"Maximum bet in {self.name}'s bet ramp exceeds their bankroll.")
 
         self.min_count = min(bet_ramp)
         self.max_count = max(bet_ramp)
@@ -48,7 +48,7 @@ class CardCounter(Player):
             counts_to_check.extend([count + 0.5 for count in range(floor(self.min_count), floor(self.max_count))])
 
         inferred_wager = None
-        for count in counts_to_check:
+        for count in sorted(counts_to_check):
             if count not in bet_ramp:
                 bet_ramp[count] = inferred_wager
             inferred_wager = bet_ramp[count]
@@ -64,7 +64,7 @@ class CardCounter(Player):
     @override
     def initial_wager(self, **kwargs: Any) -> float | int:
         if 'count' not in kwargs:
-            raise TypeError('"count" needs to be included in kwargs.')
+            raise KeyError('"count" needs to be included in the kwargs.')
         count = kwargs['count']
         if count < self.min_count:
             return self._min_bet

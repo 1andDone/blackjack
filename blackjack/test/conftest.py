@@ -165,14 +165,14 @@ def setup_playing_strategy_s17():
 
 @pytest.fixture
 def setup_simulation_stats():
-    s = SimulationStats()
-    s.add_hand(count=1, category=StatsCategory.HANDS_LOST)
-    s.add_amount(count=1, category=StatsCategory.AMOUNT_WAGERED, increment=10)
-    s.add_amount(count=1, category=StatsCategory.AMOUNT_EARNED, increment=-10)
-    s.add_hand(count=None, category=StatsCategory.HANDS_LOST)
-    s.add_amount(count=None, category=StatsCategory.AMOUNT_WAGERED, increment=20.425)
-    s.add_amount(count=None, category=StatsCategory.AMOUNT_EARNED, increment=-20.425)
-    return s
+    stats = SimulationStats()
+    stats.add_hand(count=1, category=StatsCategory.HANDS_LOST)
+    stats.add_amount(count=1, category=StatsCategory.AMOUNT_WAGERED, increment=10)
+    stats.add_amount(count=1, category=StatsCategory.AMOUNT_EARNED, increment=-10)
+    stats.add_hand(count=None, category=StatsCategory.HANDS_LOST)
+    stats.add_amount(count=None, category=StatsCategory.AMOUNT_WAGERED, increment=20.425)
+    stats.add_amount(count=None, category=StatsCategory.AMOUNT_EARNED, increment=-20.425)
+    return stats
 
 
 @pytest.fixture

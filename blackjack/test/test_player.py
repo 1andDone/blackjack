@@ -7,16 +7,18 @@ def test_init_insufficient_bankroll():
     """
     Tests the __init__ method within the Player class
     when the player has insufficient bankroll to place a bet.
+
     """
-    with pytest.raises(ValueError):
+    with pytest.raises(ValueError) as e:
         Player(name='Player 1', bankroll=1000, min_bet=1001)
+    assert str(e.value) == "Insufficient bankroll to place Player 1's desired bet."
 
 
-def test_edit_bankroll(setup_player):
-    """Tests the edit_bankroll method within the Player class."""
-    setup_player.edit_bankroll(amount=10)
+def test_update_bankroll(setup_player):
+    """Tests the update_bankroll method within the Player class."""
+    setup_player.update_bankroll(amount=10)
     assert setup_player.bankroll == 1010
-    setup_player.edit_bankroll(amount=-20)
+    setup_player.update_bankroll(amount=-20)
     assert setup_player.bankroll == 990
 
 
@@ -31,6 +33,7 @@ def test_decision_one_card(setup_player, setup_rules):
     """
     Tests the decision method within the Player class
     when there is one card in the hand.
+
     """
     setup_player.first_hand.add_card(card='8')
     setup_player.first_hand.total_bet = 10
@@ -41,6 +44,7 @@ def test_decision_number_of_hands_less_than_max_hands(setup_player, setup_rules)
     """
     Tests the decision method within the Player class
     when the number of hands is less than the max hands.
+
     """
     setup_player.first_hand.add_card(card='8')
     setup_player.first_hand.add_card(card='8')
@@ -52,6 +56,7 @@ def test_decision_number_of_hands_equals_max_hands(setup_player):
     """
     Tests the decision method within the Player class
     when the number of hands equals the max hands.
+
     """
     rules = HouseRules(min_bet=10, max_bet=500, max_hands=2)
     setup_player.first_hand.add_card(card='8')
@@ -71,6 +76,7 @@ def test_decision_soft(setup_player, setup_rules):
     """
     Tests the decision method within the Player class
     when the hand is soft.
+
     """
     setup_player.first_hand.add_card(card='7')
     setup_player.first_hand.add_card(card='A')
@@ -82,6 +88,7 @@ def test_decision_hard(setup_player, setup_rules):
     """
     Tests the decision method within the Player class
     when the hand is hard.
+
     """
     setup_player.first_hand.add_card(card='8')
     setup_player.first_hand.add_card(card='K')
@@ -93,6 +100,7 @@ def test_decision_busted(setup_player, setup_rules):
     """
     Tests the decision method within the Player class
     when the hand is busted.
+
     """
     setup_player.first_hand.add_card(card='K')
     setup_player.first_hand.add_card(card='J')
@@ -106,6 +114,7 @@ def test_decision_pair(setup_player, setup_rules):
     """
     Tests the decision method within the Player class when
     the hand is a pair.
+
     """
     setup_player.first_hand.add_card(card='8')
     setup_player.first_hand.add_card(card='8')
@@ -118,6 +127,7 @@ def test_decision_pair_insufficient_bankroll(setup_player, setup_rules):
     Tests the decision method within the Player class when
     the hand is a pair and the hand cannot be split
     due to insufficient bankroll.
+
     """
     setup_player.first_hand.add_card(card='8')
     setup_player.first_hand.add_card(card='8')
@@ -129,6 +139,7 @@ def test_decision_unlike_tens(setup_player, setup_rules):
     """
     Tests the decision method within the Player class when
     the hand is unlike tens.
+
     """
     setup_player.first_hand.add_card(card='J')
     setup_player.first_hand.add_card(card='Q')

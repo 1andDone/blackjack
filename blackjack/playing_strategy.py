@@ -14,7 +14,7 @@ class PlayingStrategy:
         Parameters
         ----------
         s17
-            True if dealer stands on a soft 17, false otherwise
+            True if dealer stands on a soft 17, False otherwise
 
         """
         self._s17 = s17

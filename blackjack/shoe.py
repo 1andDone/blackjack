@@ -143,6 +143,7 @@ class Shoe:
         """
         if not 1 <= shoe_size <= 8 :
             raise ValueError('Shoe size must be between 1 and 8 decks.')
+
         self._shoe_size = shoe_size
         self._cards = ['2', '3', '4', '5', '6', '7', '8', '9', '10', 'J', 'Q', 'K', 'A'] * 4 * self._shoe_size
         self._total_cards = 52 * self._shoe_size
@@ -182,7 +183,6 @@ class Shoe:
     def seen_cards(self) -> dict[str, int]:
         return self._seen_cards
 
-    # TODO: change how this is estimated...
     def remaining_decks(self) -> float | int:
         ratio = len(self._cards) / 52
         if ratio >= 0.75:

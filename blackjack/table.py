@@ -34,12 +34,12 @@ class Table:
             raise TypeError('Expected a Player object instance.')
         if isinstance(player, CardCounter):
             if (player.min_bet_ramp < self._rules.min_bet) or (player.max_bet_ramp > self._rules.max_bet):
-                raise ValueError("The player's desired bet is not allowed according to the table rules.")
+                raise ValueError(f"{player.name}'s desired bet is not allowed according to the table rules.")
             if not self._rules.insurance and player.insurance:
-                raise ValueError("The player's insurance is not allowed according to the table rules.")
+                raise ValueError(f"{player.name}'s insurance is not allowed according to the table rules.")
         else:
             if (player.initial_wager() < self._rules.min_bet) or (player.initial_wager() > self._rules.max_bet):
-                raise ValueError("The player's desired bet is not allowed according to the table rules.")
+                raise ValueError(f"{player.name}'s desired bet is not allowed according to the table rules.")
 
     def add_player(self, player: Player) -> None:
         self._validate_player(player=player)
@@ -50,7 +50,7 @@ class Table:
 
     def remove_player(self, player: Player) -> None:
         if player not in self._players:
-            raise ValueError('The player is neither seated at the table or an out of play back counter.')
+            raise ValueError(f'{player.name} is not seated at the table or a back counter.')
         self._players.remove(player)
 
     def remove_back_counter(self, player: Player) -> None:

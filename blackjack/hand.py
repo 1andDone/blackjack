@@ -29,7 +29,7 @@ class Hand:
         Parameters
         ----------
         is_previous_hand_split
-            True if previous hand was split, false otherwise
+            True if previous hand was split, False otherwise
 
         """
         self._cards: list[str] = []
@@ -70,12 +70,14 @@ class Hand:
     def add_card(self, card: str) -> None:
         self._cards.append(card)
 
+    @property
     def number_of_cards(self) -> int:
         return len(self._cards)
 
     def _hard_total(self) -> int:
         return sum(HARD_CARD_VALUE[card] for card in self._cards)
 
+    @property
     def total(self) -> int:
         total = self._hard_total()
 
@@ -84,14 +86,16 @@ class Hand:
 
         return total
 
+    @property
     def is_soft(self) -> bool:
         if 'A' in self._cards:
             total = self._hard_total()
             return total < 12
         return False
 
+    @property
     def is_busted(self) -> bool:
-        return self.total() > 21
+        return self.total > 21
 
     def split(self) -> Hand:
         self._is_current_hand_split = True
@@ -108,7 +112,7 @@ class Hand:
     def is_current_hand_split(self) -> bool:
         return self._is_current_hand_split
 
-    # TODO: make property...
+    @property
     def is_blackjack(self) -> bool:
-        return len(self._cards) == 2 and self.total() == 21 and \
+        return self.number_of_cards == 2 and self.total == 21 and \
             not self._is_previous_hand_split and not self._is_current_hand_split

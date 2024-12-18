@@ -54,6 +54,7 @@ def test_get_initial_wager_player_not_removed(setup_table, setup_shoe, setup_pla
     """
     Tests the get_initial_wager function when a player
     is not removed.
+
     """
     setup_table.add_player(player=setup_player)
     count_dict = get_initial_count(table=setup_table, shoe=setup_shoe)
@@ -65,10 +66,11 @@ def test_get_initial_wager_player_removed(setup_table, setup_shoe):
     """
     Tests the get_initial_wager function when a player
     is removed.
+
     """
     player = Player(name='Player 1', min_bet=10, bankroll=10)
     setup_table.add_player(player=player)
-    player.edit_bankroll(amount=-10)
+    player.update_bankroll(amount=-10)
     count_dict = get_initial_count(table=setup_table, shoe=setup_shoe)
     initial_wager_dict = get_initial_wager(table=setup_table, count_dict=count_dict)
     assert player not in initial_wager_dict
@@ -104,6 +106,7 @@ def test_add_back_counters_partner_not_at_table(setup_table, setup_shoe, setup_p
     """
     Tests the add_back_counters function when the back counter's
     partner is not at the table.
+
     """
     setup_table.add_player(player=setup_player)
     setup_table.add_player(player=setup_card_counter)
@@ -122,6 +125,7 @@ def test_add_back_counters_partner_at_table(setup_table, setup_shoe, setup_card_
     """
     Tests the add_back_counters function when the back counter's
     partner is at the table.
+
     """
     setup_table.add_player(player=setup_card_counter)
     setup_table.add_player(player=setup_back_counter)
@@ -156,6 +160,7 @@ def test_player_initial_decision_insurance_dealer_blackjack(setup_card_counter_u
     """
     Tests the player_initial_decision function when the player buys
     insurance and the dealer has blackjack.
+
     """
     rules = HouseRules(min_bet=10, max_bet=500, insurance=True)
     setup_card_counter_unbalanced.first_hand.add_card(card='5')
@@ -176,6 +181,7 @@ def test_player_initial_decision_insurance_no_dealer_blackjack(setup_card_counte
     """
     Tests the player_initial_decision function when the player buys
     insurance and the dealer does not have blackjack.
+
     """
     rules = HouseRules(min_bet=10, max_bet=500, insurance=True)
     setup_card_counter_unbalanced.first_hand.add_card(card='2')
@@ -194,6 +200,7 @@ def test_player_initial_decision_no_insurance_dealer_blackjack(setup_player, set
     """
     Tests the player_initial_decision function when the player cannot
     or does not buy insurance and the dealer has a blackjack.
+
     """
     rules = HouseRules(min_bet=10, max_bet=500, insurance=False)
     setup_player.first_hand.add_card(card='5')
@@ -212,6 +219,7 @@ def test_player_initial_decision_no_insurance_no_dealer_blackjack(setup_player, 
     """
     Tests the player_initial_decsion function when the player cannot
     or does not buy insurance and the dealer does not have a blackjack.
+
     """
     rules = HouseRules(min_bet=10, max_bet=500, insurance=False)
     setup_player.first_hand.add_card(card='2')
@@ -226,6 +234,7 @@ def test_player_initial_decision_player_blackjack(setup_player, setup_dealer, se
     """
     Tests the player_initial_decision function when the player has a
     blackjack and the dealer does not.
+
     """
     setup_player.first_hand.add_card(card='A')
     setup_player.first_hand.add_card(card='K')
@@ -243,6 +252,7 @@ def test_player_initial_decision_late_surrender(setup_player, setup_dealer):
     """
     Tests the player_initial_decision function when the player has
     the option to late surrender and does.
+
     """
     rules = HouseRules(min_bet=10, max_bet=500, late_surrender=True)
     setup_player.first_hand.add_card(card='K')
@@ -261,6 +271,7 @@ def test_player_initial_decision_no_late_surrender(setup_player, setup_dealer):
     """
     Tests the player_initial_decision function when the player does
     not have the option to late surrender.
+
     """
     rules = HouseRules(min_bet=10, max_bet=500, late_surrender=False)
     setup_player.first_hand.add_card(card='K')
@@ -276,6 +287,7 @@ def test_player_plays_hands_settled(setup_player, setup_shoe, setup_dealer):
     """
     Tests the player_plays_hands function when the hand
     is already settled.
+
     """
     rules = HouseRules(min_bet=10, max_bet=500, late_surrender=True)
     setup_player.first_hand.add_card(card='K')
@@ -298,6 +310,7 @@ def test_player_plays_hands_split(setup_shoe, setup_dealer, setup_player, setup_
     """
     Tests the player_plays_hands function when the player is dealt
     a pair and the hand is split.
+
     """
     setup_player.first_hand.add_card(card='8')
     setup_player.first_hand.add_card(card='8')
@@ -324,6 +337,7 @@ def test_player_plays_hands_split_insufficient_bankroll(setup_shoe, setup_dealer
     """
     Tests the player_plays_hands function when the player is dealt
     a pair and the player has insufficient bankroll to split a hand.
+
     """
     player = Player(name='Player 1', min_bet=10, bankroll=10)
     player.first_hand.add_card(card='8')
@@ -348,6 +362,7 @@ def test_player_plays_hands_resplit_aces(setup_player, setup_shoe, setup_dealer)
     """
     Tests the player_plays_hands function when the player is dealt
     a pair of aces and aces can be re-split.
+
     """
     rules = HouseRules(min_bet=10, max_bet=500, resplit_aces=True)
     setup_player.first_hand.add_card(card='A')
@@ -377,6 +392,7 @@ def test_player_plays_hands_resplit_aces_not_allowed(setup_player, setup_shoe, s
     """
     Tests the player_plays_hands function when the player is dealt
     a pair of aces and aces cannot be re-split.
+
     """
     rules = HouseRules(min_bet=10, max_bet=500, resplit_aces=False)
     setup_player.first_hand.add_card(card='A')
@@ -404,6 +420,7 @@ def test_player_plays_hands_double_down(setup_player, setup_dealer, setup_shoe):
     """
     Tests the player_plays_hands function when the player
     can double down.
+
     """
     rules = HouseRules(min_bet=10, max_bet=500, double_down=True)
     setup_player.first_hand.add_card(card='5')
@@ -430,6 +447,7 @@ def test_player_plays_hands_double_down_not_allowed(setup_player, setup_dealer, 
     """
     Tests the player_plays_hands function when the player
     cannot double down.
+
     """
     rules = HouseRules(min_bet=10, max_bet=500, double_down=False)
     setup_player.first_hand.add_card(card='5')
@@ -456,12 +474,13 @@ def test_player_plays_hands_double_down_insufficient_bankroll(setup_player, setu
     """
     Tests the player_plays_hands function when the player
     has insufficient bankroll to double down.
+
     """
     rules = HouseRules(min_bet=10, max_bet=500, double_down=True)
     setup_player.first_hand.add_card(card='5')
     setup_player.first_hand.add_card(card='6')
     setup_player.first_hand.total_bet = 10
-    setup_player.edit_bankroll(amount=-1000)
+    setup_player.update_bankroll(amount=-1000)
     setup_dealer.hand.add_card(card='2')
     setup_dealer.hand.add_card(card='3')
     player_plays_hands(
@@ -483,12 +502,13 @@ def test_player_plays_hands_double_after_split(setup_player, setup_dealer, setup
     """
     Tests the player_plays_hands function when the player
     doubles after splitting.
+
     """
     rules = HouseRules(min_bet=10, max_bet=500, double_down=True, double_after_split=True)
     setup_player.first_hand.add_card(card='2')
     setup_player.first_hand.add_card(card='2')
     setup_player.first_hand.total_bet = 10
-    setup_player.edit_bankroll(amount=-970)
+    setup_player.update_bankroll(amount=-970)
     setup_dealer.hand.add_card(card='2')
     setup_dealer.hand.add_card(card='3')
     setup_shoe._cards = ['K', 'A', 'J', '8', 'Q', '8']
@@ -513,6 +533,7 @@ def test_player_plays_hands_double_after_split_not_allowed(setup_player, setup_d
     """
     Tests the player_plays_hands function when the player
     is not allowed to double after splitting.
+
     """
     rules = HouseRules(min_bet=10, max_bet=500, double_down=True, double_after_split=False)
     setup_player.first_hand.add_card(card='2')
@@ -538,12 +559,13 @@ def test_player_plays_hands_double_after_split_insufficient_bankroll(setup_playe
     """
     Tests the player_plays_hands function when the player
     has insufficient bankroll to double after splitting.
+
     """
     rules = HouseRules(min_bet=10, max_bet=500, double_down=True, double_after_split=True)
     setup_player.first_hand.add_card(card='2')
     setup_player.first_hand.add_card(card='2')
     setup_player.first_hand.total_bet = 10
-    setup_player.edit_bankroll(amount=-980)
+    setup_player.update_bankroll(amount=-980)
     setup_dealer.hand.add_card(card='2')
     setup_dealer.hand.add_card(card='3')
     player_plays_hands(
@@ -597,7 +619,7 @@ def test_player_plays_hands_busted(setup_player, setup_dealer, setup_shoe, setup
     )
     assert setup_player.first_hand.cards == ['6', '7', 'A', 'K']
     assert setup_player.first_hand.status == HandStatus.SETTLED
-    assert setup_player.first_hand.total() > 21
+    assert setup_player.first_hand.total > 21
 
 
 @pytest.mark.parametrize(
@@ -616,7 +638,7 @@ def test_dealer_plays_hand(setup_shoe, setup_dealer, test_hole_card, test_up_car
     setup_dealer.hand.add_card(card=test_hole_card)
     setup_dealer.hand.add_card(card=test_up_card)
     dealer_plays_hand(shoe=setup_shoe, dealer=setup_dealer, rules=rules)
-    assert setup_dealer.hand.total() == expected
+    assert setup_dealer.hand.total == expected
 
 
 def test_dealer_turn(setup_table, setup_player):
@@ -632,12 +654,13 @@ def test_all_hands_busted_true(setup_table, setup_player):
     """
     Tests the all_hands_busted function
     when all hands at the table are busted.
+
     """
     setup_table.add_player(player=setup_player)
     setup_player.first_hand.add_card(card='4')
     setup_player.first_hand.add_card(card='J')
     setup_player.first_hand.add_card(card='K')
-    assert setup_player.first_hand.is_busted()
+    assert setup_player.first_hand.is_busted
     assert all_hands_busted(table=setup_table)
 
 
@@ -645,11 +668,12 @@ def test_all_hands_busted_false(setup_table, setup_player):
     """
     Tests the all_hands_busted function
     when not all hands at the table are busted.
+
     """
     setup_table.add_player(player=setup_player)
     setup_player.first_hand.add_card(card='J')
     setup_player.first_hand.add_card(card='K')
-    assert not setup_player.first_hand.is_busted()
+    assert not setup_player.first_hand.is_busted
     assert not all_hands_busted(table=setup_table)
 
 
@@ -657,6 +681,7 @@ def test_compare_hands_win_total(setup_player, setup_dealer):
     """
     Tests the compare_hands function when the player wins
     based on total.
+
     """
     setup_player.first_hand.status = HandStatus.SHOWDOWN
     setup_player.first_hand.add_card(card='J')
@@ -675,6 +700,7 @@ def test_compare_hands_win_dealer_busts(setup_player, setup_dealer):
     """
     Tests the compare_hands function when the player wins
     and the dealer busts.
+
     """
     setup_player.first_hand.status = HandStatus.SHOWDOWN
     setup_player.first_hand.add_card(card='J')
@@ -694,6 +720,7 @@ def test_compare_hands_push(setup_player, setup_dealer):
     """
     Tests the compare_hands function when the player and
     dealer push.
+
     """
     setup_player.first_hand.status = HandStatus.SHOWDOWN
     setup_player.first_hand.add_card(card='J')
@@ -711,6 +738,7 @@ def test_compare_hands_loss_total(setup_player, setup_dealer):
     """
     Tests the compare_hands function when the player loses
     based on total.
+
     """
     setup_player.first_hand.status = HandStatus.SHOWDOWN
     setup_player.first_hand.add_card(card='6')
@@ -744,10 +772,7 @@ def test_clear_hands(setup_dealer_with_hand, setup_table, setup_player):
 
 
 def test_play_round_back_counters_added(setup_table, setup_shoe, setup_dealer, setup_card_counter, setup_back_counter, setup_rules):
-    """
-    Tests the play_round function when back counters
-    are added.
-    """
+    """Tests the play_round function when back counters are added."""
     setup_table.add_player(player=setup_card_counter)
     setup_table.add_player(player=setup_back_counter)
     setup_shoe.add_to_seen_cards(card='2')
@@ -763,10 +788,7 @@ def test_play_round_back_counters_added(setup_table, setup_shoe, setup_dealer, s
 
 
 def test_play_round_back_counters_removed(setup_table, setup_shoe, setup_dealer, setup_card_counter, setup_back_counter, setup_rules):
-    """
-    Tests the play_round function when back counters
-    are removed.
-    """
+    """Tests the play_round function when back counters are removed."""
     setup_table.add_player(player=setup_card_counter)
     setup_table.add_player(player=setup_back_counter)
     setup_shoe.add_to_seen_cards(card='2')
@@ -784,12 +806,9 @@ def test_play_round_back_counters_removed(setup_table, setup_shoe, setup_dealer,
 
 
 def test_play_round_insufficient_funds(setup_table, setup_dealer, setup_player, setup_rules, setup_shoe):
-    """
-    Tests the play_round function when a player
-    has insufficient funds.
-    """
+    """Tests the play_round function when a player has insufficient funds."""
     setup_table.add_player(player=setup_player)
-    setup_player.edit_bankroll(amount=-1000)
+    setup_player.update_bankroll(amount=-1000)
     assert setup_player.bankroll == 0
     play_round(table=setup_table, dealer=setup_dealer, shoe=setup_shoe, rules=setup_rules)
     assert len(setup_table.players) == 0
@@ -800,6 +819,7 @@ def test_play_round_insurance_win(setup_dealer, setup_shoe, setup_card_counter_u
     """
     Tests the play_round function when a player
     purchases insurance and the dealer has blackjack.
+
     """
     rules = HouseRules(min_bet=10, max_bet=500, insurance=True)
     table = Table(rules=rules)
@@ -820,6 +840,7 @@ def test_play_round_insurance_loss(setup_dealer, setup_shoe, setup_card_counter_
     """
     Tests the play_round function when a player
     purchases insurance and the dealer does not have blackjack.
+
     """
     rules = HouseRules(min_bet=10, max_bet=500, insurance=True)
     table = Table(rules=rules)
@@ -837,10 +858,7 @@ def test_play_round_insurance_loss(setup_dealer, setup_shoe, setup_card_counter_
 
 
 def test_play_round_player_blackjack(setup_table, setup_player, setup_dealer, setup_shoe, setup_rules):
-    """
-    Tests the play_round function when a player
-    has a blackjack.
-    """
+    """Tests the play_round function when a player has a blackjack."""
     setup_table.add_player(player=setup_player)
     setup_shoe._cards = ['K', 'K', '9', 'A']
     play_round(table=setup_table, dealer=setup_dealer, shoe=setup_shoe, rules=setup_rules)
@@ -850,10 +868,7 @@ def test_play_round_player_blackjack(setup_table, setup_player, setup_dealer, se
 
 
 def test_play_round_dealer_blackjack(setup_table, setup_player, setup_dealer, setup_shoe, setup_rules):
-    """
-    Tests the play_round function when the dealer
-    has a blackjack.
-    """
+    """Tests the play_round function when the dealer has a blackjack."""
     setup_table.add_player(player=setup_player)
     setup_shoe._cards = ['K', '9', 'A', 'A']
     play_round(table=setup_table, dealer=setup_dealer, shoe=setup_shoe, rules=setup_rules)
@@ -866,6 +881,7 @@ def test_play_round_player_dealer_blackjack(setup_table, setup_player, setup_dea
     """
     Tests the play_round function when a player
     and the dealer have a blackjack.
+
     """
     setup_table.add_player(player=setup_player)
     setup_shoe._cards = ['K', 'K', 'A', 'A']
@@ -879,6 +895,7 @@ def test_play_round_all_hands_busted_dealer_shows_hole_card(setup_player, setup_
     """
     Tests the play_round function when all hands
     are busted and the dealer shows their hole card.
+
     """
     rules = HouseRules(min_bet=10, max_bet=500, dealer_shows_hole_card=True)
     table = Table(rules=rules)
@@ -893,6 +910,7 @@ def test_play_round_all_hands_busted_dealer_does_not_show_hole_card(setup_player
     """
     Tests the play_round function when all hands
     are busted and the dealer does not show their hole card.
+
     """
     rules = HouseRules(min_bet=10, max_bet=500, dealer_shows_hole_card=False)
     table = Table(rules=rules)
@@ -914,6 +932,7 @@ def test_play_round_all_hands_do_not_bust(setup_player, setup_dealer, setup_shoe
     """
     Tests the play_round function when there are
     hands that are not busted.
+
     """
     rules = HouseRules(min_bet=10, max_bet=500, dealer_shows_hole_card=test_dealer_shows_hole_card)
     table = Table(rules=rules)
@@ -928,6 +947,7 @@ def test_play_round_clear_hands(setup_table, setup_player, setup_dealer, setup_s
     Tests the play_round function to check
     that the hands are properly cleared after
     each round.
+
     """
     setup_table.add_player(player=setup_player)
     play_round(table=setup_table, dealer=setup_dealer, shoe=setup_shoe, rules=setup_rules)

@@ -36,26 +36,26 @@ class Blackjack:
         max_bet
             Maximum bet allowed at the table
         s17
-            True if dealer stands on a soft 17, false otherwise
+            True if dealer stands on a soft 17, False otherwise
         blackjack_payout
             Payout for a player receiving a natural blackjack (i.e. 3:2 is 1.5, 6:5 is 1.2)
         max_hands
             Maximum number of hands that a player can play at once after splitting
         double_down
-            True if doubling is allowed on any first two cards, false otherwise
+            True if doubling is allowed on any first two cards, False otherwise
         split_unlike_tens
-            True if able to split unlike 10's (i.e. J and Q), false otherwise
+            True if able to split unlike 10's (i.e. J and Q), False otherwise
         double_after_split
-            True if doubling after splits is allowed, false otherwise
+            True if doubling after splits is allowed, False otherwise
         resplit_aces
-            True if re-splitting aces is allowed, false otherwise
+            True if re-splitting aces is allowed, False otherwise
         insurance
-            True if insurance bet is allowed, false otherwise
+            True if insurance bet is allowed, False otherwise
         late_surrender
-            True if late surrender is allowed, false otherwise
+            True if late surrender is allowed, False otherwise
         dealer_shows_hole_card
             True if the dealer shows his hole card regardless of whether or
-            not all players bust, false otherwise
+            not all players bust, False otherwise
 
         """
         self._rules = HouseRules(

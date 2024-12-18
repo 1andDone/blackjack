@@ -16,15 +16,18 @@ def test_init_invalid_shoe_size(test_shoe_size):
     """
     Tests the __init__ method within the Shoe class
     when an invalid shoe size is provided.
+
     """
-    with pytest.raises(ValueError):
+    with pytest.raises(ValueError) as e:
         Shoe(shoe_size=test_shoe_size)
+    assert str(e.value) == 'Shoe size must be between 1 and 8 decks.'
 
 
 def test_burn_card_not_seen(setup_shoe):
     """
     Tests the burn_card method within the Shoe class when the
     burn card is not seen.
+
     """
     assert len(setup_shoe._cards) == 52
     burn_card = setup_shoe._cards[-1]
@@ -37,6 +40,7 @@ def test_burn_card_seen(setup_shoe):
     """
     Tests the burn_card method within the Shoe class
     when the burn card is seen.
+
     """
     assert len(setup_shoe._cards) == 52
     burn_card = setup_shoe._cards[-1]
@@ -121,6 +125,8 @@ def test_true_count_unbalanced_counting_system(setup_shoe):
     """
     Tests the true_count method within the Shoe class
     when an unbalanced counting system is used.
+
     """
-    with pytest.raises(ValueError):
+    with pytest.raises(ValueError) as e:
         setup_shoe.true_count(strategy=CountingStrategy.KO)
+    assert str(e.value) == '"true_count" is only applicable for balanced counting systems.'
