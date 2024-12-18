@@ -2,7 +2,7 @@
 
 Fully-customizable blackjack simulation.
 
-![Blackjack](/documentation/blackjack.jpg?raw=true)
+![Blackjack](/images/blackjack.jpg?raw=true)
 
 ## Setup
 
