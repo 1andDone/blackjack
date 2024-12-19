@@ -123,7 +123,7 @@ def _update_late_surrender_stats(player: Player, initial_wager: float | int, cou
     )
 
 
-def _update_increase_wager_stats(player: Player, hand_wager: float | int, count: float | int | None) -> None:
+def _update_wager_stats(player: Player, hand_wager: float | int, count: float | int | None) -> None:
     player.update_bankroll(amount=hand_wager * -1)
     player.stats.add_amount(
         count=count,
@@ -136,18 +136,18 @@ def _update_win_stats(player: Player, hand_wager: float | int, count: float | in
     player.update_bankroll(amount=hand_wager * 2)
     player.stats.add_hand(count=count, category=StatsCategory.HANDS_WON)
     player.stats.add_amount(
-            count=count,
-            category=StatsCategory.AMOUNT_EARNED,
-            increment=hand_wager
+        count=count,
+        category=StatsCategory.AMOUNT_EARNED,
+        increment=hand_wager
     )
 
 
 def _update_loss_stats(player: Player, hand_wager: float | int, count: float | int | None) -> None:
     player.stats.add_hand(count=count, category=StatsCategory.HANDS_LOST)
     player.stats.add_amount(
-            count=count,
-            category=StatsCategory.AMOUNT_EARNED,
-            increment=hand_wager * -1
+        count=count,
+        category=StatsCategory.AMOUNT_EARNED,
+        increment=hand_wager * -1
     )
 
 
@@ -159,7 +159,7 @@ def _update_push_stats(player: Player, hand_wager: float | int, count: float | i
 def place_initial_wager(player: Player, initial_wager: float | int, count: float | int | None) -> None:
     """Adjusts the total bet based on a player's initial wager."""
     player.first_hand.total_bet = initial_wager
-    _update_increase_wager_stats(player=player, hand_wager=initial_wager, count=count)
+    _update_wager_stats(player=player, hand_wager=initial_wager, count=count)
 
 
 def place_insurance_wager(player: Player, insurance_wager: float | int, insurance_count: float | int | None) -> None:
@@ -273,22 +273,25 @@ def player_plays_hands(
 
         if current_hand.number_of_cards == 1:
             current_hand.add_card(card=dealer.deal_card(shoe=shoe))
-            if not rules.resplit_aces and current_hand.cards[0] == 'A':
+            if current_hand.cards[0] == 'A' and (len(player.hands) == rules.max_hands or \
+                not rules.resplit_aces or current_hand.cards[1] != 'A'):
                 current_hand.status = HandStatus.SHOWDOWN
 
-        elif decision in {'P', 'Rp'} or (decision == 'Ph' and rules.double_after_split and \
+        # a sufficient bankroll check for the 'Rp' and 'P' decisions is performed in Player._can_split
+        elif decision in {'Rp', 'P'} or (decision == 'Ph' and rules.double_after_split and \
             player.has_sufficient_bankroll(amount=current_hand.total_bet * 3)):
-            _update_increase_wager_stats(player=player, hand_wager=current_hand.total_bet, count=count)
+            _update_wager_stats(player=player, hand_wager=current_hand.total_bet, count=count)
             player.hands.append(current_hand.split())
             current_hand.add_card(card=dealer.deal_card(shoe=shoe))
             another_hand += 1
-            if not rules.resplit_aces and current_hand.cards[0] == 'A':
+            if current_hand.cards[0] == 'A' and (len(player.hands) == rules.max_hands or \
+                not rules.resplit_aces or current_hand.cards[1] != 'A'):
                 current_hand.status = HandStatus.SHOWDOWN
 
         elif rules.double_down and decision in {'Dh', 'Ds'} and current_hand.number_of_cards == 2 and \
             not current_hand.is_previous_hand_split and not current_hand.is_current_hand_split and \
             player.has_sufficient_bankroll(amount=current_hand.total_bet):
-            _update_increase_wager_stats(player=player, hand_wager=current_hand.total_bet, count=count)
+            _update_wager_stats(player=player, hand_wager=current_hand.total_bet, count=count)
             current_hand.add_card(card=dealer.deal_card(shoe=shoe))
             current_hand.total_bet = current_hand.total_bet
             current_hand.status = HandStatus.SHOWDOWN
@@ -296,7 +299,7 @@ def player_plays_hands(
         elif rules.double_after_split and decision in {'Dh', 'Ds'} and current_hand.number_of_cards == 2 and \
             (current_hand.is_previous_hand_split or current_hand.is_current_hand_split) and \
             player.has_sufficient_bankroll(amount=current_hand.total_bet):
-            _update_increase_wager_stats(player=player, hand_wager=current_hand.total_bet, count=count)
+            _update_wager_stats(player=player, hand_wager=current_hand.total_bet, count=count)
             current_hand.add_card(card=dealer.deal_card(shoe=shoe))
             current_hand.total_bet = current_hand.total_bet
             current_hand.status = HandStatus.SHOWDOWN

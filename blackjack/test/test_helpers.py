@@ -340,11 +340,12 @@ def test_player_plays_hands_split_insufficient_bankroll(setup_shoe, setup_dealer
 
     """
     player = Player(name='Player 1', min_bet=10, bankroll=10)
-    player.first_hand.add_card(card='8')
-    player.first_hand.add_card(card='8')
+    player.first_hand.add_card(card='6')
+    player.first_hand.add_card(card='6')
     player.first_hand.total_bet = 20
-    setup_dealer.hand.add_card(card='6')
-    setup_dealer.hand.add_card(card='6')
+    setup_dealer.hand.add_card(card='7')
+    setup_dealer.hand.add_card(card='7')
+    setup_shoe._cards = ['J', 'Q', '7', '6', '5', 'A']
     player_plays_hands(
         player=player,
         shoe=setup_shoe,
@@ -353,7 +354,7 @@ def test_player_plays_hands_split_insufficient_bankroll(setup_shoe, setup_dealer
         dealer=setup_dealer,
         rules=setup_rules
     )
-    assert player.first_hand.cards == ['8', '8']
+    assert player.first_hand.cards == ['6', '6', 'A', '5']
     assert player.first_hand.status == HandStatus.SHOWDOWN
     assert player.first_hand.total_bet > player.bankroll
 
@@ -383,6 +384,69 @@ def test_player_plays_hands_resplit_aces(setup_player, setup_shoe, setup_dealer)
     assert setup_player.hands[1].cards == ['A', 'Q']
     assert setup_player.hands[1].status == HandStatus.SHOWDOWN
     assert setup_player.hands[2].cards == ['A', 'J']
+    assert setup_player.hands[2].status == HandStatus.SHOWDOWN
+    assert setup_player.bankroll == 980
+    assert setup_player.stats.stats[StatsKey(count=None, category=StatsCategory.AMOUNT_WAGERED)] == 20
+
+
+def test_player_plays_hands_resplit_aces_insufficient_bankroll(setup_shoe, setup_dealer):
+    """
+    Tests the player_plays_hands function when the player is dealt
+    a pair of aces and aces can be re-split but the player
+    has insufficient bankroll to split their hand again.
+
+    """
+    player = Player(name='Player 1', min_bet=10, bankroll=10)
+    rules = HouseRules(min_bet=10, max_bet=500, resplit_aces=True)
+    player.first_hand.add_card(card='A')
+    player.first_hand.add_card(card='A')
+    player.first_hand.total_bet = 10
+    setup_dealer.hand.add_card(card='5')
+    setup_dealer.hand.add_card(card='5')
+    setup_shoe._cards = ['4', '3', '2', 'Q', 'K', 'A']
+    player_plays_hands(
+        player=player,
+        shoe=setup_shoe,
+        count=None,
+        insurance_count=None,
+        dealer=setup_dealer,
+        rules=rules
+    )
+    assert player.first_hand.cards == ['A', 'A', 'K']
+    assert player.first_hand.status == HandStatus.SHOWDOWN
+    assert player.hands[1].cards == ['A', 'Q']
+    assert player.hands[1].status == HandStatus.SHOWDOWN
+    assert player.bankroll == 0
+    assert player.stats.stats[StatsKey(count=None, category=StatsCategory.AMOUNT_WAGERED)] == 10
+
+
+def test_player_plays_hands_resplit_aces_max_hands(setup_player, setup_shoe, setup_dealer):
+    """
+    Tests the player_plays_hands function when the player is dealt
+    a pair of aces and aces can be re-split but the player reaches
+    the max hands limit and is unable to split their hand again.
+
+    """
+    rules = HouseRules(min_bet=10, max_bet=500, resplit_aces=True, max_hands=3)
+    setup_player.first_hand.add_card(card='A')
+    setup_player.first_hand.add_card(card='A')
+    setup_player.first_hand.total_bet = 10
+    setup_dealer.hand.add_card(card='5')
+    setup_dealer.hand.add_card(card='5')
+    setup_shoe._cards = ['4', '3', 'A', '3', '2', 'A']
+    player_plays_hands(
+        player=setup_player,
+        shoe=setup_shoe,
+        count=None,
+        insurance_count=None,
+        dealer=setup_dealer,
+        rules=rules
+    )
+    assert setup_player.first_hand.cards == ['A', '2']
+    assert setup_player.first_hand.status == HandStatus.SHOWDOWN
+    assert setup_player.hands[1].cards == ['A', '3']
+    assert setup_player.hands[1].status == HandStatus.SHOWDOWN
+    assert setup_player.hands[2].cards == ['A', 'A']
     assert setup_player.hands[2].status == HandStatus.SHOWDOWN
     assert setup_player.bankroll == 980
     assert setup_player.stats.stats[StatsKey(count=None, category=StatsCategory.AMOUNT_WAGERED)] == 20
