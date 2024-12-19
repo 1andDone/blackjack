@@ -185,7 +185,7 @@ def add_back_counters(table: Table, count_dict: dict[Player, float | int | None]
     """Adds back counters to the table."""
     for player in table.waiting_players.copy():
         count = count_dict[player]
-        if isinstance(player, BackCounter) and count is not None and player.can_enter(count=count) and player.partner in table.players.copy():
+        if isinstance(player, BackCounter) and count is not None and player.can_enter(count=count):
             table.add_back_counter(player=player)
 
 

@@ -31,7 +31,7 @@ def test_add_player_not_player_instance(setup_table, setup_rules):
     """
     with pytest.raises(TypeError) as e:
         setup_table.add_player(player=setup_rules)
-    assert str(e.value) == 'Expected a Player object instance.'
+    assert str(e.value) == 'Expected a Player, CardCounter, or BackCounter object.'
 
 
 def test_add_player_bet_ramp_minimum_less_than_table_minimum(setup_table):

@@ -31,7 +31,7 @@ class Table:
 
     def _validate_player(self, player: Player) -> None:
         if not isinstance(player, Player):
-            raise TypeError('Expected a Player object instance.')
+            raise TypeError('Expected a Player, CardCounter, or BackCounter object.')
         if isinstance(player, CardCounter):
             if (player.min_bet_ramp < self._rules.min_bet) or (player.max_bet_ramp > self._rules.max_bet):
                 raise ValueError(f"{player.name}'s desired bet is not allowed according to the table rules.")

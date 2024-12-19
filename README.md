@@ -79,7 +79,6 @@ player3 = BackCounter(
         5: 150
     },
     insurance=10,
-    partner=player2,
     entry_point=3,
     exit_point=0
 )

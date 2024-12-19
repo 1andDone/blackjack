@@ -1,6 +1,5 @@
 from typing import Any
 
-
 ## Basic Strategy (source: https://wizardofodds.com/games/blackjack/strategy/4-decks/)
 # H  : hit
 # S  : stand

@@ -11,12 +11,10 @@ class BackCounter(CardCounter):
 
     """
 
-    def __init__(self, partner: CardCounter, entry_point: float | int, exit_point: float | int, **kwargs: Any):
+    def __init__(self, entry_point: float | int, exit_point: float | int, **kwargs: Any):
         """
         Parameters
         ----------
-        partner
-            Partner that will call the back counting player to the table
         entry_point
             Running or true count at which the back counter will start
             playing hands at the table
@@ -27,22 +25,13 @@ class BackCounter(CardCounter):
         """
         super().__init__(**kwargs)
 
-        if not isinstance(partner, CardCounter) or (isinstance(partner, CardCounter) and isinstance(partner, BackCounter)):
-            raise TypeError(f"{self.name}'s partner must be a card counter.")
-        if partner.counting_strategy != self.counting_strategy:
-            raise ValueError(f'{self.name} must have the same card counting strategy as {partner.name}.')
         if exit_point >= entry_point:
             raise ValueError('Exit point must be less than the entry point.')
         if self.insurance and exit_point > self.insurance:
             raise ValueError('Exit point must be lower for player to take insurance bet.')
 
-        self._partner = partner
         self._entry_point = entry_point
         self._exit_point = exit_point
-
-    @property
-    def partner(self) -> CardCounter:
-        return self._partner
 
     @property
     def entry_point(self) -> float | int:
@@ -56,4 +45,4 @@ class BackCounter(CardCounter):
         return self._exit_point
 
     def can_exit(self, count: float | int) -> bool:
-        return self._exit_point >= count
+        return count <= self._exit_point

@@ -132,7 +132,7 @@ def setup_card_counter_unbalanced():
 
 
 @pytest.fixture
-def setup_back_counter(setup_card_counter):
+def setup_back_counter():
     return BackCounter(
         name='Player 3',
         bankroll=1000,
@@ -146,7 +146,6 @@ def setup_back_counter(setup_card_counter):
             5: 70
         },
         insurance=None,
-        partner=setup_card_counter,
         entry_point=3,
         exit_point=0
     )
