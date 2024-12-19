@@ -3,13 +3,14 @@ from blackjack.back_counter import BackCounter
 from blackjack.card_counter import CardCounter
 from blackjack.dealer import Dealer
 from blackjack.enums import CountingStrategy
+from blackjack.enums import StatsCategory
 from blackjack.hand import Hand
 from blackjack.house_rules import HouseRules
 from blackjack.player import Player
 from blackjack.playing_strategy import PlayingStrategy
 from blackjack.shoe import Shoe
 from blackjack.table import Table
-from blackjack.simulation_stats import StatsCategory, SimulationStats
+from blackjack.stats import Stats
 
 
 @pytest.fixture
@@ -162,14 +163,14 @@ def setup_playing_strategy_s17():
 
 
 @pytest.fixture
-def setup_simulation_stats():
-    stats = SimulationStats()
+def setup_stats():
+    stats = Stats()
     stats.add_hand(count=1, category=StatsCategory.HANDS_LOST)
-    stats.add_amount(count=1, category=StatsCategory.AMOUNT_WAGERED, increment=10)
-    stats.add_amount(count=1, category=StatsCategory.AMOUNT_EARNED, increment=-10)
+    stats.update_amount(count=1, category=StatsCategory.AMOUNT_WAGERED, increment=10)
+    stats.update_amount(count=1, category=StatsCategory.AMOUNT_EARNED, increment=-10)
     stats.add_hand(count=None, category=StatsCategory.HANDS_LOST)
-    stats.add_amount(count=None, category=StatsCategory.AMOUNT_WAGERED, increment=20.425)
-    stats.add_amount(count=None, category=StatsCategory.AMOUNT_EARNED, increment=-20.425)
+    stats.update_amount(count=None, category=StatsCategory.AMOUNT_WAGERED, increment=20.425)
+    stats.update_amount(count=None, category=StatsCategory.AMOUNT_EARNED, increment=-20.425)
     return stats
 
 

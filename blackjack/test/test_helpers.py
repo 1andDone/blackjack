@@ -4,7 +4,7 @@ from blackjack.hand import HandStatus
 from blackjack.house_rules import HouseRules
 from blackjack.player import Player
 from blackjack.shoe import Shoe
-from blackjack.simulation_stats import StatsKey
+from blackjack.stats import StatsKey
 from blackjack.table import Table
 from blackjack.helpers import get_initial_count, get_insurance_count
 from blackjack.helpers import get_initial_wager, place_initial_wager

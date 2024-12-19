@@ -17,7 +17,7 @@ pip install .
 Begin by setting up the `Blackjack` class object with certain house rules.
 
 ```python
-from blackjack import Blackjack
+from blackjack.blackjack import Blackjack
 
 blackjack = Blackjack(
     min_bet=10,
@@ -47,7 +47,7 @@ from blackjack.player import Player
 
 player1 = Player(
     name='Player 1',
-    bankroll=1000,
+    bankroll=1000000,
     min_bet=10
 )
 
@@ -61,26 +61,32 @@ player2 = CardCounter(
         2: 20,
         3: 40,
         4: 50,
-        5: 70
+        5: 70,
+        6: 100,
+        7: 150,
+        8: 200
     },
     insurance=None
 )
 
 player3 = BackCounter(
     name='Player 3',
-    bankroll=10000,
+    bankroll=15000,
     min_bet=10,
-    counting_strategy=CountingStrategy.HI_LO,
+    counting_strategy=CountingStrategy.OMEGA_II,
     bet_ramp={
         1: 15,
         2: 20,
-        3: 80,
-        4: 120,
-        5: 150
+        3: 50,
+        4: 100,
+        5: 150,
+        6: 250,
+        7: 400,
+        8: 500
     },
     insurance=10,
-    entry_point=3,
-    exit_point=0
+    entry_point=5,
+    exit_point=1
 )
 ```
 
@@ -90,29 +96,29 @@ Finally, add all players and simulate.
 blackjack.add_player(player=player1)
 blackjack.add_player(player=player2)
 blackjack.add_player(player=player3)
-blackjack.simulate(penetration=0.75, number_of_shoes=1000, shoe_size=6, seed=1)
+blackjack.simulate(penetration=0.75, number_of_shoes=50000, shoe_size=8, seed=1)
 ```
 
 ## Results
 
-Summary statistics are available after each run by using the `stats` method.
+Summary statistics are available after each run by using each player's `stats` method.
 
 ```python
-print(player3.stats)
+print(player3.stats.summary)
 ```
 
 ```
->> Amount wagered: $369,950.00 
->> Hands lost: 1,975 
->> Hands played: 4,097 
->> Amount earned: $3,097.50 
->> Hands won: 1,746 
->> Hands pushed: 376 
->> Insurance amount wagered: $660.00 
->> Insurance amount earned: -$210.00 
->> Total amount earned: $2,887.50 
->> Total amount wagered: $370,610.00 
->> Element of Risk: 0.84% 
+>> HANDS PLAYED: 238,545
+>> HANDS WON: 102,706
+>> HANDS LOST: 115,391
+>> HANDS PUSHED: 20,448
+>> AMOUNT EARNED: $764,635.00
+>> AMOUNT WAGERED: $64,313,200.00
+>> INSURANCE AMOUNT EARNED: -$148,000.00
+>> INSURANCE AMOUNT WAGERED: $570,600.00
+>> TOTAL AMOUNT EARNED: $616,635.00
+>> TOTAL AMOUNT WAGERED: $64,883,800.00
+>> ELEMENT OF RISK: 0.95%
 ```
 
 If desired, the statistics at each count can be accessed as well.

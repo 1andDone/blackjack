@@ -5,8 +5,8 @@ from blackjack.enums import CountingStrategy, HandStatus
 from blackjack.house_rules import HouseRules
 from blackjack.player import Player
 from blackjack.shoe import Shoe
+from blackjack.stats import StatsCategory
 from blackjack.table import Table
-from blackjack.simulation_stats import StatsCategory
 
 
 def _get_card_counter_count(card_counter: CardCounter, shoe: Shoe) -> float | int | None:
@@ -72,13 +72,13 @@ def _update_insurance_stats(
 ) -> None:
     if dealer.hand.is_blackjack:
         player.update_bankroll(amount=insurance_wager * 2)
-        player.stats.add_amount(
+        player.stats.update_amount(
             count=insurance_count,
             category=StatsCategory.INSURANCE_AMOUNT_EARNED,
             increment=insurance_wager
         )
     else:
-        player.stats.add_amount(
+        player.stats.update_amount(
             count=insurance_count,
             category=StatsCategory.INSURANCE_AMOUNT_EARNED,
             increment=insurance_wager * -1
@@ -99,14 +99,14 @@ def _update_blackjack_stats(
         else:
             player.update_bankroll(amount=initial_wager * (1 + blackjack_payout))
             player.stats.add_hand(count=count, category=StatsCategory.HANDS_WON)
-            player.stats.add_amount(
+            player.stats.update_amount(
                 count=count,
                 category=StatsCategory.AMOUNT_EARNED,
                 increment=initial_wager * blackjack_payout
             )
     else:
         player.stats.add_hand(count=count, category=StatsCategory.HANDS_LOST)
-        player.stats.add_amount(
+        player.stats.update_amount(
             count=count,
             category=StatsCategory.AMOUNT_EARNED,
             increment=initial_wager * -1
@@ -116,7 +116,7 @@ def _update_blackjack_stats(
 def _update_late_surrender_stats(player: Player, initial_wager: float | int, count: float | int | None) -> None:
     player.update_bankroll(amount=initial_wager * 0.5)
     player.stats.add_hand(count=count, category=StatsCategory.HANDS_LOST)
-    player.stats.add_amount(
+    player.stats.update_amount(
         count=count,
         category=StatsCategory.AMOUNT_EARNED,
         increment=initial_wager * -0.5
@@ -125,7 +125,7 @@ def _update_late_surrender_stats(player: Player, initial_wager: float | int, cou
 
 def _update_wager_stats(player: Player, hand_wager: float | int, count: float | int | None) -> None:
     player.update_bankroll(amount=hand_wager * -1)
-    player.stats.add_amount(
+    player.stats.update_amount(
         count=count,
         category=StatsCategory.AMOUNT_WAGERED,
         increment=hand_wager
@@ -135,7 +135,7 @@ def _update_wager_stats(player: Player, hand_wager: float | int, count: float | 
 def _update_win_stats(player: Player, hand_wager: float | int, count: float | int | None) -> None:
     player.update_bankroll(amount=hand_wager * 2)
     player.stats.add_hand(count=count, category=StatsCategory.HANDS_WON)
-    player.stats.add_amount(
+    player.stats.update_amount(
         count=count,
         category=StatsCategory.AMOUNT_EARNED,
         increment=hand_wager
@@ -144,7 +144,7 @@ def _update_win_stats(player: Player, hand_wager: float | int, count: float | in
 
 def _update_loss_stats(player: Player, hand_wager: float | int, count: float | int | None) -> None:
     player.stats.add_hand(count=count, category=StatsCategory.HANDS_LOST)
-    player.stats.add_amount(
+    player.stats.update_amount(
         count=count,
         category=StatsCategory.AMOUNT_EARNED,
         increment=hand_wager * -1
@@ -166,7 +166,7 @@ def place_insurance_wager(player: Player, insurance_wager: float | int, insuranc
     """Adjusts the side bet based on a player's insurance wager."""
     player.first_hand.side_bet = insurance_wager
     player.update_bankroll(amount=insurance_wager * -1)
-    player.stats.add_amount(
+    player.stats.update_amount(
         count=insurance_count,
         category=StatsCategory.INSURANCE_AMOUNT_WAGERED,
         increment=insurance_wager

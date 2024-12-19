@@ -63,10 +63,10 @@ def test_shuffle(setup_shoe):
 def test_add_to_seen_cards(setup_shoe):
     """Tests the add_to_seen_cards method within the Shoe class."""
     assert setup_shoe.seen_cards['10-J-Q-K'] == 0
-    assert setup_shoe.seen_cards['2'] == 0
     setup_shoe.add_to_seen_cards(card='K')
-    setup_shoe.add_to_seen_cards(card='2')
     assert setup_shoe.seen_cards['10-J-Q-K'] == 1
+    assert setup_shoe.seen_cards['2'] == 0
+    setup_shoe.add_to_seen_cards(card='2')
     assert setup_shoe.seen_cards['2'] == 1
 
 

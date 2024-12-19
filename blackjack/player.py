@@ -1,8 +1,8 @@
 from typing import Any
 from blackjack.hand import Hand
-from blackjack.playing_strategy import PlayingStrategy
 from blackjack.house_rules import HouseRules
-from blackjack.simulation_stats import SimulationStats
+from blackjack.playing_strategy import PlayingStrategy
+from blackjack.stats import Stats
 
 
 class Player:
@@ -30,7 +30,7 @@ class Player:
         self._bankroll = bankroll
         self._min_bet = min_bet
         self._hands = [Hand()]
-        self._stats = SimulationStats()
+        self._stats = Stats()
 
     @property
     def name(self) -> str:
@@ -48,7 +48,7 @@ class Player:
         return self._hands
 
     @property
-    def stats(self) -> SimulationStats:
+    def stats(self) -> Stats:
         return self._stats
 
     @property
