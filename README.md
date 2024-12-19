@@ -26,7 +26,6 @@ blackjack = Blackjack(
     blackjack_payout=1.5,
     max_hands=4,
     double_down=True,
-    split_unlike_tens=False,
     double_after_split=False,
     resplit_aces=False,
     insurance=True,
@@ -41,8 +40,10 @@ and `BackCounter` class instance. `Player` class instances do not count cards.
 
 
 ```python
-from blackjack import Player, CardCounter, BackCounter
-from blackjack import CountingStrategy
+from blackjack.back_counter import BackCounter
+from blackjack.card_counter import CardCounter
+from blackjack.enums import CountingStrategy
+from blackjack.player import Player
 
 player1 = Player(
     name='Player 1',

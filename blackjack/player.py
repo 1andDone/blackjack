@@ -63,8 +63,7 @@ class Player:
 
     def _can_split(self, hand: Hand, rules: HouseRules) -> bool:
         if self.has_sufficient_bankroll(amount=hand.total_bet):
-            return hand.number_of_cards == 2 and ((hand.cards[0] == hand.cards[1]) or
-                (rules.split_unlike_tens and all(card in {'10', 'J', 'Q', 'K'} for card in hand.cards))) and \
+            return hand.number_of_cards == 2 and (hand.cards[0] == hand.cards[1]) and \
                 len(self._hands) < rules.max_hands
         return False
 

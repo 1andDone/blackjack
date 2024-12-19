@@ -21,7 +21,6 @@ def setup_rules():
         blackjack_payout=1.5,
         max_hands=4,
         double_down=True,
-        split_unlike_tens=False,
         double_after_split=False,
         resplit_aces=False,
         insurance=True,

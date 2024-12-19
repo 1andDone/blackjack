@@ -4,19 +4,18 @@ class HouseRules:
 
     """
     def __init__(
-            self,
-            min_bet: float | int,
-            max_bet: float | int,
-            s17: bool = True,
-            blackjack_payout: float | int = 1.5,
-            max_hands: int = 4,
-            double_down: bool = True,
-            split_unlike_tens: bool = False,
-            double_after_split: bool = False,
-            resplit_aces: bool = False,
-            insurance: bool = True,
-            late_surrender: bool = True,
-            dealer_shows_hole_card: bool = False
+        self,
+        min_bet: float | int,
+        max_bet: float | int,
+        s17: bool = True,
+        blackjack_payout: float | int = 1.5,
+        max_hands: int = 4,
+        double_down: bool = True,
+        double_after_split: bool = False,
+        resplit_aces: bool = False,
+        insurance: bool = True,
+        late_surrender: bool = True,
+        dealer_shows_hole_card: bool = False
     ):
         """
         Parameters
@@ -33,8 +32,6 @@ class HouseRules:
             Maximum number of hands that a player can play at once after splitting
         double_down
             True if doubling is allowed on any first two cards, False otherwise
-        split_unlike_tens
-            True if able to split unlike 10's (i.e. J and Q), False otherwise
         double_after_split
             True if doubling after splits is allowed, False otherwise
         resplit_aces
@@ -67,7 +64,6 @@ class HouseRules:
         self._blackjack_payout = blackjack_payout
         self._max_hands = max_hands
         self._double_down = double_down
-        self._split_unlike_tens = split_unlike_tens
         self._double_after_split = double_after_split
         self._resplit_aces = resplit_aces
         self._insurance = insurance
@@ -97,10 +93,6 @@ class HouseRules:
     @property
     def double_down(self) -> bool:
         return self._double_down
-
-    @property
-    def split_unlike_tens(self) -> bool:
-        return self._split_unlike_tens
 
     @property
     def double_after_split(self) -> bool:

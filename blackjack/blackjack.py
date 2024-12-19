@@ -14,19 +14,19 @@ class Blackjack:
 
     """
     def __init__(
-            self,
-            min_bet: int,
-            max_bet: int,
-            s17: bool = True,
-            blackjack_payout: int | float = 1.5,
-            max_hands: int = 4,
-            double_down: bool = True,
-            split_unlike_tens: bool = False,
-            double_after_split: bool = False,
-            resplit_aces: bool = False,
-            insurance: bool = True,
-            late_surrender: bool = True,
-            dealer_shows_hole_card: bool = False
+        self,
+        min_bet: int,
+        max_bet: int,
+        s17: bool = True,
+        blackjack_payout: int | float = 1.5,
+        max_hands: int = 4,
+        double_down: bool = True,
+        split_unlike_tens: bool = False,
+        double_after_split: bool = False,
+        resplit_aces: bool = False,
+        insurance: bool = True,
+        late_surrender: bool = True,
+        dealer_shows_hole_card: bool = False
     ):
         """
         Parameters
