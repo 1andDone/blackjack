@@ -16,28 +16,32 @@ def test_status(setup_hand_blackjack):
     assert setup_hand_blackjack.status == HandStatus.SETTLED
 
 
-def test_total_bet(setup_hand_with_ace):
+def test_update_total_bet(setup_hand_with_ace):
     """
-    Tests the total_bet getter and setter methods
-    within the Hand class.
+    Tests the update_total_bet method within
+    the Hand class.
 
     """
-    setup_hand_with_ace.total_bet = 10
+    setup_hand_with_ace.update_total_bet(amount=10)
     assert setup_hand_with_ace.total_bet == 10
-    setup_hand_with_ace.total_bet = 10
-    assert setup_hand_with_ace.total_bet == 20
+    setup_hand_with_ace.update_total_bet(amount=15)
+    assert setup_hand_with_ace.total_bet == 25
+    setup_hand_with_ace.update_total_bet(amount=-7.5)
+    assert setup_hand_with_ace.total_bet == 17.5
 
 
-def test_side_bet(setup_hand_with_ace):
+def test_update_side_bet(setup_hand_with_ace):
     """
-    Tests the side_bet getter and setter methods
-    within the Hand class.
+    Tests the update_side_bet method within
+    the Hand class.
 
     """
-    setup_hand_with_ace.side_bet = 10
+    setup_hand_with_ace.update_side_bet(amount=10)
     assert setup_hand_with_ace.side_bet == 10
-    setup_hand_with_ace.side_bet = 10
-    assert setup_hand_with_ace.side_bet == 20
+    setup_hand_with_ace.update_side_bet(amount=15)
+    assert setup_hand_with_ace.side_bet == 25
+    setup_hand_with_ace.update_side_bet(amount=-7.5)
+    assert setup_hand_with_ace.side_bet == 17.5
 
 
 def test_add_cards(setup_hand_with_ace):

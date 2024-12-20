@@ -158,13 +158,13 @@ def _update_push_stats(player: Player, hand_wager: float | int, count: float | i
 
 def place_initial_wager(player: Player, initial_wager: float | int, count: float | int | None) -> None:
     """Adjusts the total bet based on a player's initial wager."""
-    player.first_hand.total_bet = initial_wager
+    player.first_hand.update_total_bet(amount=initial_wager)
     _update_wager_stats(player=player, hand_wager=initial_wager, count=count)
 
 
 def place_insurance_wager(player: Player, insurance_wager: float | int, insurance_count: float | int | None) -> None:
     """Adjusts the side bet based on a player's insurance wager."""
-    player.first_hand.side_bet = insurance_wager
+    player.first_hand.update_side_bet(amount=insurance_wager)
     player.update_bankroll(amount=insurance_wager * -1)
     player.stats.update_amount(
         count=insurance_count,
@@ -293,7 +293,7 @@ def player_plays_hands(
             player.has_sufficient_bankroll(amount=current_hand.total_bet):
             _update_wager_stats(player=player, hand_wager=current_hand.total_bet, count=count)
             current_hand.add_card(card=dealer.deal_card(shoe=shoe))
-            current_hand.total_bet = current_hand.total_bet
+            current_hand.update_total_bet(amount=current_hand.total_bet)
             current_hand.status = HandStatus.SHOWDOWN
 
         elif rules.double_after_split and decision in {'Dh', 'Ds'} and current_hand.number_of_cards == 2 and \
@@ -301,7 +301,7 @@ def player_plays_hands(
             player.has_sufficient_bankroll(amount=current_hand.total_bet):
             _update_wager_stats(player=player, hand_wager=current_hand.total_bet, count=count)
             current_hand.add_card(card=dealer.deal_card(shoe=shoe))
-            current_hand.total_bet = current_hand.total_bet
+            current_hand.update_total_bet(amount=current_hand.total_bet)
             current_hand.status = HandStatus.SHOWDOWN
 
         elif decision in {'Rh', 'Dh', 'Ph', 'H'}:

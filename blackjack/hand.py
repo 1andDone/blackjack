@@ -55,16 +55,14 @@ class Hand:
     def total_bet(self) -> float | int:
         return self._total_bet
 
-    @total_bet.setter
-    def total_bet(self, amount: float | int) -> None:
+    def update_total_bet(self, amount: float | int) -> None:
         self._total_bet += amount
 
     @property
     def side_bet(self) -> float | int:
         return self._side_bet
 
-    @side_bet.setter
-    def side_bet(self, amount: float | int) -> None:
+    def update_side_bet(self, amount: float | int) -> None:
         self._side_bet += amount
 
     def add_card(self, card: str) -> None:
@@ -101,7 +99,7 @@ class Hand:
         self._is_current_hand_split = True
         new_hand = Hand(is_previous_hand_split=True)
         new_hand.add_card(card=self._cards.pop())
-        new_hand.total_bet = self._total_bet
+        new_hand.update_total_bet(amount=self._total_bet)
         return new_hand
 
     @property
