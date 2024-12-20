@@ -26,7 +26,9 @@ class CardCounter(Player):
         bet_ramp
             Dictionary where each key value is the running or
             true count and each value indicates the amount of money
-            wagered at that running or true count
+            wagered at that running or true count. In the event
+            of a missing count, the amount of money wagered is inferred
+            from the previous running/true count
         insurance
             Minimum running or true count at which a player will
             purchase insurance, if desired, and if available

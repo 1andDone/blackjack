@@ -1,11 +1,11 @@
 def test_hole_card(setup_dealer_with_hand):
     """Tests the hole_card method within the Dealer class."""
-    assert setup_dealer_with_hand.hole_card() == '8'
+    assert setup_dealer_with_hand.hole_card == '8'
 
 
 def test_up_card(setup_dealer_with_hand):
     """Tests the up_card method within the Dealer class."""
-    assert setup_dealer_with_hand.up_card() == '6'
+    assert setup_dealer_with_hand.up_card == '6'
 
 
 def test_deal_card(setup_dealer_with_hand, setup_shoe):

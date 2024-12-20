@@ -209,7 +209,7 @@ def player_initial_decision(
     first two cards dealt to them by the dealer.
 
     """
-    if rules.insurance and dealer.up_card() == 'A':
+    if rules.insurance and dealer.up_card == 'A':
         if isinstance(player, CardCounter) and player.insurance and insurance_count and insurance_count >= player.insurance:
             insurance_wager = player.first_hand.total_bet * 0.5
             place_insurance_wager(player=player, insurance_wager=insurance_wager, insurance_count=insurance_count)
@@ -233,7 +233,7 @@ def player_initial_decision(
 
     decision = player.decision(
             hand=player.first_hand,
-            dealer_up_card=dealer.up_card(),
+            dealer_up_card=dealer.up_card,
             rules=rules
     )
 
@@ -317,7 +317,7 @@ def player_plays_hands(
         if current_hand.status == HandStatus.IN_PLAY:
             decision = player.decision(
                     hand=current_hand,
-                    dealer_up_card=dealer.up_card(),
+                    dealer_up_card=dealer.up_card,
                     rules=rules
             )
         elif another_hand > 0:
@@ -419,7 +419,7 @@ def play_round(table: Table, dealer: Dealer, rules: HouseRules, shoe: Shoe) -> N
             )
 
         if (all_hands_busted(table=table) and rules.dealer_shows_hole_card) or not all_hands_busted(table=table):
-            shoe.add_to_seen_cards(card=dealer.hole_card())
+            shoe.add_to_seen_cards(card=dealer.hole_card)
 
         if dealer_turn(table=table):
             dealer_plays_hand(shoe=shoe, dealer=dealer, rules=rules)
