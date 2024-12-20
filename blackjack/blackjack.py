@@ -42,8 +42,6 @@ class Blackjack:
             Maximum number of hands that a player can play at once after splitting
         double_down
             True if doubling is allowed on any first two cards, False otherwise
-        split_unlike_tens
-            True if able to split unlike 10's (i.e. J and Q), False otherwise
         double_after_split
             True if doubling after splits is allowed, False otherwise
         resplit_aces

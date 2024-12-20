@@ -23,7 +23,7 @@ def get_initial_count(table: Table, shoe: Shoe) -> dict[Player, float | int | No
 
     """
     count_dict: dict[Player, float | int | None] = {}
-    for player in table.players + table.waiting_players:
+    for player in table.players + table.observers:
         if isinstance(player, CardCounter):
             count_dict[player] = _get_card_counter_count(card_counter=player, shoe=shoe)
         else:
@@ -183,7 +183,7 @@ def initialize_hands(table: Table, dealer: Dealer, shoe: Shoe) -> None:
 
 def add_back_counters(table: Table, count_dict: dict[Player, float | int | None]) -> None:
     """Adds back counters to the table."""
-    for player in table.waiting_players.copy():
+    for player in table.observers.copy():
         count = count_dict[player]
         if isinstance(player, BackCounter) and count is not None and player.can_enter(count=count):
             table.add_back_counter(player=player)

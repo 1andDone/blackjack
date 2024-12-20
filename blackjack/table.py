@@ -19,15 +19,15 @@ class Table:
         """
         self._rules = rules
         self._players: list[Player] = []
-        self._waiting_players: list[Player] = []
+        self._observers: list[Player] = []
 
     @property
     def players(self):
         return self._players
 
     @property
-    def waiting_players(self) -> list[Player]:
-        return self._waiting_players
+    def observers(self) -> list[Player]:
+        return self._observers
 
     def _validate_player(self, player: Player) -> None:
         if not isinstance(player, Player):
@@ -44,7 +44,7 @@ class Table:
     def add_player(self, player: Player) -> None:
         self._validate_player(player=player)
         if isinstance(player, BackCounter):
-            self._waiting_players.append(player)
+            self._observers.append(player)
         else:
             self._players.append(player)
 
@@ -56,8 +56,8 @@ class Table:
     def remove_back_counter(self, player: Player) -> None:
         self._players.remove(player)
         if isinstance(player, CardCounter) and player.has_sufficient_bankroll(amount=player.max_bet_ramp):
-            self._waiting_players.append(player)
+            self._observers.append(player)
 
     def add_back_counter(self, player: Player) -> None:
-        self._waiting_players.remove(player)
+        self._observers.remove(player)
         self._players.append(player)
