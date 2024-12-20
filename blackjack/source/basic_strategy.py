@@ -1,5 +1,3 @@
-from typing import Any
-
 ## Basic Strategy (source: https://wizardofodds.com/games/blackjack/strategy/4-decks/)
 # H  : hit
 # S  : stand
@@ -124,47 +122,22 @@ S17_PAIR_ARRAY = [
     ['P',	'P',	'P',	'P',	'P',	'P',	'P',	'P',	'P',	'P',	'P',	'P',	'P']   # A
 ]
 
-CARDS: list[Any] = ['2', '3', '4', '5', '6', '7', '8', '9', '10', 'J', 'Q', 'K', 'A']
 
-# dealer hits on soft 17
-H17_HARD_DICT: dict[int, dict[str, str]] = {}
-for row_ix, i in enumerate(range(4, 22)):
-    H17_HARD_DICT[i] = {}
-    for col_ix, j in enumerate(CARDS):
-        H17_HARD_DICT[i][j] = H17_HARD_ARRAY[row_ix][col_ix]
+CARDS: list[str] = ['2', '3', '4', '5', '6', '7', '8', '9', '10', 'J', 'Q', 'K', 'A']
 
 
-H17_SOFT_DICT: dict[int, dict[str, str]] = {}
-for row_ix, i in enumerate(range(12, 22)):
-    H17_SOFT_DICT[i] = {}
-    for col_ix, j in enumerate(CARDS):
-        H17_SOFT_DICT[i][j] = H17_SOFT_ARRAY[row_ix][col_ix]
+def array_to_dict(array: list[list[str]], rows: list[int] | list[str], columns: list[str]) -> dict[int | str, dict[str, str]]:
+    d: dict[int | str, dict[str, str]] = {}
+    for row_ix, i in enumerate(rows):
+        d[i] = {}
+        for col_ix, j in enumerate(columns):
+            d[i][j] = array[row_ix][col_ix]
+    return d
 
 
-H17_PAIR_DICT: dict[str, dict[str, str]] = {}
-for row_ix, i in enumerate(CARDS):
-    H17_PAIR_DICT[str(i)] = {}
-    for col_ix, j in enumerate(CARDS):
-        H17_PAIR_DICT[str(i)][j] = H17_PAIR_ARRAY[row_ix][col_ix]
-
-
-# dealer stands on soft 17
-S17_HARD_DICT: dict[int, dict[str, str]] = {}
-for row_ix, i in enumerate(range(4, 22)):
-    S17_HARD_DICT[i] = {}
-    for col_ix, j in enumerate(CARDS):
-        S17_HARD_DICT[i][j] = S17_HARD_ARRAY[row_ix][col_ix]
-
-
-S17_SOFT_DICT: dict[int, dict[str, str]] = {}
-for row_ix, i in enumerate(range(12, 22)):
-    S17_SOFT_DICT[i] = {}
-    for col_ix, j in enumerate(CARDS):
-        S17_SOFT_DICT[i][j] = S17_SOFT_ARRAY[row_ix][col_ix]
-
-
-S17_PAIR_DICT: dict[str, dict[str, str]] = {}
-for row_ix, i in enumerate(CARDS):
-    S17_PAIR_DICT[str(i)] = {}
-    for col_ix, j in enumerate(CARDS):
-        S17_PAIR_DICT[str(i)][j] = S17_PAIR_ARRAY[row_ix][col_ix]
+H17_HARD_DICT: dict[int, dict[str, str]] = array_to_dict(array=H17_HARD_ARRAY, rows=range(4, 22), columns=CARDS)
+H17_SOFT_DICT: dict[int, dict[str, str]] = array_to_dict(array=H17_SOFT_ARRAY, rows=range(12, 22), columns=CARDS)
+H17_PAIR_DICT: dict[str, dict[str, str]] = array_to_dict(array=H17_PAIR_ARRAY, rows=CARDS, columns=CARDS)
+S17_HARD_DICT: dict[int, dict[str, str]] = array_to_dict(array=S17_HARD_ARRAY, rows=range(4, 22), columns=CARDS)
+S17_SOFT_DICT: dict[int, dict[str, str]] = array_to_dict(array=S17_SOFT_ARRAY, rows=range(12, 22), columns=CARDS)
+S17_PAIR_DICT: dict[str, dict[str, str]] = array_to_dict(array=S17_PAIR_ARRAY, rows=CARDS, columns=CARDS)
