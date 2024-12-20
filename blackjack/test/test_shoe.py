@@ -72,15 +72,15 @@ def test_add_to_seen_cards(setup_shoe):
 
 def test_remaining_decks(setup_shoe):
     """Tests the remaining_decks method within the Shoe class."""
-    assert setup_shoe.remaining_decks() == 1
+    assert setup_shoe.remaining_decks == 1
     # burn half a deck
     for _ in range(0, 26):
         setup_shoe.burn_card(seen=False)
-    assert setup_shoe.remaining_decks() == 0.5
+    assert setup_shoe.remaining_decks == 0.5
     # burn a quarter of a deck
     for _ in range(0, 13):
         setup_shoe.burn_card(seen=False)
-    assert setup_shoe.remaining_decks() == 0.25
+    assert setup_shoe.remaining_decks == 0.25
 
 
 def test_cut_card_reached(setup_shoe):

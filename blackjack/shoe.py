@@ -183,6 +183,7 @@ class Shoe:
     def seen_cards(self) -> dict[str, int]:
         return self._seen_cards
 
+    @property
     def remaining_decks(self) -> float | int:
         ratio = len(self._cards) / 52
         if ratio >= 0.75:
@@ -203,4 +204,4 @@ class Shoe:
     def true_count(self, strategy: CountingStrategy) -> float | int:
         if strategy == CountingStrategy.KO:
             raise ValueError('"true_count" is only applicable for balanced counting systems.')
-        return round(self.running_count(strategy=strategy) / self.remaining_decks(), 0)
+        return round(self.running_count(strategy=strategy) / self.remaining_decks, 0)

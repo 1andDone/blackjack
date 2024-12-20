@@ -78,10 +78,8 @@ class Hand:
     @property
     def total(self) -> int:
         total = self._hard_total()
-
         if 'A' in self._cards and total < 12:
             total += 10
-
         return total
 
     @property
