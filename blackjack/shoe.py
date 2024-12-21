@@ -23,7 +23,7 @@ class Shoe:
         self._shoe_size = shoe_size
         self._cards = ['2', '3', '4', '5', '6', '7', '8', '9', '10', 'J', 'Q', 'K', 'A'] * 4 * self._shoe_size
         self._total_cards = len(self._cards)
-        self._seen_cards = Counter()
+        self._seen_cards: Counter[str] = Counter()
 
     @property
     def cards(self) -> list[str]:

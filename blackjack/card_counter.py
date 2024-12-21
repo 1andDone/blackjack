@@ -49,7 +49,7 @@ class CardCounter(Player):
         if card_counting_system == CardCountingSystem.HALVES:
             counts_to_check.extend([count + 0.5 for count in range(floor(self.min_count), floor(self.max_count))])
 
-        inferred_wager = None
+        inferred_wager: float | int = 0
         for count in sorted(counts_to_check):
             if count not in bet_ramp:
                 bet_ramp[count] = inferred_wager

@@ -126,18 +126,27 @@ S17_PAIR_ARRAY = [
 CARDS: list[str] = ['2', '3', '4', '5', '6', '7', '8', '9', '10', 'J', 'Q', 'K', 'A']
 
 
-def array_to_dict(array: list[list[str]], rows: list[int] | list[str], columns: list[str]) -> dict[int | str, dict[str, str]]:
-    d: dict[int | str, dict[str, str]] = {}
+def _array_to_integer_dict(array: list[list[str]], rows: range) -> dict[int, dict[str, str]]:
+    d: dict[int, dict[str, str]] = {}
     for row_ix, i in enumerate(rows):
         d[i] = {}
-        for col_ix, j in enumerate(columns):
+        for col_ix, j in enumerate(CARDS):
             d[i][j] = array[row_ix][col_ix]
     return d
 
 
-H17_HARD_DICT: dict[int, dict[str, str]] = array_to_dict(array=H17_HARD_ARRAY, rows=range(4, 22), columns=CARDS)
-H17_SOFT_DICT: dict[int, dict[str, str]] = array_to_dict(array=H17_SOFT_ARRAY, rows=range(12, 22), columns=CARDS)
-H17_PAIR_DICT: dict[str, dict[str, str]] = array_to_dict(array=H17_PAIR_ARRAY, rows=CARDS, columns=CARDS)
-S17_HARD_DICT: dict[int, dict[str, str]] = array_to_dict(array=S17_HARD_ARRAY, rows=range(4, 22), columns=CARDS)
-S17_SOFT_DICT: dict[int, dict[str, str]] = array_to_dict(array=S17_SOFT_ARRAY, rows=range(12, 22), columns=CARDS)
-S17_PAIR_DICT: dict[str, dict[str, str]] = array_to_dict(array=S17_PAIR_ARRAY, rows=CARDS, columns=CARDS)
+def _array_to_string_dict(array: list[list[str]], rows: list[str]) -> dict[str, dict[str, str]]:
+    d: dict[str, dict[str, str]] = {}
+    for row_ix, i in enumerate(rows):
+        d[i] = {}
+        for col_ix, j in enumerate(CARDS):
+            d[i][j] = array[row_ix][col_ix]
+    return d
+
+
+H17_HARD_DICT: dict[int, dict[str, str]] = _array_to_integer_dict(array=H17_HARD_ARRAY, rows=range(4, 22))
+H17_SOFT_DICT: dict[int, dict[str, str]] = _array_to_integer_dict(array=H17_SOFT_ARRAY, rows=range(12, 22))
+H17_PAIR_DICT: dict[str, dict[str, str]] = _array_to_string_dict(array=H17_PAIR_ARRAY, rows=CARDS)
+S17_HARD_DICT: dict[int, dict[str, str]] = _array_to_integer_dict(array=S17_HARD_ARRAY, rows=range(4, 22))
+S17_SOFT_DICT: dict[int, dict[str, str]] = _array_to_integer_dict(array=S17_SOFT_ARRAY, rows=range(12, 22))
+S17_PAIR_DICT: dict[str, dict[str, str]] = _array_to_string_dict(array=S17_PAIR_ARRAY, rows=CARDS)
