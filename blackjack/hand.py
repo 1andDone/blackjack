@@ -24,17 +24,17 @@ class Hand:
     Represents a single blackjack hand.
 
     """
-    def __init__(self, is_previous_hand_split: bool = False):
+    def __init__(self, was_split: bool = False):
         """
         Parameters
         ----------
-        is_previous_hand_split
-            True if previous hand was split, False otherwise
+        was_split
+            True if the previous hand was split, False otherwise
 
         """
         self._cards: list[str] = []
-        self._is_previous_hand_split = is_previous_hand_split
-        self._is_current_hand_split = False
+        self._was_split = was_split
+        self._is_split = False
         self._status = HandStatus.IN_PLAY
         self._total_bet: float | int = 0
         self._side_bet: float | int = 0
@@ -55,14 +55,14 @@ class Hand:
     def total_bet(self) -> float | int:
         return self._total_bet
 
-    def update_total_bet(self, amount: float | int) -> None:
+    def add_to_total_bet(self, amount: float | int) -> None:
         self._total_bet += amount
 
     @property
     def side_bet(self) -> float | int:
         return self._side_bet
 
-    def update_side_bet(self, amount: float | int) -> None:
+    def add_to_side_bet(self, amount: float | int) -> None:
         self._side_bet += amount
 
     def add_card(self, card: str) -> None:
@@ -72,12 +72,12 @@ class Hand:
     def number_of_cards(self) -> int:
         return len(self._cards)
 
-    def _hard_total(self) -> int:
+    def _calculate_hard_total(self) -> int:
         return sum(HARD_CARD_VALUE[card] for card in self._cards)
 
     @property
     def total(self) -> int:
-        total = self._hard_total()
+        total = self._calculate_hard_total()
         if 'A' in self._cards and total < 12:
             total += 10
         return total
@@ -85,7 +85,7 @@ class Hand:
     @property
     def is_soft(self) -> bool:
         if 'A' in self._cards:
-            total = self._hard_total()
+            total = self._calculate_hard_total()
             return total < 12
         return False
 
@@ -94,21 +94,21 @@ class Hand:
         return self.total > 21
 
     def split(self) -> Hand:
-        self._is_current_hand_split = True
-        new_hand = Hand(is_previous_hand_split=True)
+        self._is_split = True
+        new_hand = Hand(was_split=True)
         new_hand.add_card(card=self._cards.pop())
-        new_hand.update_total_bet(amount=self._total_bet)
+        new_hand.add_to_total_bet(amount=self._total_bet)
         return new_hand
 
     @property
-    def is_previous_hand_split(self) -> bool:
-        return self._is_previous_hand_split
+    def was_split(self) -> bool:
+        return self._was_split
 
     @property
-    def is_current_hand_split(self) -> bool:
-        return self._is_current_hand_split
+    def is_split(self) -> bool:
+        return self._is_split
 
     @property
     def is_blackjack(self) -> bool:
         return self.number_of_cards == 2 and self.total == 21 and \
-            not self._is_previous_hand_split and not self._is_current_hand_split
+            not self._was_split and not self._is_split

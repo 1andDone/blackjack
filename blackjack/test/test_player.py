@@ -36,7 +36,7 @@ def test_decision_one_card(setup_player, setup_rules):
 
     """
     setup_player.first_hand.add_card(card='8')
-    setup_player.first_hand.update_total_bet(amount=10)
+    setup_player.first_hand.add_to_total_bet(amount=10)
     assert setup_player.decision(hand=setup_player.first_hand, dealer_up_card='J', rules=setup_rules) == 'H'
 
 
@@ -48,7 +48,7 @@ def test_decision_number_of_hands_less_than_max_hands(setup_player, setup_rules)
     """
     setup_player.first_hand.add_card(card='8')
     setup_player.first_hand.add_card(card='8')
-    setup_player.first_hand.update_total_bet(amount=10)
+    setup_player.first_hand.add_to_total_bet(amount=10)
     assert setup_player.decision(hand=setup_player.first_hand, dealer_up_card='J', rules=setup_rules) == 'P'
 
 
@@ -64,11 +64,11 @@ def test_decision_number_of_hands_equals_max_hands(setup_player):
     split_card = setup_player.first_hand.split()
     setup_player.hands.append(split_card)
     setup_player.first_hand.add_card(card='J')
-    setup_player.first_hand.update_total_bet(amount=10)
+    setup_player.first_hand.add_to_total_bet(amount=10)
     assert setup_player.decision(hand=setup_player.first_hand, dealer_up_card='J', rules=rules) == 'S'
     split_hand = setup_player.hands[1]
     split_hand.add_card(card='8')
-    setup_player.hands[1].update_total_bet(amount=10)
+    setup_player.hands[1].add_to_total_bet(amount=10)
     assert setup_player.decision(hand=split_hand, dealer_up_card='J', rules=rules) == 'Rh'
 
 
@@ -80,7 +80,7 @@ def test_decision_soft(setup_player, setup_rules):
     """
     setup_player.first_hand.add_card(card='7')
     setup_player.first_hand.add_card(card='A')
-    setup_player.first_hand.update_total_bet(amount=10)
+    setup_player.first_hand.add_to_total_bet(amount=10)
     assert setup_player.decision(hand=setup_player.first_hand, dealer_up_card='J', rules=setup_rules) == 'H'
 
 
@@ -92,7 +92,7 @@ def test_decision_hard(setup_player, setup_rules):
     """
     setup_player.first_hand.add_card(card='8')
     setup_player.first_hand.add_card(card='K')
-    setup_player.first_hand.update_total_bet(amount=10)
+    setup_player.first_hand.add_to_total_bet(amount=10)
     assert setup_player.decision(hand=setup_player.first_hand, dealer_up_card='J', rules=setup_rules) == 'S'
 
 
@@ -105,7 +105,7 @@ def test_decision_busted(setup_player, setup_rules):
     setup_player.first_hand.add_card(card='K')
     setup_player.first_hand.add_card(card='J')
     setup_player.first_hand.add_card(card='2')
-    setup_player.first_hand.update_total_bet(amount=10)
+    setup_player.first_hand.add_to_total_bet(amount=10)
     with pytest.raises(KeyError):
         setup_player.decision(hand=setup_player.first_hand, dealer_up_card='J', rules=setup_rules)
 
@@ -118,7 +118,7 @@ def test_decision_pair(setup_player, setup_rules):
     """
     setup_player.first_hand.add_card(card='8')
     setup_player.first_hand.add_card(card='8')
-    setup_player.first_hand.update_total_bet(amount=10)
+    setup_player.first_hand.add_to_total_bet(amount=10)
     assert setup_player.decision(hand=setup_player.first_hand, dealer_up_card='J', rules=setup_rules) == 'P'
 
 
@@ -131,7 +131,7 @@ def test_decision_pair_insufficient_bankroll(setup_player, setup_rules):
     """
     setup_player.first_hand.add_card(card='8')
     setup_player.first_hand.add_card(card='8')
-    setup_player.first_hand.update_total_bet(amount=2000)
+    setup_player.first_hand.add_to_total_bet(amount=2000)
     assert setup_player.decision(hand=setup_player.first_hand, dealer_up_card='J', rules=setup_rules) == 'Rh'
 
 

@@ -1,3 +1,4 @@
+import pytest
 from blackjack.enums import HandStatus
 
 
@@ -16,32 +17,28 @@ def test_status(setup_hand_blackjack):
     assert setup_hand_blackjack.status == HandStatus.SETTLED
 
 
-def test_update_total_bet(setup_hand_with_ace):
+def test_add_to_total_bet(setup_hand_with_ace):
     """
-    Tests the update_total_bet method within
+    Tests the add_to_total_bet method within
     the Hand class.
 
     """
-    setup_hand_with_ace.update_total_bet(amount=10)
+    setup_hand_with_ace.add_to_total_bet(amount=10)
     assert setup_hand_with_ace.total_bet == 10
-    setup_hand_with_ace.update_total_bet(amount=15)
+    setup_hand_with_ace.add_to_total_bet(amount=15)
     assert setup_hand_with_ace.total_bet == 25
-    setup_hand_with_ace.update_total_bet(amount=-7.5)
-    assert setup_hand_with_ace.total_bet == 17.5
 
 
-def test_update_side_bet(setup_hand_with_ace):
+def test_add_to_side_bet(setup_hand_with_ace):
     """
-    Tests the update_side_bet method within
+    Tests the add_to_side_bet method within
     the Hand class.
 
     """
-    setup_hand_with_ace.update_side_bet(amount=10)
+    setup_hand_with_ace.add_to_side_bet(amount=10)
     assert setup_hand_with_ace.side_bet == 10
-    setup_hand_with_ace.update_side_bet(amount=15)
+    setup_hand_with_ace.add_to_side_bet(amount=15)
     assert setup_hand_with_ace.side_bet == 25
-    setup_hand_with_ace.update_side_bet(amount=-7.5)
-    assert setup_hand_with_ace.side_bet == 17.5
 
 
 def test_add_cards(setup_hand_with_ace):
@@ -101,15 +98,31 @@ def test_split(setup_hand_split):
     assert setup_hand_split.cards == ['7', '7']
     new_hand = setup_hand_split.split()
     assert setup_hand_split.cards == ['7']
-    assert setup_hand_split.is_current_hand_split
+    assert setup_hand_split.is_split
     assert new_hand.cards == ['7']
-    assert not new_hand.is_current_hand_split
+    assert not new_hand.is_split
 
 
-def test_is_blackjack(setup_hand_blackjack):
-    """Tests the is_blackjack method within the Hand class."""
+@pytest.mark.parametrize(
+    'test_was_split, test_is_split, expected',
+     [
+        (False, True, False),
+        (True, False, False),
+        (True, True, False),
+        (False, False, True)
+     ]
+)
+def test_is_blackjack(setup_hand_blackjack, test_was_split, test_is_split, expected):
+    """
+    Tests the is_blackjack method within the Hand class
+    when the previous hand and current hand may or may not
+    have been split.
+    
+    """
+    setup_hand_blackjack._was_split = test_was_split
+    setup_hand_blackjack._is_split = test_is_split
     assert setup_hand_blackjack.total == 21
-    assert setup_hand_blackjack.is_blackjack
+    assert setup_hand_blackjack.is_blackjack is expected
 
 
 def test_is_blackjack_too_many_cards(setup_hand_without_ace):
@@ -123,40 +136,3 @@ def test_is_blackjack_too_many_cards(setup_hand_without_ace):
     setup_hand_without_ace.add_card(card='3')
     assert setup_hand_without_ace.total == 21
     assert not setup_hand_without_ace.is_blackjack
-
-
-def test_is_blackjack_current_hand_split(setup_hand_blackjack):
-    """
-    Tests the is_blackjack method within the Hand class
-    when the hand totals 21 but the current hand was split.
-
-    """
-    setup_hand_blackjack._is_previous_hand_split = False
-    setup_hand_blackjack._is_current_hand_split = True
-    assert setup_hand_blackjack.total == 21
-    assert not setup_hand_blackjack.is_blackjack
-
-
-def test_is_blackjack_previous_hand_split(setup_hand_blackjack):
-    """
-    Tests the is_blackjack method within the Hand class
-    when the hand totals 21 but the previous hand was split.
-
-    """
-    setup_hand_blackjack._is_previous_hand_split = True
-    setup_hand_blackjack._is_current_hand_split = False
-    assert setup_hand_blackjack.total == 21
-    assert not setup_hand_blackjack.is_blackjack
-
-
-def test_is_blackjack_previous_current_hand_split(setup_hand_blackjack):
-    """
-    Tests the is_blackjack method within the Hand class
-    when the hand totals 21 but the previous and current hands
-    were split.
-
-    """
-    setup_hand_blackjack._is_previous_hand_split = True
-    setup_hand_blackjack._is_current_hand_split = True
-    assert setup_hand_blackjack.total == 21
-    assert not setup_hand_blackjack.is_blackjack

@@ -151,7 +151,7 @@ def test_player_initial_decision_insurance_dealer_blackjack(setup_card_counter_u
     rules = HouseRules(min_bet=10, max_bet=500, insurance=True)
     setup_card_counter_unbalanced.first_hand.add_card(card='5')
     setup_card_counter_unbalanced.first_hand.add_card(card='6')
-    setup_card_counter_unbalanced.first_hand.update_total_bet(amount=10)
+    setup_card_counter_unbalanced.first_hand.add_to_total_bet(amount=10)
     setup_dealer.hand.add_card(card='K')
     setup_dealer.hand.add_card(card='A')
     assert player_initial_decision(player=setup_card_counter_unbalanced, count=3, insurance_count=4, rules=rules, dealer=setup_dealer) is None
@@ -172,7 +172,7 @@ def test_player_initial_decision_insurance_no_dealer_blackjack(setup_card_counte
     rules = HouseRules(min_bet=10, max_bet=500, insurance=True)
     setup_card_counter_unbalanced.first_hand.add_card(card='2')
     setup_card_counter_unbalanced.first_hand.add_card(card='2')
-    setup_card_counter_unbalanced.first_hand.update_total_bet(amount=10)
+    setup_card_counter_unbalanced.first_hand.add_to_total_bet(amount=10)
     setup_dealer.hand.add_card(card='6')
     setup_dealer.hand.add_card(card='A')
     assert player_initial_decision(player=setup_card_counter_unbalanced, count=3, insurance_count=4, rules=rules, dealer=setup_dealer) == 'H'
@@ -191,7 +191,7 @@ def test_player_initial_decision_no_insurance_dealer_blackjack(setup_player, set
     rules = HouseRules(min_bet=10, max_bet=500, insurance=False)
     setup_player.first_hand.add_card(card='5')
     setup_player.first_hand.add_card(card='6')
-    setup_player.first_hand.update_total_bet(amount=10)
+    setup_player.first_hand.add_to_total_bet(amount=10)
     setup_dealer.hand.add_card(card='K')
     setup_dealer.hand.add_card(card='A')
     assert player_initial_decision(player=setup_player, count=0, insurance_count=None, rules=rules, dealer=setup_dealer) is None
@@ -224,7 +224,7 @@ def test_player_initial_decision_player_blackjack(setup_player, setup_dealer, se
     """
     setup_player.first_hand.add_card(card='A')
     setup_player.first_hand.add_card(card='K')
-    setup_player.first_hand.update_total_bet(amount=20)
+    setup_player.first_hand.add_to_total_bet(amount=20)
     setup_dealer.hand.add_card(card='K')
     setup_dealer.hand.add_card(card='J')
     assert player_initial_decision(player=setup_player, count=1, insurance_count=None, rules=setup_rules, dealer=setup_dealer) is None
@@ -243,7 +243,7 @@ def test_player_initial_decision_late_surrender(setup_player, setup_dealer):
     rules = HouseRules(min_bet=10, max_bet=500, late_surrender=True)
     setup_player.first_hand.add_card(card='K')
     setup_player.first_hand.add_card(card='5')
-    setup_player.first_hand.update_total_bet(amount=50)
+    setup_player.first_hand.add_to_total_bet(amount=50)
     setup_dealer.hand.add_card(card='K')
     setup_dealer.hand.add_card(card='J')
     assert player_initial_decision(player=setup_player, count=None, insurance_count=None, rules=rules, dealer=setup_dealer) is None
@@ -262,7 +262,7 @@ def test_player_initial_decision_no_late_surrender(setup_player, setup_dealer):
     rules = HouseRules(min_bet=10, max_bet=500, late_surrender=False)
     setup_player.first_hand.add_card(card='K')
     setup_player.first_hand.add_card(card='5')
-    setup_player.first_hand.update_total_bet(amount=50)
+    setup_player.first_hand.add_to_total_bet(amount=50)
     setup_dealer.hand.add_card(card='K')
     setup_dealer.hand.add_card(card='J')
     assert player_initial_decision(player=setup_player, count=None, insurance_count=None, rules=rules, dealer=setup_dealer) == 'Rh'
@@ -278,7 +278,7 @@ def test_player_plays_hands_settled(setup_player, setup_shoe, setup_dealer):
     rules = HouseRules(min_bet=10, max_bet=500, late_surrender=True)
     setup_player.first_hand.add_card(card='K')
     setup_player.first_hand.add_card(card='5')
-    setup_player.first_hand.update_total_bet(amount=50)
+    setup_player.first_hand.add_to_total_bet(amount=50)
     setup_dealer.hand.add_card(card='K')
     setup_dealer.hand.add_card(card='J')
     player_plays_hands(
@@ -300,7 +300,7 @@ def test_player_plays_hands_split(setup_shoe, setup_dealer, setup_player, setup_
     """
     setup_player.first_hand.add_card(card='8')
     setup_player.first_hand.add_card(card='8')
-    setup_player.first_hand.update_total_bet(amount=10)
+    setup_player.first_hand.add_to_total_bet(amount=10)
     setup_dealer.hand.add_card(card='6')
     setup_dealer.hand.add_card(card='6')
     player_plays_hands(
@@ -328,7 +328,7 @@ def test_player_plays_hands_split_insufficient_bankroll(setup_shoe, setup_dealer
     player = Player(name='Player 1', min_bet=10, bankroll=10)
     player.first_hand.add_card(card='6')
     player.first_hand.add_card(card='6')
-    player.first_hand.update_total_bet(amount=20)
+    player.first_hand.add_to_total_bet(amount=20)
     setup_dealer.hand.add_card(card='7')
     setup_dealer.hand.add_card(card='7')
     setup_shoe._cards = ['J', 'Q', '7', '6', '5', 'A']
@@ -354,7 +354,7 @@ def test_player_plays_hands_resplit_aces(setup_player, setup_shoe, setup_dealer)
     rules = HouseRules(min_bet=10, max_bet=500, resplit_aces=True)
     setup_player.first_hand.add_card(card='A')
     setup_player.first_hand.add_card(card='A')
-    setup_player.first_hand.update_total_bet(amount=10)
+    setup_player.first_hand.add_to_total_bet(amount=10)
     setup_dealer.hand.add_card(card='6')
     setup_dealer.hand.add_card(card='6')
     player_plays_hands(
@@ -386,7 +386,7 @@ def test_player_plays_hands_resplit_aces_insufficient_bankroll(setup_shoe, setup
     rules = HouseRules(min_bet=10, max_bet=500, resplit_aces=True)
     player.first_hand.add_card(card='A')
     player.first_hand.add_card(card='A')
-    player.first_hand.update_total_bet(amount=10)
+    player.first_hand.add_to_total_bet(amount=10)
     setup_dealer.hand.add_card(card='5')
     setup_dealer.hand.add_card(card='5')
     setup_shoe._cards = ['4', '3', '2', 'Q', 'K', 'A']
@@ -416,7 +416,7 @@ def test_player_plays_hands_resplit_aces_max_hands(setup_player, setup_shoe, set
     rules = HouseRules(min_bet=10, max_bet=500, resplit_aces=True, max_hands=3)
     setup_player.first_hand.add_card(card='A')
     setup_player.first_hand.add_card(card='A')
-    setup_player.first_hand.update_total_bet(amount=10)
+    setup_player.first_hand.add_to_total_bet(amount=10)
     setup_dealer.hand.add_card(card='5')
     setup_dealer.hand.add_card(card='5')
     setup_shoe._cards = ['4', '3', 'A', '3', '2', 'A']
@@ -447,7 +447,7 @@ def test_player_plays_hands_resplit_aces_not_allowed(setup_player, setup_shoe, s
     rules = HouseRules(min_bet=10, max_bet=500, resplit_aces=False)
     setup_player.first_hand.add_card(card='A')
     setup_player.first_hand.add_card(card='A')
-    setup_player.first_hand.update_total_bet(amount=10)
+    setup_player.first_hand.add_to_total_bet(amount=10)
     setup_dealer.hand.add_card(card='6')
     setup_dealer.hand.add_card(card='6')
     player_plays_hands(
@@ -475,7 +475,7 @@ def test_player_plays_hands_double_down(setup_player, setup_dealer, setup_shoe):
     rules = HouseRules(min_bet=10, max_bet=500, double_down=True)
     setup_player.first_hand.add_card(card='5')
     setup_player.first_hand.add_card(card='6')
-    setup_player.first_hand.update_total_bet(amount=10)
+    setup_player.first_hand.add_to_total_bet(amount=10)
     setup_dealer.hand.add_card(card='2')
     setup_dealer.hand.add_card(card='3')
     player_plays_hands(
@@ -502,7 +502,7 @@ def test_player_plays_hands_double_down_not_allowed(setup_player, setup_dealer, 
     rules = HouseRules(min_bet=10, max_bet=500, double_down=False)
     setup_player.first_hand.add_card(card='5')
     setup_player.first_hand.add_card(card='6')
-    setup_player.first_hand.update_total_bet(amount=10)
+    setup_player.first_hand.add_to_total_bet(amount=10)
     setup_dealer.hand.add_card(card='2')
     setup_dealer.hand.add_card(card='3')
     player_plays_hands(
@@ -529,7 +529,7 @@ def test_player_plays_hands_double_down_insufficient_bankroll(setup_player, setu
     rules = HouseRules(min_bet=10, max_bet=500, double_down=True)
     setup_player.first_hand.add_card(card='5')
     setup_player.first_hand.add_card(card='6')
-    setup_player.first_hand.update_total_bet(amount=10)
+    setup_player.first_hand.add_to_total_bet(amount=10)
     setup_player.update_bankroll(amount=-1000)
     setup_dealer.hand.add_card(card='2')
     setup_dealer.hand.add_card(card='3')
@@ -557,7 +557,7 @@ def test_player_plays_hands_double_after_split(setup_player, setup_dealer, setup
     rules = HouseRules(min_bet=10, max_bet=500, double_down=True, double_after_split=True)
     setup_player.first_hand.add_card(card='2')
     setup_player.first_hand.add_card(card='2')
-    setup_player.first_hand.update_total_bet(amount=10)
+    setup_player.first_hand.add_to_total_bet(amount=10)
     setup_player.update_bankroll(amount=-970)
     setup_dealer.hand.add_card(card='2')
     setup_dealer.hand.add_card(card='3')
@@ -588,7 +588,7 @@ def test_player_plays_hands_double_after_split_not_allowed(setup_player, setup_d
     rules = HouseRules(min_bet=10, max_bet=500, double_down=True, double_after_split=False)
     setup_player.first_hand.add_card(card='2')
     setup_player.first_hand.add_card(card='2')
-    setup_player.first_hand.update_total_bet(amount=10)
+    setup_player.first_hand.add_to_total_bet(amount=10)
     setup_dealer.hand.add_card(card='2')
     setup_dealer.hand.add_card(card='3')
     player_plays_hands(
@@ -614,7 +614,7 @@ def test_player_plays_hands_double_after_split_insufficient_bankroll(setup_playe
     rules = HouseRules(min_bet=10, max_bet=500, double_down=True, double_after_split=True)
     setup_player.first_hand.add_card(card='2')
     setup_player.first_hand.add_card(card='2')
-    setup_player.first_hand.update_total_bet(amount=10)
+    setup_player.first_hand.add_to_total_bet(amount=10)
     setup_player.update_bankroll(amount=-980)
     setup_dealer.hand.add_card(card='2')
     setup_dealer.hand.add_card(card='3')
@@ -637,7 +637,7 @@ def test_player_plays_hands_stand(setup_player, setup_dealer, setup_shoe, setup_
     """Tests the player_plays_hands function when the player stands."""
     setup_player.first_hand.add_card(card='6')
     setup_player.first_hand.add_card(card='7')
-    setup_player.first_hand.update_total_bet(amount=10)
+    setup_player.first_hand.add_to_total_bet(amount=10)
     setup_dealer.hand.add_card(card='6')
     setup_dealer.hand.add_card(card='6')
     player_plays_hands(
@@ -656,7 +656,7 @@ def test_player_plays_hands_busted(setup_player, setup_dealer, setup_shoe, setup
     """Tests the player_plays_hands function when the hand is busted."""
     setup_player.first_hand.add_card(card='6')
     setup_player.first_hand.add_card(card='7')
-    setup_player.first_hand.update_total_bet(amount=10)
+    setup_player.first_hand.add_to_total_bet(amount=10)
     setup_dealer.hand.add_card(card='10')
     setup_dealer.hand.add_card(card='Q')
     player_plays_hands(
@@ -736,7 +736,7 @@ def test_compare_hands_win_total(setup_player, setup_dealer):
     setup_player.first_hand.status = HandStatus.SHOWDOWN
     setup_player.first_hand.add_card(card='J')
     setup_player.first_hand.add_card(card='K')
-    setup_player.first_hand.update_total_bet(amount=10)
+    setup_player.first_hand.add_to_total_bet(amount=10)
     setup_dealer.hand.add_card(card='10')
     setup_dealer.hand.add_card(card='8')
     compare_hands(player=setup_player, dealer=setup_dealer, count=3)
@@ -755,7 +755,7 @@ def test_compare_hands_win_dealer_busts(setup_player, setup_dealer):
     setup_player.first_hand.status = HandStatus.SHOWDOWN
     setup_player.first_hand.add_card(card='J')
     setup_player.first_hand.add_card(card='K')
-    setup_player.first_hand.update_total_bet(amount=20)
+    setup_player.first_hand.add_to_total_bet(amount=20)
     setup_dealer.hand.add_card(card='10')
     setup_dealer.hand.add_card(card='6')
     setup_dealer.hand.add_card(card='K')
@@ -775,7 +775,7 @@ def test_compare_hands_push(setup_player, setup_dealer):
     setup_player.first_hand.status = HandStatus.SHOWDOWN
     setup_player.first_hand.add_card(card='J')
     setup_player.first_hand.add_card(card='K')
-    setup_player.first_hand.update_total_bet(amount=10)
+    setup_player.first_hand.add_to_total_bet(amount=10)
     setup_dealer.hand.add_card(card='10')
     setup_dealer.hand.add_card(card='Q')
     compare_hands(player=setup_player, dealer=setup_dealer, count=None)
@@ -793,7 +793,7 @@ def test_compare_hands_loss_total(setup_player, setup_dealer):
     setup_player.first_hand.status = HandStatus.SHOWDOWN
     setup_player.first_hand.add_card(card='6')
     setup_player.first_hand.add_card(card='K')
-    setup_player.first_hand.update_total_bet(amount=20)
+    setup_player.first_hand.add_to_total_bet(amount=20)
     setup_dealer.hand.add_card(card='10')
     setup_dealer.hand.add_card(card='8')
     compare_hands(player=setup_player, dealer=setup_dealer, count=-2)
