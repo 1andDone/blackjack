@@ -53,11 +53,15 @@ class Table:
             raise ValueError(f'{player.name} is not seated at the table or a back counter.')
         self._players.remove(player)
 
-    def remove_back_counter(self, player: Player) -> None:
-        self._players.remove(player)
-        if isinstance(player, CardCounter) and player.has_sufficient_bankroll(amount=player.max_bet_ramp):
-            self._observers.append(player)
+    def remove_back_counter(self, back_counter: BackCounter) -> None:
+        if not isinstance(back_counter, BackCounter):
+            raise TypeError('Expected a BackCounter object.')
+        self._players.remove(back_counter)
+        if isinstance(back_counter, BackCounter) and back_counter.has_sufficient_bankroll(amount=back_counter.max_bet_ramp):
+            self._observers.append(back_counter)
 
-    def add_back_counter(self, player: Player) -> None:
-        self._observers.remove(player)
-        self._players.append(player)
+    def add_back_counter(self, back_counter: BackCounter) -> None:
+        if not isinstance(back_counter, BackCounter):
+            raise TypeError('Expected a BackCounter object.')
+        self._observers.remove(back_counter)
+        self._players.append(back_counter)

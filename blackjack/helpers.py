@@ -186,7 +186,7 @@ def add_back_counters(table: Table, count_dict: dict[Player, float | int | None]
     for player in table.observers.copy():
         count = count_dict[player]
         if isinstance(player, BackCounter) and count is not None and player.can_enter(count=count):
-            table.add_back_counter(player=player)
+            table.add_back_counter(back_counter=player)
 
 
 def remove_back_counters(table: Table, count_dict: dict[Player, float | int | None]) -> None:
@@ -194,7 +194,7 @@ def remove_back_counters(table: Table, count_dict: dict[Player, float | int | No
     for player in table.players.copy():
         count = count_dict[player]
         if isinstance(player, BackCounter) and count is not None and player.can_exit(count=count):
-            table.remove_back_counter(player=player)
+            table.remove_back_counter(back_counter=player)
 
 
 def player_initial_decision(
