@@ -183,10 +183,10 @@ def initialize_hands(table: Table, dealer: Dealer, shoe: Shoe) -> None:
 
 def add_back_counters(table: Table, count_dict: dict[Player, float | int | None]) -> None:
     """Adds back counters to the table."""
-    for player in table.observers.copy():
-        count = count_dict[player]
-        if isinstance(player, BackCounter) and count is not None and player.can_enter(count=count):
-            table.add_back_counter(back_counter=player)
+    for observer in table.observers.copy():
+        count = count_dict[observer]
+        if isinstance(observer, BackCounter) and count is not None and observer.can_enter(count=count):
+            table.add_back_counter(back_counter=observer)
 
 
 def remove_back_counters(table: Table, count_dict: dict[Player, float | int | None]) -> None:

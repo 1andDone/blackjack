@@ -38,7 +38,7 @@ class BackCounter(CardCounter):
         return self._entry_point
 
     def can_enter(self, count: float | int) -> bool:
-        return count >= self._entry_point
+        return count >= self._entry_point and self.has_sufficient_bankroll(amount=self.initial_wager(count=count))
 
     @property
     def exit_point(self) -> float | int:

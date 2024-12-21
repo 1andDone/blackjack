@@ -77,6 +77,17 @@ def test_can_enter(setup_back_counter, test_count, expected):
     assert setup_back_counter.can_enter(count=test_count) is expected
 
 
+def test_can_enter_insufficient_bankroll(setup_back_counter):
+    """
+    Tests the can_enter method within the BackCounter class
+    when the back counter has insufficient bankroll to place
+    a wager at the current count.
+
+    """
+    setup_back_counter.update_bankroll(amount=-1000)
+    assert setup_back_counter.can_enter(count=10) is False
+
+
 @pytest.mark.parametrize(
     'test_count, expected',
      [

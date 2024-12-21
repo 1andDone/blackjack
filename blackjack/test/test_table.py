@@ -166,23 +166,6 @@ def test_remove_back_counter(setup_table, setup_back_counter):
     assert setup_back_counter in setup_table.observers
 
 
-def test_remove_back_counter_insufficient_bankroll(setup_table, setup_back_counter):
-    """
-    Tests the remove_back_counter method within the Table class
-    when the back counter has insufficient bankroll to be added
-    as an observer.
-
-    """
-    setup_table.add_player(player=setup_back_counter)
-    setup_table.add_back_counter(back_counter=setup_back_counter)
-    assert setup_back_counter in setup_table.players
-    assert setup_back_counter not in setup_table.observers
-    setup_back_counter.update_bankroll(amount=-1000)
-    setup_table.remove_back_counter(back_counter=setup_back_counter)
-    assert setup_back_counter not in setup_table.players
-    assert setup_back_counter not in setup_table.observers
-
-
 def test_add_back_counter(setup_table, setup_back_counter):
     """Tests the add_back_counter method within the Table class."""
     setup_table.add_player(player=setup_back_counter)
