@@ -1,7 +1,7 @@
 from math import ceil, floor
 from typing import Any
 from typing_extensions import override
-from blackjack.enums import CountingStrategy
+from blackjack.enums import CardCountingSystem
 from blackjack.player import Player
 
 
@@ -13,7 +13,7 @@ class CardCounter(Player):
     """
     def __init__(
         self,
-        counting_strategy: CountingStrategy,
+        card_counting_system: CardCountingSystem,
         bet_ramp: dict[float | int, float | int],
         insurance: float | int | None = None,
         **kwargs: Any
@@ -21,8 +21,8 @@ class CardCounter(Player):
         """
         Parameters
         ----------
-        counting_strategy
-            Card counting strategy used by the player
+        card_counting_system
+            Card counting system used by the player
         bet_ramp
             Dictionary where each key value is the running or
             true count and each value indicates the amount of money
@@ -46,7 +46,7 @@ class CardCounter(Player):
         self.max_count = max(bet_ramp)
 
         counts_to_check: list[float | int] = list(range(ceil(self.min_count), floor(self.max_count) + 1))
-        if counting_strategy == CountingStrategy.HALVES:
+        if card_counting_system == CardCountingSystem.HALVES:
             counts_to_check.extend([count + 0.5 for count in range(floor(self.min_count), floor(self.max_count))])
 
         inferred_wager = None
@@ -56,12 +56,12 @@ class CardCounter(Player):
             inferred_wager = bet_ramp[count]
 
         self._bet_ramp = bet_ramp
-        self._counting_strategy = counting_strategy
+        self._card_counting_system = card_counting_system
         self._insurance = insurance
 
     @property
-    def counting_strategy(self) -> CountingStrategy:
-        return self._counting_strategy
+    def card_counting_system(self) -> CardCountingSystem:
+        return self._card_counting_system
 
     @override
     def initial_wager(self, **kwargs: Any) -> float | int:

@@ -1,6 +1,6 @@
 import pytest
 from blackjack.card_counter import CardCounter
-from blackjack.enums import CountingStrategy
+from blackjack.enums import CardCountingSystem
 
 
 def test_init_bet_ramp_maximum_exceeds_bankroll():
@@ -15,7 +15,7 @@ def test_init_bet_ramp_maximum_exceeds_bankroll():
             name='Player 2',
             bankroll=1000,
             min_bet=10,
-            counting_strategy=CountingStrategy.HI_LO,
+            card_counting_system=CardCountingSystem.HI_LO,
             bet_ramp={
                 1: 15,
                 2: 20,
@@ -39,7 +39,7 @@ def test_init_bet_ramp_count_does_not_exist_float():
         name='Player 2',
         bankroll=1000,
         min_bet=10,
-        counting_strategy=CountingStrategy.HALVES,
+        card_counting_system=CardCountingSystem.HALVES,
         bet_ramp={
             1.5: 15,
             2: 20,
@@ -67,19 +67,19 @@ def test_init_bet_ramp_count_does_not_exist_integer():
 
     """
     card_counter = CardCounter(
-            name='Player 2',
-            bankroll=1000,
-            min_bet=10,
-            counting_strategy=CountingStrategy.HI_LO,
-            bet_ramp={
-                1: 15,
-                2: 20,
-                3: 40,
-                4: 50,
-                6: 80
-            },
-            insurance=None
-        )
+        name='Player 2',
+        bankroll=1000,
+        min_bet=10,
+        card_counting_system=CardCountingSystem.HI_LO,
+        bet_ramp={
+            1: 15,
+            2: 20,
+            3: 40,
+            4: 50,
+            6: 80
+        },
+        insurance=None
+    )
     assert card_counter._bet_ramp == {
         1: 15,
         2: 20,
@@ -93,9 +93,9 @@ def test_init_bet_ramp_count_does_not_exist_integer():
 @pytest.mark.parametrize(
     'test_count, expected',
     [
-         (-5, 10),
-         (1, 15),
-         (6, 70)
+        (-5, 10),
+        (1, 15),
+        (6, 70)
      ]
 )
 def test_initial_wager(test_count, expected, setup_card_counter):

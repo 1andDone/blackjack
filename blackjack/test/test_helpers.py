@@ -114,11 +114,11 @@ def test_add_back_counters(setup_table, setup_shoe, setup_card_counter, setup_ba
     setup_shoe.add_to_seen_cards(card='2')
     add_back_counters(table=setup_table, count_dict=get_initial_count(table=setup_table, shoe=setup_shoe))
     assert len(setup_table.players) == 1
-    assert setup_shoe.running_count(strategy=setup_back_counter.counting_strategy) < setup_back_counter.entry_point
+    assert setup_shoe.running_count(card_counting_system=setup_back_counter.card_counting_system) < setup_back_counter.entry_point
     setup_shoe.add_to_seen_cards(card='2')
     add_back_counters(table=setup_table, count_dict=get_initial_count(table=setup_table, shoe=setup_shoe))
     assert len(setup_table.players) == 2
-    assert setup_shoe.running_count(strategy=setup_back_counter.counting_strategy) == setup_back_counter.entry_point
+    assert setup_shoe.running_count(card_counting_system=setup_back_counter.card_counting_system) == setup_back_counter.entry_point
 
 
 def test_remove_back_counters(setup_table, setup_shoe, setup_card_counter, setup_back_counter):
@@ -130,16 +130,16 @@ def test_remove_back_counters(setup_table, setup_shoe, setup_card_counter, setup
     setup_shoe.add_to_seen_cards(card='2')
     add_back_counters(table=setup_table, count_dict=get_initial_count(table=setup_table, shoe=setup_shoe))
     assert len(setup_table.players) == 2
-    assert setup_shoe.running_count(strategy=setup_back_counter.counting_strategy) > setup_back_counter.exit_point
+    assert setup_shoe.running_count(card_counting_system=setup_back_counter.card_counting_system) > setup_back_counter.exit_point
     remove_back_counters(table=setup_table, count_dict=get_initial_count(table=setup_table, shoe=setup_shoe))
     assert len(setup_table.players) == 2
-    assert setup_shoe.running_count(strategy=setup_back_counter.counting_strategy) > setup_back_counter.exit_point
+    assert setup_shoe.running_count(card_counting_system=setup_back_counter.card_counting_system) > setup_back_counter.exit_point
     setup_shoe.add_to_seen_cards(card='K')
     setup_shoe.add_to_seen_cards(card='K')
     setup_shoe.add_to_seen_cards(card='K')
     remove_back_counters(table=setup_table, count_dict=get_initial_count(table=setup_table, shoe=setup_shoe))
     assert len(setup_table.players) == 1
-    assert setup_shoe.running_count(strategy=setup_back_counter.counting_strategy) == setup_back_counter.exit_point
+    assert setup_shoe.running_count(card_counting_system=setup_back_counter.card_counting_system) == setup_back_counter.exit_point
 
 
 def test_player_initial_decision_insurance_dealer_blackjack(setup_card_counter_unbalanced, setup_dealer):
@@ -675,11 +675,11 @@ def test_player_plays_hands_busted(setup_player, setup_dealer, setup_shoe, setup
 @pytest.mark.parametrize(
     'test_hole_card, test_up_card, test_s17, expected',
     [
-         ('2', '6', True, 19),
-         ('6', 'A', True, 17),
-         ('6', 'A', False, 18),
-         ('7', 'J', True, 17),
-         ('7', 'J', False, 17)
+        ('2', '6', True, 19),
+        ('6', 'A', True, 17),
+        ('6', 'A', False, 18),
+        ('7', 'J', True, 17),
+        ('7', 'J', False, 17)
      ]
 )
 def test_dealer_plays_hand(setup_shoe, setup_dealer, test_hole_card, test_up_card, test_s17, expected):
@@ -974,8 +974,8 @@ def test_play_round_all_hands_busted_dealer_does_not_show_hole_card(setup_player
 @pytest.mark.parametrize(
     'test_dealer_shows_hole_card',
     [
-         (True),
-         (False)
+        (True),
+        (False)
      ]
 )
 def test_play_round_all_hands_do_not_bust(setup_player, setup_dealer, setup_shoe, test_dealer_shows_hole_card):

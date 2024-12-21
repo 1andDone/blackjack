@@ -1,6 +1,6 @@
 import pytest
 from blackjack.card_counter import CardCounter
-from blackjack.enums import CountingStrategy
+from blackjack.enums import CardCountingSystem
 from blackjack.player import Player
 from blackjack.house_rules import HouseRules
 from blackjack.table import Table
@@ -45,7 +45,7 @@ def test_add_player_bet_ramp_minimum_less_than_table_minimum(setup_table):
         name='Player 2',
         bankroll=1000,
         min_bet=10,
-        counting_strategy=CountingStrategy.HI_LO,
+        card_counting_system=CardCountingSystem.HI_LO,
         bet_ramp={
             1: 5,
             2: 20,
@@ -71,7 +71,7 @@ def test_add_player_bet_ramp_maximum_exceeds_table_maximum(setup_table):
         name='Player 2',
         bankroll=10000,
         min_bet=10,
-        counting_strategy=CountingStrategy.HI_LO,
+        card_counting_system=CardCountingSystem.HI_LO,
         bet_ramp={
             1: 15,
             2: 20,
@@ -98,7 +98,7 @@ def test_add_player_no_insurance():
         name='Player 2',
         bankroll=1000,
         min_bet=10,
-        counting_strategy=CountingStrategy.HI_LO,
+        card_counting_system=CardCountingSystem.HI_LO,
         bet_ramp={
             1: 15,
             2: 20,

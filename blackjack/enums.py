@@ -1,7 +1,7 @@
 from enum import Enum
 
 
-class CountingStrategy(Enum):
+class CardCountingSystem(Enum):
     HI_LO = 'HI-LO'
     HI_OPT_I = 'HI-OPT I'
     HI_OPT_II = 'HI-OPT II'

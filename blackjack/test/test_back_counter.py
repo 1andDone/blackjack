@@ -1,13 +1,13 @@
 import pytest
 from blackjack.back_counter import BackCounter
-from blackjack.enums import CountingStrategy
+from blackjack.enums import CardCountingSystem
 
 
 @pytest.mark.parametrize(
     'test_entry_point, test_exit_point',
      [
-         (1, 2),
-         (2, 2)
+        (1, 2),
+        (2, 2)
      ]
 )
 def test_init_exit_point_gte_entry_point(test_entry_point, test_exit_point):
@@ -22,7 +22,7 @@ def test_init_exit_point_gte_entry_point(test_entry_point, test_exit_point):
             name='Player 3',
             bankroll=1000,
             min_bet=10,
-            counting_strategy=CountingStrategy.HI_LO,
+            card_counting_system=CardCountingSystem.HI_LO,
             bet_ramp={
                 1: 15,
                 2: 20,
@@ -49,7 +49,7 @@ def test_init_exit_point_gt_insurance():
             name='Player 3',
             bankroll=1000,
             min_bet=10,
-            counting_strategy=CountingStrategy.HI_LO,
+            card_counting_system=CardCountingSystem.HI_LO,
             bet_ramp={
                 1: 15,
                 2: 20,
@@ -67,9 +67,9 @@ def test_init_exit_point_gt_insurance():
 @pytest.mark.parametrize(
     'test_count, expected',
      [
-         (4, True),
-         (3, True),
-         (2, False)
+        (4, True),
+        (3, True),
+        (2, False)
      ]
 )
 def test_can_enter(setup_back_counter, test_count, expected):
@@ -80,9 +80,9 @@ def test_can_enter(setup_back_counter, test_count, expected):
 @pytest.mark.parametrize(
     'test_count, expected',
      [
-         (1, False),
-         (0, True),
-         (-1, True)
+        (1, False),
+        (0, True),
+        (-1, True)
      ]
 )
 def test_can_exit(setup_back_counter, test_count, expected):

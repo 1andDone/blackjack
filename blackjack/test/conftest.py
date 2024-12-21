@@ -2,7 +2,7 @@ import pytest
 from blackjack.back_counter import BackCounter
 from blackjack.card_counter import CardCounter
 from blackjack.dealer import Dealer
-from blackjack.enums import CountingStrategy
+from blackjack.enums import CardCountingSystem
 from blackjack.enums import StatsCategory
 from blackjack.hand import Hand
 from blackjack.house_rules import HouseRules
@@ -102,7 +102,7 @@ def setup_card_counter():
         name='Player 2',
         bankroll=1000,
         min_bet=10,
-        counting_strategy=CountingStrategy.HI_LO,
+        card_counting_system=CardCountingSystem.HI_LO,
         bet_ramp={
             1: 15,
             2: 20,
@@ -120,7 +120,7 @@ def setup_card_counter_unbalanced():
         name='Player 2',
         bankroll=1000,
         min_bet=10,
-        counting_strategy=CountingStrategy.KO,
+        card_counting_system=CardCountingSystem.KO,
         bet_ramp={
             1: 15,
             2: 20,
@@ -138,7 +138,7 @@ def setup_back_counter():
         name='Player 3',
         bankroll=1000,
         min_bet=10,
-        counting_strategy=CountingStrategy.HI_LO,
+        card_counting_system=CardCountingSystem.HI_LO,
         bet_ramp={
             1: 15,
             2: 20,

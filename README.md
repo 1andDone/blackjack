@@ -42,7 +42,7 @@ and `BackCounter` class instance. `Player` class instances do not count cards.
 ```python
 from blackjack.back_counter import BackCounter
 from blackjack.card_counter import CardCounter
-from blackjack.enums import CountingStrategy
+from blackjack.enums import CardCountingSystem
 from blackjack.player import Player
 
 player1 = Player(
@@ -55,7 +55,7 @@ player2 = CardCounter(
     name='Player 2',
     bankroll=10000,
     min_bet=10,
-    counting_strategy=CountingStrategy.HI_LO,
+    card_counting_system=CardCountingSystem.HI_LO,
     bet_ramp={
         1: 15,
         2: 20,
@@ -73,7 +73,7 @@ player3 = BackCounter(
     name='Player 3',
     bankroll=15000,
     min_bet=10,
-    counting_strategy=CountingStrategy.OMEGA_II,
+    card_counting_system=CardCountingSystem.OMEGA_II,
     bet_ramp={
         1: 15,
         2: 20,

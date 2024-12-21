@@ -1,7 +1,7 @@
 from blackjack.back_counter import BackCounter
 from blackjack.card_counter import CardCounter
 from blackjack.dealer import Dealer
-from blackjack.enums import CountingStrategy, HandStatus
+from blackjack.enums import CardCountingSystem, HandStatus
 from blackjack.house_rules import HouseRules
 from blackjack.player import Player
 from blackjack.shoe import Shoe
@@ -10,9 +10,9 @@ from blackjack.table import Table
 
 
 def _get_card_counter_count(card_counter: CardCounter, shoe: Shoe) -> float | int | None:
-    if card_counter.counting_strategy == CountingStrategy.KO:
-        return shoe.running_count(strategy=card_counter.counting_strategy)
-    return shoe.true_count(strategy=card_counter.counting_strategy)
+    if card_counter.card_counting_system == CardCountingSystem.KO:
+        return shoe.running_count(card_counting_system=card_counter.card_counting_system)
+    return shoe.true_count(card_counting_system=card_counter.card_counting_system)
 
 
 def get_initial_count(table: Table, shoe: Shoe) -> dict[Player, float | int | None]:
