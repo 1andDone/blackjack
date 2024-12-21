@@ -2,7 +2,7 @@ import pytest
 from blackjack.card_counter import CardCounter
 from blackjack.enums import CardCountingSystem
 from blackjack.player import Player
-from blackjack.house_rules import HouseRules
+from blackjack.rules import Rules
 from blackjack.table import Table
 
 
@@ -92,7 +92,7 @@ def test_add_player_no_insurance():
     when the player wants to buy insurance but it is not allowed.
 
     """
-    rules = HouseRules(min_bet=10, max_bet=500, insurance=False)
+    rules = Rules(min_bet=10, max_bet=500, insurance=False)
     table = Table(rules=rules)
     player =  CardCounter(
         name='Player 2',

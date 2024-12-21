@@ -5,9 +5,9 @@ from blackjack.dealer import Dealer
 from blackjack.enums import CardCountingSystem
 from blackjack.enums import StatsCategory
 from blackjack.hand import Hand
-from blackjack.house_rules import HouseRules
 from blackjack.player import Player
 from blackjack.playing_strategy import PlayingStrategy
+from blackjack.rules import Rules
 from blackjack.shoe import Shoe
 from blackjack.table import Table
 from blackjack.stats import Stats
@@ -15,7 +15,7 @@ from blackjack.stats import Stats
 
 @pytest.fixture
 def setup_rules():
-    return HouseRules(
+    return Rules(
         min_bet=10,
         max_bet=500,
         s17=True,

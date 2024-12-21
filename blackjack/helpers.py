@@ -2,8 +2,8 @@ from blackjack.back_counter import BackCounter
 from blackjack.card_counter import CardCounter
 from blackjack.dealer import Dealer
 from blackjack.enums import CardCountingSystem, HandStatus
-from blackjack.house_rules import HouseRules
 from blackjack.player import Player
+from blackjack.rules import Rules
 from blackjack.shoe import Shoe
 from blackjack.stats import StatsCategory
 from blackjack.table import Table
@@ -201,7 +201,7 @@ def player_initial_decision(
     player: Player,
     count: float | int | None,
     insurance_count: float | int | None,
-    rules: HouseRules,
+    rules: Rules,
     dealer: Dealer
 ) -> str | None:
     """
@@ -251,7 +251,7 @@ def player_plays_hands(
     count: float | int | None,
     insurance_count: float | int | None,
     dealer: Dealer,
-    rules: HouseRules
+    rules: Rules
 ) -> None:
     """Player plays out their hand(s)."""
     decision = player_initial_decision(
@@ -350,7 +350,7 @@ def all_hands_busted(table: Table) -> bool:
     )
 
 
-def dealer_plays_hand(shoe: Shoe, dealer: Dealer, rules: HouseRules) -> None:
+def dealer_plays_hand(shoe: Shoe, dealer: Dealer, rules: Rules) -> None:
     """Dealer plays out their hand."""
     while dealer.hand.total < 17 or (dealer.hand.total == 17 and dealer.hand.is_soft and not rules.s17):
         dealer.hand.add_card(card=dealer.deal_card(shoe=shoe))
@@ -386,7 +386,7 @@ def clear_hands(dealer: Dealer, table: Table) -> None:
         player.reset_hands()
 
 
-def play_round(table: Table, dealer: Dealer, rules: HouseRules, shoe: Shoe) -> None:
+def play_round(table: Table, dealer: Dealer, rules: Rules, shoe: Shoe) -> None:
     """
     Plays a round of blackjack between a
     dealer and players at a table.

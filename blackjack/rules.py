@@ -1,4 +1,4 @@
-class HouseRules:
+class Rules:
     """
     Represents the rules at a table.
 

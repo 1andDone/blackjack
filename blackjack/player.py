@@ -1,7 +1,7 @@
 from typing import Any
 from blackjack.hand import Hand
-from blackjack.house_rules import HouseRules
 from blackjack.playing_strategy import PlayingStrategy
+from blackjack.rules import Rules
 from blackjack.stats import Stats
 
 
@@ -61,13 +61,13 @@ class Player:
     def has_sufficient_bankroll(self, amount: float | int) -> bool:
         return amount <= self._bankroll
 
-    def _can_split(self, hand: Hand, rules: HouseRules) -> bool:
+    def _can_split(self, hand: Hand, rules: Rules) -> bool:
         if self.has_sufficient_bankroll(amount=hand.total_bet):
             return hand.number_of_cards == 2 and (hand.cards[0] == hand.cards[1]) and \
                 len(self._hands) < rules.max_hands
         return False
 
-    def decision(self, hand: Hand, dealer_up_card: str, rules: HouseRules) -> str:
+    def decision(self, hand: Hand, dealer_up_card: str, rules: Rules) -> str:
         playing_strategy = PlayingStrategy(s17=rules.s17)
         if self._can_split(hand=hand, rules=rules):
             return playing_strategy.pair(card=hand.cards[0], dealer_up_card=dealer_up_card)

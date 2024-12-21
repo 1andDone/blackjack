@@ -1,11 +1,6 @@
 import pytest
 from blackjack.enums import StatsCategory
 from blackjack.hand import HandStatus
-from blackjack.house_rules import HouseRules
-from blackjack.player import Player
-from blackjack.shoe import Shoe
-from blackjack.stats import StatsKey
-from blackjack.table import Table
 from blackjack.helpers import get_initial_count, get_insurance_count
 from blackjack.helpers import get_initial_wager, place_initial_wager
 from blackjack.helpers import place_insurance_wager, initialize_hands
@@ -14,6 +9,11 @@ from blackjack.helpers import player_initial_decision, player_plays_hands
 from blackjack.helpers import dealer_turn, all_hands_busted
 from blackjack.helpers import dealer_plays_hand, compare_hands
 from blackjack.helpers import clear_hands, play_round
+from blackjack.player import Player
+from blackjack.shoe import Shoe
+from blackjack.rules import Rules
+from blackjack.stats import StatsKey
+from blackjack.table import Table
 
 
 def test_get_initial_count(setup_table, setup_player, setup_card_counter, setup_back_counter):
@@ -148,7 +148,7 @@ def test_player_initial_decision_insurance_dealer_blackjack(setup_card_counter_u
     insurance and the dealer has blackjack.
 
     """
-    rules = HouseRules(min_bet=10, max_bet=500, insurance=True)
+    rules = Rules(min_bet=10, max_bet=500, insurance=True)
     setup_card_counter_unbalanced.first_hand.add_card(card='5')
     setup_card_counter_unbalanced.first_hand.add_card(card='6')
     setup_card_counter_unbalanced.first_hand.add_to_total_bet(amount=10)
@@ -169,7 +169,7 @@ def test_player_initial_decision_insurance_no_dealer_blackjack(setup_card_counte
     insurance and the dealer does not have blackjack.
 
     """
-    rules = HouseRules(min_bet=10, max_bet=500, insurance=True)
+    rules = Rules(min_bet=10, max_bet=500, insurance=True)
     setup_card_counter_unbalanced.first_hand.add_card(card='2')
     setup_card_counter_unbalanced.first_hand.add_card(card='2')
     setup_card_counter_unbalanced.first_hand.add_to_total_bet(amount=10)
@@ -188,7 +188,7 @@ def test_player_initial_decision_no_insurance_dealer_blackjack(setup_player, set
     or does not buy insurance and the dealer has a blackjack.
 
     """
-    rules = HouseRules(min_bet=10, max_bet=500, insurance=False)
+    rules = Rules(min_bet=10, max_bet=500, insurance=False)
     setup_player.first_hand.add_card(card='5')
     setup_player.first_hand.add_card(card='6')
     setup_player.first_hand.add_to_total_bet(amount=10)
@@ -207,7 +207,7 @@ def test_player_initial_decision_no_insurance_no_dealer_blackjack(setup_player, 
     or does not buy insurance and the dealer does not have a blackjack.
 
     """
-    rules = HouseRules(min_bet=10, max_bet=500, insurance=False)
+    rules = Rules(min_bet=10, max_bet=500, insurance=False)
     setup_player.first_hand.add_card(card='2')
     setup_player.first_hand.add_card(card='3')
     setup_dealer.hand.add_card(card='K')
@@ -240,7 +240,7 @@ def test_player_initial_decision_late_surrender(setup_player, setup_dealer):
     the option to late surrender and does.
 
     """
-    rules = HouseRules(min_bet=10, max_bet=500, late_surrender=True)
+    rules = Rules(min_bet=10, max_bet=500, late_surrender=True)
     setup_player.first_hand.add_card(card='K')
     setup_player.first_hand.add_card(card='5')
     setup_player.first_hand.add_to_total_bet(amount=50)
@@ -259,7 +259,7 @@ def test_player_initial_decision_no_late_surrender(setup_player, setup_dealer):
     not have the option to late surrender.
 
     """
-    rules = HouseRules(min_bet=10, max_bet=500, late_surrender=False)
+    rules = Rules(min_bet=10, max_bet=500, late_surrender=False)
     setup_player.first_hand.add_card(card='K')
     setup_player.first_hand.add_card(card='5')
     setup_player.first_hand.add_to_total_bet(amount=50)
@@ -275,7 +275,7 @@ def test_player_plays_hands_settled(setup_player, setup_shoe, setup_dealer):
     is already settled.
 
     """
-    rules = HouseRules(min_bet=10, max_bet=500, late_surrender=True)
+    rules = Rules(min_bet=10, max_bet=500, late_surrender=True)
     setup_player.first_hand.add_card(card='K')
     setup_player.first_hand.add_card(card='5')
     setup_player.first_hand.add_to_total_bet(amount=50)
@@ -351,7 +351,7 @@ def test_player_plays_hands_resplit_aces(setup_player, setup_shoe, setup_dealer)
     a pair of aces and aces can be re-split.
 
     """
-    rules = HouseRules(min_bet=10, max_bet=500, resplit_aces=True)
+    rules = Rules(min_bet=10, max_bet=500, resplit_aces=True)
     setup_player.first_hand.add_card(card='A')
     setup_player.first_hand.add_card(card='A')
     setup_player.first_hand.add_to_total_bet(amount=10)
@@ -383,7 +383,7 @@ def test_player_plays_hands_resplit_aces_insufficient_bankroll(setup_shoe, setup
 
     """
     player = Player(name='Player 1', min_bet=10, bankroll=10)
-    rules = HouseRules(min_bet=10, max_bet=500, resplit_aces=True)
+    rules = Rules(min_bet=10, max_bet=500, resplit_aces=True)
     player.first_hand.add_card(card='A')
     player.first_hand.add_card(card='A')
     player.first_hand.add_to_total_bet(amount=10)
@@ -413,7 +413,7 @@ def test_player_plays_hands_resplit_aces_max_hands(setup_player, setup_shoe, set
     the max hands limit and is unable to split their hand again.
 
     """
-    rules = HouseRules(min_bet=10, max_bet=500, resplit_aces=True, max_hands=3)
+    rules = Rules(min_bet=10, max_bet=500, resplit_aces=True, max_hands=3)
     setup_player.first_hand.add_card(card='A')
     setup_player.first_hand.add_card(card='A')
     setup_player.first_hand.add_to_total_bet(amount=10)
@@ -444,7 +444,7 @@ def test_player_plays_hands_resplit_aces_not_allowed(setup_player, setup_shoe, s
     a pair of aces and aces cannot be re-split.
 
     """
-    rules = HouseRules(min_bet=10, max_bet=500, resplit_aces=False)
+    rules = Rules(min_bet=10, max_bet=500, resplit_aces=False)
     setup_player.first_hand.add_card(card='A')
     setup_player.first_hand.add_card(card='A')
     setup_player.first_hand.add_to_total_bet(amount=10)
@@ -472,7 +472,7 @@ def test_player_plays_hands_double_down(setup_player, setup_dealer, setup_shoe):
     can double down.
 
     """
-    rules = HouseRules(min_bet=10, max_bet=500, double_down=True)
+    rules = Rules(min_bet=10, max_bet=500, double_down=True)
     setup_player.first_hand.add_card(card='5')
     setup_player.first_hand.add_card(card='6')
     setup_player.first_hand.add_to_total_bet(amount=10)
@@ -499,7 +499,7 @@ def test_player_plays_hands_double_down_not_allowed(setup_player, setup_dealer, 
     cannot double down.
 
     """
-    rules = HouseRules(min_bet=10, max_bet=500, double_down=False)
+    rules = Rules(min_bet=10, max_bet=500, double_down=False)
     setup_player.first_hand.add_card(card='5')
     setup_player.first_hand.add_card(card='6')
     setup_player.first_hand.add_to_total_bet(amount=10)
@@ -526,7 +526,7 @@ def test_player_plays_hands_double_down_insufficient_bankroll(setup_player, setu
     has insufficient bankroll to double down.
 
     """
-    rules = HouseRules(min_bet=10, max_bet=500, double_down=True)
+    rules = Rules(min_bet=10, max_bet=500, double_down=True)
     setup_player.first_hand.add_card(card='5')
     setup_player.first_hand.add_card(card='6')
     setup_player.first_hand.add_to_total_bet(amount=10)
@@ -554,7 +554,7 @@ def test_player_plays_hands_double_after_split(setup_player, setup_dealer, setup
     doubles after splitting.
 
     """
-    rules = HouseRules(min_bet=10, max_bet=500, double_down=True, double_after_split=True)
+    rules = Rules(min_bet=10, max_bet=500, double_down=True, double_after_split=True)
     setup_player.first_hand.add_card(card='2')
     setup_player.first_hand.add_card(card='2')
     setup_player.first_hand.add_to_total_bet(amount=10)
@@ -585,7 +585,7 @@ def test_player_plays_hands_double_after_split_not_allowed(setup_player, setup_d
     is not allowed to double after splitting.
 
     """
-    rules = HouseRules(min_bet=10, max_bet=500, double_down=True, double_after_split=False)
+    rules = Rules(min_bet=10, max_bet=500, double_down=True, double_after_split=False)
     setup_player.first_hand.add_card(card='2')
     setup_player.first_hand.add_card(card='2')
     setup_player.first_hand.add_to_total_bet(amount=10)
@@ -611,7 +611,7 @@ def test_player_plays_hands_double_after_split_insufficient_bankroll(setup_playe
     has insufficient bankroll to double after splitting.
 
     """
-    rules = HouseRules(min_bet=10, max_bet=500, double_down=True, double_after_split=True)
+    rules = Rules(min_bet=10, max_bet=500, double_down=True, double_after_split=True)
     setup_player.first_hand.add_card(card='2')
     setup_player.first_hand.add_card(card='2')
     setup_player.first_hand.add_to_total_bet(amount=10)
@@ -684,7 +684,7 @@ def test_player_plays_hands_busted(setup_player, setup_dealer, setup_shoe, setup
 )
 def test_dealer_plays_hand(setup_shoe, setup_dealer, test_hole_card, test_up_card, test_s17, expected):
     """Tests the dealer_plays_hand function."""
-    rules = HouseRules(min_bet=10, max_bet=500, s17=test_s17)
+    rules = Rules(min_bet=10, max_bet=500, s17=test_s17)
     setup_dealer.hand.add_card(card=test_hole_card)
     setup_dealer.hand.add_card(card=test_up_card)
     dealer_plays_hand(shoe=setup_shoe, dealer=setup_dealer, rules=rules)
@@ -871,7 +871,7 @@ def test_play_round_insurance_win(setup_dealer, setup_shoe, setup_card_counter_u
     purchases insurance and the dealer has blackjack.
 
     """
-    rules = HouseRules(min_bet=10, max_bet=500, insurance=True)
+    rules = Rules(min_bet=10, max_bet=500, insurance=True)
     table = Table(rules=rules)
     table.add_player(player=setup_card_counter_unbalanced)
     setup_shoe._cards = ['A', '5', 'K', 'K']
@@ -892,7 +892,7 @@ def test_play_round_insurance_loss(setup_dealer, setup_shoe, setup_card_counter_
     purchases insurance and the dealer does not have blackjack.
 
     """
-    rules = HouseRules(min_bet=10, max_bet=500, insurance=True)
+    rules = Rules(min_bet=10, max_bet=500, insurance=True)
     table = Table(rules=rules)
     table.add_player(player=setup_card_counter_unbalanced)
     setup_shoe._cards = ['5', 'A', '5', '7', 'K']
@@ -947,7 +947,7 @@ def test_play_round_all_hands_busted_dealer_shows_hole_card(setup_player, setup_
     are busted and the dealer shows their hole card.
 
     """
-    rules = HouseRules(min_bet=10, max_bet=500, dealer_shows_hole_card=True)
+    rules = Rules(min_bet=10, max_bet=500, dealer_shows_hole_card=True)
     table = Table(rules=rules)
     table.add_player(player=setup_player)
     setup_shoe._cards = ['10', 'J', 'Q', 'K', '4']
@@ -962,7 +962,7 @@ def test_play_round_all_hands_busted_dealer_does_not_show_hole_card(setup_player
     are busted and the dealer does not show their hole card.
 
     """
-    rules = HouseRules(min_bet=10, max_bet=500, dealer_shows_hole_card=False)
+    rules = Rules(min_bet=10, max_bet=500, dealer_shows_hole_card=False)
     table = Table(rules=rules)
     table.add_player(player=setup_player)
     setup_shoe._cards = ['10', 'J', 'Q', 'K', '4']
@@ -984,7 +984,7 @@ def test_play_round_all_hands_do_not_bust(setup_player, setup_dealer, setup_shoe
     hands that are not busted.
 
     """
-    rules = HouseRules(min_bet=10, max_bet=500, dealer_shows_hole_card=test_dealer_shows_hole_card)
+    rules = Rules(min_bet=10, max_bet=500, dealer_shows_hole_card=test_dealer_shows_hole_card)
     table = Table(rules=rules)
     table.add_player(player=setup_player)
     setup_shoe._cards = ['10', 'J', 'Q', 'K']

@@ -1,6 +1,6 @@
 import pytest
-from blackjack.house_rules import HouseRules
 from blackjack.player import Player
+from blackjack.rules import Rules
 
 
 def test_init_insufficient_bankroll():
@@ -58,7 +58,7 @@ def test_decision_number_of_hands_equals_max_hands(setup_player):
     when the number of hands equals the max hands.
 
     """
-    rules = HouseRules(min_bet=10, max_bet=500, max_hands=2)
+    rules = Rules(min_bet=10, max_bet=500, max_hands=2)
     setup_player.first_hand.add_card(card='8')
     setup_player.first_hand.add_card(card='8')
     split_card = setup_player.first_hand.split()

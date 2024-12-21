@@ -1,7 +1,7 @@
 import random
 from blackjack.dealer import Dealer
-from blackjack.house_rules import HouseRules
 from blackjack.player import Player
+from blackjack.rules import Rules
 from blackjack.shoe import Shoe
 from blackjack.table import Table
 from blackjack.helpers import play_round
@@ -55,7 +55,7 @@ class Blackjack:
             not all players bust, False otherwise
 
         """
-        self._rules = HouseRules(
+        self._rules = Rules(
             min_bet=min_bet,
             max_bet=max_bet,
             s17=s17,

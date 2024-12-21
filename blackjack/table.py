@@ -1,7 +1,7 @@
 from blackjack.back_counter import BackCounter
 from blackjack.card_counter import CardCounter
 from blackjack.player import Player
-from blackjack.house_rules import HouseRules
+from blackjack.rules import Rules
 
 
 class Table:
@@ -9,12 +9,12 @@ class Table:
     Represents a table where one or more players play blackjack.
 
     """
-    def __init__(self, rules: HouseRules):
+    def __init__(self, rules: Rules):
         """
         Parameters
         ----------
-        rules: HouseRules
-            HouseRules class instance
+        rules: Rules
+            Rules class instance
 
         """
         self._rules = rules
