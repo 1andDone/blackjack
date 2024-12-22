@@ -91,8 +91,8 @@ def setup_player():
 
 @pytest.fixture
 def setup_player_with_hand(setup_player):
-    setup_player.first_hand.add_card(card='8')
-    setup_player.first_hand.add_card(card='6')
+    setup_player.get_first_hand().add_card(card='8')
+    setup_player.get_first_hand().add_card(card='6')
     return setup_player
 
 
@@ -166,10 +166,10 @@ def setup_playing_strategy_s17():
 def setup_stats():
     stats = Stats()
     stats.add_hand(count=1, category=StatsCategory.HANDS_LOST)
-    stats.update_amount(count=1, category=StatsCategory.AMOUNT_WAGERED, increment=10)
+    stats.update_amount(count=1, category=StatsCategory.AMOUNT_BET, increment=10)
     stats.update_amount(count=1, category=StatsCategory.AMOUNT_EARNED, increment=-10)
     stats.add_hand(count=None, category=StatsCategory.HANDS_LOST)
-    stats.update_amount(count=None, category=StatsCategory.AMOUNT_WAGERED, increment=20.425)
+    stats.update_amount(count=None, category=StatsCategory.AMOUNT_BET, increment=20.425)
     stats.update_amount(count=None, category=StatsCategory.AMOUNT_EARNED, increment=-20.425)
     return stats
 

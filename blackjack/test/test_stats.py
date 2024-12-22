@@ -16,4 +16,4 @@ def test_update_amount(setup_stats):
 
 def test_summary(setup_stats):
     """Tests the summary method within the Stats class."""
-    assert setup_stats.summary == 'HANDS PLAYED: 2\nHANDS WON: 0\nHANDS LOST: 2\nHANDS PUSHED: 0\nAMOUNT EARNED: -$30.43\nAMOUNT WAGERED: $30.43\nINSURANCE AMOUNT EARNED: $0.00\nINSURANCE AMOUNT WAGERED: $0.00\nTOTAL AMOUNT EARNED: -$30.43\nTOTAL AMOUNT WAGERED: $30.43\nELEMENT OF RISK: -100.00%\n'
+    assert setup_stats.summary == 'HANDS PLAYED: 2\nHANDS WON: 0\nHANDS LOST: 2\nHANDS PUSHED: 0\nAMOUNT EARNED: -$30.43\nAMOUNT BET: $30.43\nINSURANCE AMOUNT EARNED: $0.00\nINSURANCE AMOUNT BET: $0.00\nTOTAL AMOUNT EARNED: -$30.43\nTOTAL AMOUNT BET: $30.43\nELEMENT OF RISK: -100.00%\n'

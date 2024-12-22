@@ -40,36 +40,36 @@ class Player:
     def bankroll(self) -> float | int:
         return self._bankroll
 
-    def initial_wager(self, **kwargs: Any) -> float | int:
+    def placed_bet(self, **kwargs: Any) -> float | int:
         return self._min_bet
 
     @property
     def hands(self) -> list[Hand]:
         return self._hands
 
+    def get_first_hand(self) -> Hand:
+        return self._hands[0]
+
     @property
     def stats(self) -> Stats:
         return self._stats
 
-    @property
-    def first_hand(self) -> Hand:
-        return self.hands[0]
-
-    def update_bankroll(self, amount: float | int) -> None:
+    def adjust_bankroll(self, amount: float | int) -> None:
         self._bankroll += amount
 
     def has_sufficient_bankroll(self, amount: float | int) -> bool:
         return amount <= self._bankroll
 
-    def _can_split(self, hand: Hand, rules: Rules) -> bool:
+    def _is_split_allowed(self, hand: Hand, rules: Rules) -> bool:
         if self.has_sufficient_bankroll(amount=hand.total_bet):
             return hand.number_of_cards == 2 and (hand.cards[0] == hand.cards[1]) and \
                 len(self._hands) < rules.max_hands
         return False
 
+    # TODO: PlayingStrategy should NOT be instantiated every time there is a decision...
     def decision(self, hand: Hand, dealer_up_card: str, rules: Rules) -> str:
         playing_strategy = PlayingStrategy(s17=rules.s17)
-        if self._can_split(hand=hand, rules=rules):
+        if self._is_split_allowed(hand=hand, rules=rules):
             return playing_strategy.pair(card=hand.cards[0], dealer_up_card=dealer_up_card)
         if hand.is_soft:
             return playing_strategy.soft(total=hand.total, dealer_up_card=dealer_up_card)

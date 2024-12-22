@@ -52,21 +52,21 @@ class Stats:
             value = totals.get(category.value, 0)
             if category in {
                 StatsCategory.AMOUNT_EARNED,
-                StatsCategory.AMOUNT_WAGERED,
+                StatsCategory.AMOUNT_BET,
                 StatsCategory.INSURANCE_AMOUNT_EARNED,
-                StatsCategory.INSURANCE_AMOUNT_WAGERED
+                StatsCategory.INSURANCE_AMOUNT_BET
             }:
                 result.append(self._format_currency(category=category.value, amount=value))
             else:
                 result.append(f'{category.value}: {int(value):,}\n')
 
         total_earned = self._get_total(totals, StatsCategory.AMOUNT_EARNED, StatsCategory.INSURANCE_AMOUNT_EARNED)
-        total_wagered = self._get_total(totals, StatsCategory.AMOUNT_WAGERED, StatsCategory.INSURANCE_AMOUNT_WAGERED)
+        total_bet = self._get_total(totals, StatsCategory.AMOUNT_BET, StatsCategory.INSURANCE_AMOUNT_BET)
 
         result.append(self._format_currency(category='TOTAL AMOUNT EARNED', amount=total_earned))
-        result.append(self._format_currency(category='TOTAL AMOUNT WAGERED', amount=total_wagered))
+        result.append(self._format_currency(category='TOTAL AMOUNT BET', amount=total_bet))
 
-        if total_wagered > 0:
-            element_of_risk = (total_earned / total_wagered) * 100
+        if total_bet > 0:
+            element_of_risk = (total_earned / total_bet) * 100
             result.append(f'ELEMENT OF RISK: {element_of_risk:.2f}%\n')
         return ''.join(result)

@@ -84,7 +84,7 @@ def test_can_enter_insufficient_bankroll(setup_back_counter):
     a wager at the current count.
 
     """
-    setup_back_counter.update_bankroll(amount=-1000)
+    setup_back_counter.adjust_bankroll(amount=-1000)
     assert setup_back_counter.can_enter(count=10) is False
 
 

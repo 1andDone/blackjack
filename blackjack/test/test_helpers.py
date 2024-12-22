@@ -1,9 +1,9 @@
 import pytest
 from blackjack.enums import StatsCategory
 from blackjack.hand import HandStatus
-from blackjack.helpers import get_initial_count, get_insurance_count
-from blackjack.helpers import get_initial_wager, place_initial_wager
-from blackjack.helpers import place_insurance_wager, initialize_hands
+from blackjack.helpers import get_count, get_insurance_count
+from blackjack.helpers import get_placed_bet, place_bet
+from blackjack.helpers import place_insurance_bet, initialize_hands
 from blackjack.helpers import add_back_counters, remove_back_counters
 from blackjack.helpers import player_initial_decision, player_plays_hands
 from blackjack.helpers import dealer_turn, all_hands_busted
@@ -16,8 +16,8 @@ from blackjack.stats import StatsKey
 from blackjack.table import Table
 
 
-def test_get_initial_count(setup_table, setup_player, setup_card_counter, setup_back_counter):
-    """Tests the get_initial_count function."""
+def test_get_count(setup_table, setup_player, setup_card_counter, setup_back_counter):
+    """Tests the get_count function."""
     shoe = Shoe(shoe_size=6)
     # burn an entire 52 card deck and make them all visible 'K'
     # exactly 5 decks remain
@@ -27,10 +27,10 @@ def test_get_initial_count(setup_table, setup_player, setup_card_counter, setup_
     setup_table.add_player(player=setup_player)
     setup_table.add_player(player=setup_card_counter)
     setup_table.add_player(player=setup_back_counter)
-    initial_count = get_initial_count(table=setup_table, shoe=shoe)
-    assert initial_count[setup_player] is None
-    assert initial_count[setup_card_counter] == -10
-    assert initial_count[setup_back_counter] == -10
+    count = get_count(table=setup_table, shoe=shoe)
+    assert count[setup_player] is None
+    assert count[setup_card_counter] == -10
+    assert count[setup_back_counter] == -10
 
 
 def test_get_insurance_count(setup_shoe, setup_table, setup_player, setup_card_counter, setup_card_counter_unbalanced, setup_back_counter):
@@ -50,53 +50,53 @@ def test_get_insurance_count(setup_shoe, setup_table, setup_player, setup_card_c
     assert setup_back_counter not in insurance_count
 
 
-def test_get_initial_wager_player_not_removed(setup_table, setup_shoe, setup_player):
+def test_get_placed_bet_player_not_removed(setup_table, setup_shoe, setup_player):
     """
-    Tests the get_initial_wager function when a player
+    Tests the get_placed_bet function when a player
     is not removed.
 
     """
     setup_table.add_player(player=setup_player)
-    count_dict = get_initial_count(table=setup_table, shoe=setup_shoe)
-    initial_wager_dict = get_initial_wager(table=setup_table, count_dict=count_dict)
-    assert initial_wager_dict[setup_player] == setup_player.initial_wager()
+    count_dict = get_count(table=setup_table, shoe=setup_shoe)
+    placed_bet_dict = get_placed_bet(table=setup_table, count_dict=count_dict)
+    assert placed_bet_dict[setup_player] == setup_player.placed_bet()
 
 
-def test_get_initial_wager_player_removed(setup_table, setup_shoe):
+def test_get_placed_bet_player_removed(setup_table, setup_shoe):
     """
-    Tests the get_initial_wager function when a player
+    Tests the get_placed_bet function when a player
     is removed.
 
     """
     player = Player(name='Player 1', min_bet=10, bankroll=10)
     setup_table.add_player(player=player)
-    player.update_bankroll(amount=-10)
-    count_dict = get_initial_count(table=setup_table, shoe=setup_shoe)
-    initial_wager_dict = get_initial_wager(table=setup_table, count_dict=count_dict)
-    assert player not in initial_wager_dict
+    player.adjust_bankroll(amount=-10)
+    count_dict = get_count(table=setup_table, shoe=setup_shoe)
+    placed_bet_dict = get_placed_bet(table=setup_table, count_dict=count_dict)
+    assert player not in placed_bet_dict
 
 
-def test_place_initial_wager(setup_player):
-    """Tests the place_initial_wager function."""
-    place_initial_wager(player=setup_player, initial_wager=50, count=2)
-    assert setup_player.first_hand.total_bet == 50
+def test_place_bet(setup_player):
+    """Tests the place_bet function."""
+    place_bet(player=setup_player, amount=50, count=2)
+    assert setup_player.get_first_hand().total_bet == 50
     assert setup_player.bankroll == 950
-    assert setup_player.stats.stats[StatsKey(count=2, category=StatsCategory.AMOUNT_WAGERED)] == 50
+    assert setup_player.stats.stats[StatsKey(count=2, category=StatsCategory.AMOUNT_BET)] == 50
 
 
-def test_place_insurance_wager(setup_card_counter_unbalanced):
-    """Tests the place_insurance_wager function."""
-    place_insurance_wager(player=setup_card_counter_unbalanced, insurance_wager=25, insurance_count=2)
-    assert setup_card_counter_unbalanced.first_hand.side_bet == 25
+def test_place_insurance_bet(setup_card_counter_unbalanced):
+    """Tests the place_insurance_bet function."""
+    place_insurance_bet(player=setup_card_counter_unbalanced, amount=25, count=2)
+    assert setup_card_counter_unbalanced.get_first_hand().side_bet == 25
     assert setup_card_counter_unbalanced.bankroll == 975
-    assert setup_card_counter_unbalanced.stats.stats[StatsKey(count=2, category=StatsCategory.INSURANCE_AMOUNT_WAGERED)] == 25
+    assert setup_card_counter_unbalanced.stats.stats[StatsKey(count=2, category=StatsCategory.INSURANCE_AMOUNT_BET)] == 25
 
 
 def test_initialize_hands(setup_table, setup_player, setup_dealer, setup_shoe):
     """Tests the initialize_hands function."""
     setup_table.add_player(player=setup_player)
     initialize_hands(table=setup_table, dealer=setup_dealer, shoe=setup_shoe)
-    assert setup_player.first_hand.cards == ['A', 'Q']
+    assert setup_player.get_first_hand().cards == ['A', 'Q']
     assert setup_dealer.hand.cards == ['K', 'J']
     assert setup_shoe.seen_cards['A'] == 1
     assert setup_shoe.seen_cards['10-J-Q-K'] == 2
@@ -112,11 +112,11 @@ def test_add_back_counters(setup_table, setup_shoe, setup_card_counter, setup_ba
     setup_table.add_player(player=setup_back_counter)
     setup_shoe.add_to_seen_cards(card='2')
     setup_shoe.add_to_seen_cards(card='2')
-    add_back_counters(table=setup_table, count_dict=get_initial_count(table=setup_table, shoe=setup_shoe))
+    add_back_counters(table=setup_table, count_dict=get_count(table=setup_table, shoe=setup_shoe))
     assert len(setup_table.players) == 1
     assert setup_shoe.running_count(card_counting_system=setup_back_counter.card_counting_system) < setup_back_counter.entry_point
     setup_shoe.add_to_seen_cards(card='2')
-    add_back_counters(table=setup_table, count_dict=get_initial_count(table=setup_table, shoe=setup_shoe))
+    add_back_counters(table=setup_table, count_dict=get_count(table=setup_table, shoe=setup_shoe))
     assert len(setup_table.players) == 2
     assert setup_shoe.running_count(card_counting_system=setup_back_counter.card_counting_system) == setup_back_counter.entry_point
 
@@ -128,16 +128,16 @@ def test_remove_back_counters(setup_table, setup_shoe, setup_card_counter, setup
     setup_shoe.add_to_seen_cards(card='2')
     setup_shoe.add_to_seen_cards(card='2')
     setup_shoe.add_to_seen_cards(card='2')
-    add_back_counters(table=setup_table, count_dict=get_initial_count(table=setup_table, shoe=setup_shoe))
+    add_back_counters(table=setup_table, count_dict=get_count(table=setup_table, shoe=setup_shoe))
     assert len(setup_table.players) == 2
     assert setup_shoe.running_count(card_counting_system=setup_back_counter.card_counting_system) > setup_back_counter.exit_point
-    remove_back_counters(table=setup_table, count_dict=get_initial_count(table=setup_table, shoe=setup_shoe))
+    remove_back_counters(table=setup_table, count_dict=get_count(table=setup_table, shoe=setup_shoe))
     assert len(setup_table.players) == 2
     assert setup_shoe.running_count(card_counting_system=setup_back_counter.card_counting_system) > setup_back_counter.exit_point
     setup_shoe.add_to_seen_cards(card='K')
     setup_shoe.add_to_seen_cards(card='K')
     setup_shoe.add_to_seen_cards(card='K')
-    remove_back_counters(table=setup_table, count_dict=get_initial_count(table=setup_table, shoe=setup_shoe))
+    remove_back_counters(table=setup_table, count_dict=get_count(table=setup_table, shoe=setup_shoe))
     assert len(setup_table.players) == 1
     assert setup_shoe.running_count(card_counting_system=setup_back_counter.card_counting_system) == setup_back_counter.exit_point
 
@@ -149,17 +149,17 @@ def test_player_initial_decision_insurance_dealer_blackjack(setup_card_counter_u
 
     """
     rules = Rules(min_bet=10, max_bet=500, insurance=True)
-    setup_card_counter_unbalanced.first_hand.add_card(card='5')
-    setup_card_counter_unbalanced.first_hand.add_card(card='6')
-    setup_card_counter_unbalanced.first_hand.add_to_total_bet(amount=10)
+    setup_card_counter_unbalanced.get_first_hand().add_card(card='5')
+    setup_card_counter_unbalanced.get_first_hand().add_card(card='6')
+    setup_card_counter_unbalanced.get_first_hand().add_to_total_bet(amount=10)
     setup_dealer.hand.add_card(card='K')
     setup_dealer.hand.add_card(card='A')
     assert player_initial_decision(player=setup_card_counter_unbalanced, count=3, insurance_count=4, rules=rules, dealer=setup_dealer) is None
-    assert setup_card_counter_unbalanced.first_hand.status == HandStatus.SETTLED
+    assert setup_card_counter_unbalanced.get_first_hand().status == HandStatus.SETTLED
     assert setup_card_counter_unbalanced.bankroll == 1005
     assert setup_card_counter_unbalanced.stats.stats[StatsKey(count=3, category=StatsCategory.HANDS_LOST)] == 1
     assert setup_card_counter_unbalanced.stats.stats[StatsKey(count=3, category=StatsCategory.AMOUNT_EARNED)] == -10
-    assert setup_card_counter_unbalanced.stats.stats[StatsKey(count=4, category=StatsCategory.INSURANCE_AMOUNT_WAGERED)] == 5
+    assert setup_card_counter_unbalanced.stats.stats[StatsKey(count=4, category=StatsCategory.INSURANCE_AMOUNT_BET)] == 5
     assert setup_card_counter_unbalanced.stats.stats[StatsKey(count=4, category=StatsCategory.INSURANCE_AMOUNT_EARNED)] == 5
 
 
@@ -170,15 +170,15 @@ def test_player_initial_decision_insurance_no_dealer_blackjack(setup_card_counte
 
     """
     rules = Rules(min_bet=10, max_bet=500, insurance=True)
-    setup_card_counter_unbalanced.first_hand.add_card(card='2')
-    setup_card_counter_unbalanced.first_hand.add_card(card='2')
-    setup_card_counter_unbalanced.first_hand.add_to_total_bet(amount=10)
+    setup_card_counter_unbalanced.get_first_hand().add_card(card='2')
+    setup_card_counter_unbalanced.get_first_hand().add_card(card='2')
+    setup_card_counter_unbalanced.get_first_hand().add_to_total_bet(amount=10)
     setup_dealer.hand.add_card(card='6')
     setup_dealer.hand.add_card(card='A')
     assert player_initial_decision(player=setup_card_counter_unbalanced, count=3, insurance_count=4, rules=rules, dealer=setup_dealer) == 'H'
-    assert setup_card_counter_unbalanced.first_hand.status == HandStatus.IN_PLAY
+    assert setup_card_counter_unbalanced.get_first_hand().status == HandStatus.IN_PLAY
     assert setup_card_counter_unbalanced.bankroll == 995
-    assert setup_card_counter_unbalanced.stats.stats[StatsKey(count=4, category=StatsCategory.INSURANCE_AMOUNT_WAGERED)] == 5
+    assert setup_card_counter_unbalanced.stats.stats[StatsKey(count=4, category=StatsCategory.INSURANCE_AMOUNT_BET)] == 5
     assert setup_card_counter_unbalanced.stats.stats[StatsKey(count=4, category=StatsCategory.INSURANCE_AMOUNT_EARNED)] == -5
 
 
@@ -189,13 +189,13 @@ def test_player_initial_decision_no_insurance_dealer_blackjack(setup_player, set
 
     """
     rules = Rules(min_bet=10, max_bet=500, insurance=False)
-    setup_player.first_hand.add_card(card='5')
-    setup_player.first_hand.add_card(card='6')
-    setup_player.first_hand.add_to_total_bet(amount=10)
+    setup_player.get_first_hand().add_card(card='5')
+    setup_player.get_first_hand().add_card(card='6')
+    setup_player.get_first_hand().add_to_total_bet(amount=10)
     setup_dealer.hand.add_card(card='K')
     setup_dealer.hand.add_card(card='A')
     assert player_initial_decision(player=setup_player, count=0, insurance_count=None, rules=rules, dealer=setup_dealer) is None
-    assert setup_player.first_hand.status == HandStatus.SETTLED
+    assert setup_player.get_first_hand().status == HandStatus.SETTLED
     assert setup_player.bankroll == 1000
     assert setup_player.stats.stats[StatsKey(count=0, category=StatsCategory.HANDS_LOST)] == 1
     assert setup_player.stats.stats[StatsKey(count=0, category=StatsCategory.AMOUNT_EARNED)] == -10
@@ -203,17 +203,17 @@ def test_player_initial_decision_no_insurance_dealer_blackjack(setup_player, set
 
 def test_player_initial_decision_no_insurance_no_dealer_blackjack(setup_player, setup_dealer):
     """
-    Tests the player_initial_decsion function when the player cannot
+    Tests the player_initial_decision function when the player cannot
     or does not buy insurance and the dealer does not have a blackjack.
 
     """
     rules = Rules(min_bet=10, max_bet=500, insurance=False)
-    setup_player.first_hand.add_card(card='2')
-    setup_player.first_hand.add_card(card='3')
+    setup_player.get_first_hand().add_card(card='2')
+    setup_player.get_first_hand().add_card(card='3')
     setup_dealer.hand.add_card(card='K')
     setup_dealer.hand.add_card(card='J')
     assert player_initial_decision(player=setup_player, count=0, insurance_count=None, rules=rules, dealer=setup_dealer) == 'H'
-    assert setup_player.first_hand.status == HandStatus.IN_PLAY
+    assert setup_player.get_first_hand().status == HandStatus.IN_PLAY
 
 
 def test_player_initial_decision_player_blackjack(setup_player, setup_dealer, setup_rules):
@@ -222,13 +222,13 @@ def test_player_initial_decision_player_blackjack(setup_player, setup_dealer, se
     blackjack and the dealer does not.
 
     """
-    setup_player.first_hand.add_card(card='A')
-    setup_player.first_hand.add_card(card='K')
-    setup_player.first_hand.add_to_total_bet(amount=20)
+    setup_player.get_first_hand().add_card(card='A')
+    setup_player.get_first_hand().add_card(card='K')
+    setup_player.get_first_hand().add_to_total_bet(amount=20)
     setup_dealer.hand.add_card(card='K')
     setup_dealer.hand.add_card(card='J')
     assert player_initial_decision(player=setup_player, count=1, insurance_count=None, rules=setup_rules, dealer=setup_dealer) is None
-    assert setup_player.first_hand.status == HandStatus.SETTLED
+    assert setup_player.get_first_hand().status == HandStatus.SETTLED
     assert setup_player.bankroll == 1050
     assert setup_player.stats.stats[StatsKey(count=1, category=StatsCategory.HANDS_WON)] == 1
     assert setup_player.stats.stats[StatsKey(count=1, category=StatsCategory.AMOUNT_EARNED)] == 30
@@ -241,13 +241,13 @@ def test_player_initial_decision_late_surrender(setup_player, setup_dealer):
 
     """
     rules = Rules(min_bet=10, max_bet=500, late_surrender=True)
-    setup_player.first_hand.add_card(card='K')
-    setup_player.first_hand.add_card(card='5')
-    setup_player.first_hand.add_to_total_bet(amount=50)
+    setup_player.get_first_hand().add_card(card='K')
+    setup_player.get_first_hand().add_card(card='5')
+    setup_player.get_first_hand().add_to_total_bet(amount=50)
     setup_dealer.hand.add_card(card='K')
     setup_dealer.hand.add_card(card='J')
     assert player_initial_decision(player=setup_player, count=None, insurance_count=None, rules=rules, dealer=setup_dealer) is None
-    assert setup_player.first_hand.status == HandStatus.SETTLED
+    assert setup_player.get_first_hand().status == HandStatus.SETTLED
     assert setup_player.bankroll == 1025
     assert setup_player.stats.stats[StatsKey(count=None, category=StatsCategory.HANDS_LOST)] == 1
     assert setup_player.stats.stats[StatsKey(count=None, category=StatsCategory.AMOUNT_EARNED)] == -25
@@ -260,13 +260,13 @@ def test_player_initial_decision_no_late_surrender(setup_player, setup_dealer):
 
     """
     rules = Rules(min_bet=10, max_bet=500, late_surrender=False)
-    setup_player.first_hand.add_card(card='K')
-    setup_player.first_hand.add_card(card='5')
-    setup_player.first_hand.add_to_total_bet(amount=50)
+    setup_player.get_first_hand().add_card(card='K')
+    setup_player.get_first_hand().add_card(card='5')
+    setup_player.get_first_hand().add_to_total_bet(amount=50)
     setup_dealer.hand.add_card(card='K')
     setup_dealer.hand.add_card(card='J')
     assert player_initial_decision(player=setup_player, count=None, insurance_count=None, rules=rules, dealer=setup_dealer) == 'Rh'
-    assert setup_player.first_hand.status == HandStatus.IN_PLAY
+    assert setup_player.get_first_hand().status == HandStatus.IN_PLAY
 
 
 def test_player_plays_hands_settled(setup_player, setup_shoe, setup_dealer):
@@ -276,9 +276,9 @@ def test_player_plays_hands_settled(setup_player, setup_shoe, setup_dealer):
 
     """
     rules = Rules(min_bet=10, max_bet=500, late_surrender=True)
-    setup_player.first_hand.add_card(card='K')
-    setup_player.first_hand.add_card(card='5')
-    setup_player.first_hand.add_to_total_bet(amount=50)
+    setup_player.get_first_hand().add_card(card='K')
+    setup_player.get_first_hand().add_card(card='5')
+    setup_player.get_first_hand().add_to_total_bet(amount=50)
     setup_dealer.hand.add_card(card='K')
     setup_dealer.hand.add_card(card='J')
     player_plays_hands(
@@ -289,7 +289,7 @@ def test_player_plays_hands_settled(setup_player, setup_shoe, setup_dealer):
         dealer=setup_dealer,
         rules=rules
     )
-    assert setup_player.first_hand.status == HandStatus.SETTLED
+    assert setup_player.get_first_hand().status == HandStatus.SETTLED
 
 
 def test_player_plays_hands_split(setup_shoe, setup_dealer, setup_player, setup_rules):
@@ -298,9 +298,9 @@ def test_player_plays_hands_split(setup_shoe, setup_dealer, setup_player, setup_
     a pair and the hand is split.
 
     """
-    setup_player.first_hand.add_card(card='8')
-    setup_player.first_hand.add_card(card='8')
-    setup_player.first_hand.add_to_total_bet(amount=10)
+    setup_player.get_first_hand().add_card(card='8')
+    setup_player.get_first_hand().add_card(card='8')
+    setup_player.get_first_hand().add_to_total_bet(amount=10)
     setup_dealer.hand.add_card(card='6')
     setup_dealer.hand.add_card(card='6')
     player_plays_hands(
@@ -311,12 +311,12 @@ def test_player_plays_hands_split(setup_shoe, setup_dealer, setup_player, setup_
         dealer=setup_dealer,
         rules=setup_rules
     )
-    assert setup_player.first_hand.cards == ['8', 'A']
-    assert setup_player.first_hand.status == HandStatus.SHOWDOWN
+    assert setup_player.get_first_hand().cards == ['8', 'A']
+    assert setup_player.get_first_hand().status == HandStatus.SHOWDOWN
     assert setup_player.hands[1].cards == ['8', 'K']
     assert setup_player.hands[1].status == HandStatus.SHOWDOWN
     assert setup_player.bankroll == 990
-    assert setup_player.stats.stats[StatsKey(count=None, category=StatsCategory.AMOUNT_WAGERED)] == 10
+    assert setup_player.stats.stats[StatsKey(count=None, category=StatsCategory.AMOUNT_BET)] == 10
 
 
 def test_player_plays_hands_split_insufficient_bankroll(setup_shoe, setup_dealer, setup_rules):
@@ -326,9 +326,9 @@ def test_player_plays_hands_split_insufficient_bankroll(setup_shoe, setup_dealer
 
     """
     player = Player(name='Player 1', min_bet=10, bankroll=10)
-    player.first_hand.add_card(card='6')
-    player.first_hand.add_card(card='6')
-    player.first_hand.add_to_total_bet(amount=20)
+    player.get_first_hand().add_card(card='6')
+    player.get_first_hand().add_card(card='6')
+    player.get_first_hand().add_to_total_bet(amount=20)
     setup_dealer.hand.add_card(card='7')
     setup_dealer.hand.add_card(card='7')
     setup_shoe._cards = ['J', 'Q', '7', '6', '5', 'A']
@@ -340,9 +340,9 @@ def test_player_plays_hands_split_insufficient_bankroll(setup_shoe, setup_dealer
         dealer=setup_dealer,
         rules=setup_rules
     )
-    assert player.first_hand.cards == ['6', '6', 'A', '5']
-    assert player.first_hand.status == HandStatus.SHOWDOWN
-    assert player.first_hand.total_bet > player.bankroll
+    assert player.get_first_hand().cards == ['6', '6', 'A', '5']
+    assert player.get_first_hand().status == HandStatus.SHOWDOWN
+    assert player.get_first_hand().total_bet > player.bankroll
 
 
 def test_player_plays_hands_resplit_aces(setup_player, setup_shoe, setup_dealer):
@@ -352,9 +352,9 @@ def test_player_plays_hands_resplit_aces(setup_player, setup_shoe, setup_dealer)
 
     """
     rules = Rules(min_bet=10, max_bet=500, resplit_aces=True)
-    setup_player.first_hand.add_card(card='A')
-    setup_player.first_hand.add_card(card='A')
-    setup_player.first_hand.add_to_total_bet(amount=10)
+    setup_player.get_first_hand().add_card(card='A')
+    setup_player.get_first_hand().add_card(card='A')
+    setup_player.get_first_hand().add_to_total_bet(amount=10)
     setup_dealer.hand.add_card(card='6')
     setup_dealer.hand.add_card(card='6')
     player_plays_hands(
@@ -365,14 +365,14 @@ def test_player_plays_hands_resplit_aces(setup_player, setup_shoe, setup_dealer)
         dealer=setup_dealer,
         rules=rules
     )
-    assert setup_player.first_hand.cards == ['A', 'K']
-    assert setup_player.first_hand.status == HandStatus.SHOWDOWN
+    assert setup_player.get_first_hand().cards == ['A', 'K']
+    assert setup_player.get_first_hand().status == HandStatus.SHOWDOWN
     assert setup_player.hands[1].cards == ['A', 'Q']
     assert setup_player.hands[1].status == HandStatus.SHOWDOWN
     assert setup_player.hands[2].cards == ['A', 'J']
     assert setup_player.hands[2].status == HandStatus.SHOWDOWN
     assert setup_player.bankroll == 980
-    assert setup_player.stats.stats[StatsKey(count=None, category=StatsCategory.AMOUNT_WAGERED)] == 20
+    assert setup_player.stats.stats[StatsKey(count=None, category=StatsCategory.AMOUNT_BET)] == 20
 
 
 def test_player_plays_hands_resplit_aces_insufficient_bankroll(setup_shoe, setup_dealer):
@@ -384,9 +384,9 @@ def test_player_plays_hands_resplit_aces_insufficient_bankroll(setup_shoe, setup
     """
     player = Player(name='Player 1', min_bet=10, bankroll=10)
     rules = Rules(min_bet=10, max_bet=500, resplit_aces=True)
-    player.first_hand.add_card(card='A')
-    player.first_hand.add_card(card='A')
-    player.first_hand.add_to_total_bet(amount=10)
+    player.get_first_hand().add_card(card='A')
+    player.get_first_hand().add_card(card='A')
+    player.get_first_hand().add_to_total_bet(amount=10)
     setup_dealer.hand.add_card(card='5')
     setup_dealer.hand.add_card(card='5')
     setup_shoe._cards = ['4', '3', '2', 'Q', 'K', 'A']
@@ -398,12 +398,12 @@ def test_player_plays_hands_resplit_aces_insufficient_bankroll(setup_shoe, setup
         dealer=setup_dealer,
         rules=rules
     )
-    assert player.first_hand.cards == ['A', 'A', 'K']
-    assert player.first_hand.status == HandStatus.SHOWDOWN
+    assert player.get_first_hand().cards == ['A', 'A', 'K']
+    assert player.get_first_hand().status == HandStatus.SHOWDOWN
     assert player.hands[1].cards == ['A', 'Q']
     assert player.hands[1].status == HandStatus.SHOWDOWN
     assert player.bankroll == 0
-    assert player.stats.stats[StatsKey(count=None, category=StatsCategory.AMOUNT_WAGERED)] == 10
+    assert player.stats.stats[StatsKey(count=None, category=StatsCategory.AMOUNT_BET)] == 10
 
 
 def test_player_plays_hands_resplit_aces_max_hands(setup_player, setup_shoe, setup_dealer):
@@ -414,9 +414,9 @@ def test_player_plays_hands_resplit_aces_max_hands(setup_player, setup_shoe, set
 
     """
     rules = Rules(min_bet=10, max_bet=500, resplit_aces=True, max_hands=3)
-    setup_player.first_hand.add_card(card='A')
-    setup_player.first_hand.add_card(card='A')
-    setup_player.first_hand.add_to_total_bet(amount=10)
+    setup_player.get_first_hand().add_card(card='A')
+    setup_player.get_first_hand().add_card(card='A')
+    setup_player.get_first_hand().add_to_total_bet(amount=10)
     setup_dealer.hand.add_card(card='5')
     setup_dealer.hand.add_card(card='5')
     setup_shoe._cards = ['4', '3', 'A', '3', '2', 'A']
@@ -428,14 +428,14 @@ def test_player_plays_hands_resplit_aces_max_hands(setup_player, setup_shoe, set
         dealer=setup_dealer,
         rules=rules
     )
-    assert setup_player.first_hand.cards == ['A', '2']
-    assert setup_player.first_hand.status == HandStatus.SHOWDOWN
+    assert setup_player.get_first_hand().cards == ['A', '2']
+    assert setup_player.get_first_hand().status == HandStatus.SHOWDOWN
     assert setup_player.hands[1].cards == ['A', '3']
     assert setup_player.hands[1].status == HandStatus.SHOWDOWN
     assert setup_player.hands[2].cards == ['A', 'A']
     assert setup_player.hands[2].status == HandStatus.SHOWDOWN
     assert setup_player.bankroll == 980
-    assert setup_player.stats.stats[StatsKey(count=None, category=StatsCategory.AMOUNT_WAGERED)] == 20
+    assert setup_player.stats.stats[StatsKey(count=None, category=StatsCategory.AMOUNT_BET)] == 20
 
 
 def test_player_plays_hands_resplit_aces_not_allowed(setup_player, setup_shoe, setup_dealer):
@@ -445,9 +445,9 @@ def test_player_plays_hands_resplit_aces_not_allowed(setup_player, setup_shoe, s
 
     """
     rules = Rules(min_bet=10, max_bet=500, resplit_aces=False)
-    setup_player.first_hand.add_card(card='A')
-    setup_player.first_hand.add_card(card='A')
-    setup_player.first_hand.add_to_total_bet(amount=10)
+    setup_player.get_first_hand().add_card(card='A')
+    setup_player.get_first_hand().add_card(card='A')
+    setup_player.get_first_hand().add_to_total_bet(amount=10)
     setup_dealer.hand.add_card(card='6')
     setup_dealer.hand.add_card(card='6')
     player_plays_hands(
@@ -458,12 +458,12 @@ def test_player_plays_hands_resplit_aces_not_allowed(setup_player, setup_shoe, s
         dealer=setup_dealer,
         rules=rules
     )
-    assert setup_player.first_hand.cards == ['A', 'A']
-    assert setup_player.first_hand.status == HandStatus.SHOWDOWN
+    assert setup_player.get_first_hand().cards == ['A', 'A']
+    assert setup_player.get_first_hand().status == HandStatus.SHOWDOWN
     assert setup_player.hands[1].cards == ['A', 'K']
     assert setup_player.hands[1].status == HandStatus.SHOWDOWN
     assert setup_player.bankroll == 990
-    assert setup_player.stats.stats[StatsKey(count=None, category=StatsCategory.AMOUNT_WAGERED)] == 10
+    assert setup_player.stats.stats[StatsKey(count=None, category=StatsCategory.AMOUNT_BET)] == 10
 
 
 def test_player_plays_hands_double_down(setup_player, setup_dealer, setup_shoe):
@@ -473,9 +473,9 @@ def test_player_plays_hands_double_down(setup_player, setup_dealer, setup_shoe):
 
     """
     rules = Rules(min_bet=10, max_bet=500, double_down=True)
-    setup_player.first_hand.add_card(card='5')
-    setup_player.first_hand.add_card(card='6')
-    setup_player.first_hand.add_to_total_bet(amount=10)
+    setup_player.get_first_hand().add_card(card='5')
+    setup_player.get_first_hand().add_card(card='6')
+    setup_player.get_first_hand().add_to_total_bet(amount=10)
     setup_dealer.hand.add_card(card='2')
     setup_dealer.hand.add_card(card='3')
     player_plays_hands(
@@ -486,11 +486,11 @@ def test_player_plays_hands_double_down(setup_player, setup_dealer, setup_shoe):
         dealer=setup_dealer,
         rules=rules
     )
-    assert setup_player.first_hand.cards == ['5', '6', 'A']
-    assert setup_player.first_hand.total_bet == 20
-    assert setup_player.first_hand.status == HandStatus.SHOWDOWN
+    assert setup_player.get_first_hand().cards == ['5', '6', 'A']
+    assert setup_player.get_first_hand().total_bet == 20
+    assert setup_player.get_first_hand().status == HandStatus.SHOWDOWN
     assert setup_player.bankroll == 990
-    assert setup_player.stats.stats[StatsKey(count=None, category=StatsCategory.AMOUNT_WAGERED)] == 10
+    assert setup_player.stats.stats[StatsKey(count=None, category=StatsCategory.AMOUNT_BET)] == 10
 
 
 def test_player_plays_hands_double_down_not_allowed(setup_player, setup_dealer, setup_shoe):
@@ -500,9 +500,9 @@ def test_player_plays_hands_double_down_not_allowed(setup_player, setup_dealer, 
 
     """
     rules = Rules(min_bet=10, max_bet=500, double_down=False)
-    setup_player.first_hand.add_card(card='5')
-    setup_player.first_hand.add_card(card='6')
-    setup_player.first_hand.add_to_total_bet(amount=10)
+    setup_player.get_first_hand().add_card(card='5')
+    setup_player.get_first_hand().add_card(card='6')
+    setup_player.get_first_hand().add_to_total_bet(amount=10)
     setup_dealer.hand.add_card(card='2')
     setup_dealer.hand.add_card(card='3')
     player_plays_hands(
@@ -513,11 +513,11 @@ def test_player_plays_hands_double_down_not_allowed(setup_player, setup_dealer, 
         dealer=setup_dealer,
         rules=rules
     )
-    assert setup_player.first_hand.cards == ['5', '6', 'A', 'K']
-    assert setup_player.first_hand.total_bet == 10
-    assert setup_player.first_hand.status == HandStatus.SETTLED
+    assert setup_player.get_first_hand().cards == ['5', '6', 'A', 'K']
+    assert setup_player.get_first_hand().total_bet == 10
+    assert setup_player.get_first_hand().status == HandStatus.SETTLED
     assert setup_player.bankroll == 1000
-    assert setup_player.stats.stats[StatsKey(count=None, category=StatsCategory.AMOUNT_WAGERED)] == 0
+    assert setup_player.stats.stats[StatsKey(count=None, category=StatsCategory.AMOUNT_BET)] == 0
 
 
 def test_player_plays_hands_double_down_insufficient_bankroll(setup_player, setup_dealer, setup_shoe):
@@ -527,10 +527,10 @@ def test_player_plays_hands_double_down_insufficient_bankroll(setup_player, setu
 
     """
     rules = Rules(min_bet=10, max_bet=500, double_down=True)
-    setup_player.first_hand.add_card(card='5')
-    setup_player.first_hand.add_card(card='6')
-    setup_player.first_hand.add_to_total_bet(amount=10)
-    setup_player.update_bankroll(amount=-1000)
+    setup_player.get_first_hand().add_card(card='5')
+    setup_player.get_first_hand().add_card(card='6')
+    setup_player.get_first_hand().add_to_total_bet(amount=10)
+    setup_player.adjust_bankroll(amount=-1000)
     setup_dealer.hand.add_card(card='2')
     setup_dealer.hand.add_card(card='3')
     player_plays_hands(
@@ -541,11 +541,11 @@ def test_player_plays_hands_double_down_insufficient_bankroll(setup_player, setu
         dealer=setup_dealer,
         rules=rules
     )
-    assert setup_player.first_hand.cards == ['5', '6', 'A', 'K']
-    assert setup_player.first_hand.total_bet == 10
-    assert setup_player.first_hand.status == HandStatus.SETTLED
+    assert setup_player.get_first_hand().cards == ['5', '6', 'A', 'K']
+    assert setup_player.get_first_hand().total_bet == 10
+    assert setup_player.get_first_hand().status == HandStatus.SETTLED
     assert setup_player.bankroll == 0
-    assert setup_player.stats.stats[StatsKey(count=None, category=StatsCategory.AMOUNT_WAGERED)] == 0
+    assert setup_player.stats.stats[StatsKey(count=None, category=StatsCategory.AMOUNT_BET)] == 0
 
 
 def test_player_plays_hands_double_after_split(setup_player, setup_dealer, setup_shoe):
@@ -555,10 +555,10 @@ def test_player_plays_hands_double_after_split(setup_player, setup_dealer, setup
 
     """
     rules = Rules(min_bet=10, max_bet=500, double_down=True, double_after_split=True)
-    setup_player.first_hand.add_card(card='2')
-    setup_player.first_hand.add_card(card='2')
-    setup_player.first_hand.add_to_total_bet(amount=10)
-    setup_player.update_bankroll(amount=-970)
+    setup_player.get_first_hand().add_card(card='2')
+    setup_player.get_first_hand().add_card(card='2')
+    setup_player.get_first_hand().add_to_total_bet(amount=10)
+    setup_player.adjust_bankroll(amount=-970)
     setup_dealer.hand.add_card(card='2')
     setup_dealer.hand.add_card(card='3')
     setup_shoe._cards = ['K', 'A', 'J', '8', 'Q', '8']
@@ -570,13 +570,13 @@ def test_player_plays_hands_double_after_split(setup_player, setup_dealer, setup
         dealer=setup_dealer,
         rules=rules
     )
-    assert setup_player.first_hand.cards == ['2', '8', 'Q']
-    assert setup_player.first_hand.total_bet == 20
-    assert setup_player.first_hand.status == HandStatus.SHOWDOWN
+    assert setup_player.get_first_hand().cards == ['2', '8', 'Q']
+    assert setup_player.get_first_hand().total_bet == 20
+    assert setup_player.get_first_hand().status == HandStatus.SHOWDOWN
     assert setup_player.hands[1].cards == ['2', '8', 'J']
     assert setup_player.hands[1].total_bet == 20
     assert setup_player.hands[1].status == HandStatus.SHOWDOWN
-    assert setup_player.stats.stats[StatsKey(count=None, category=StatsCategory.AMOUNT_WAGERED)] == 30
+    assert setup_player.stats.stats[StatsKey(count=None, category=StatsCategory.AMOUNT_BET)] == 30
 
 
 def test_player_plays_hands_double_after_split_not_allowed(setup_player, setup_dealer, setup_shoe):
@@ -586,9 +586,9 @@ def test_player_plays_hands_double_after_split_not_allowed(setup_player, setup_d
 
     """
     rules = Rules(min_bet=10, max_bet=500, double_down=True, double_after_split=False)
-    setup_player.first_hand.add_card(card='2')
-    setup_player.first_hand.add_card(card='2')
-    setup_player.first_hand.add_to_total_bet(amount=10)
+    setup_player.get_first_hand().add_card(card='2')
+    setup_player.get_first_hand().add_card(card='2')
+    setup_player.get_first_hand().add_to_total_bet(amount=10)
     setup_dealer.hand.add_card(card='2')
     setup_dealer.hand.add_card(card='3')
     player_plays_hands(
@@ -599,10 +599,10 @@ def test_player_plays_hands_double_after_split_not_allowed(setup_player, setup_d
         dealer=setup_dealer,
         rules=rules
     )
-    assert setup_player.first_hand.cards == ['2', '2', 'A', 'K']
-    assert setup_player.first_hand.total_bet == 10
-    assert setup_player.first_hand.status == HandStatus.SHOWDOWN
-    assert setup_player.stats.stats[StatsKey(count=None, category=StatsCategory.AMOUNT_WAGERED)] == 0
+    assert setup_player.get_first_hand().cards == ['2', '2', 'A', 'K']
+    assert setup_player.get_first_hand().total_bet == 10
+    assert setup_player.get_first_hand().status == HandStatus.SHOWDOWN
+    assert setup_player.stats.stats[StatsKey(count=None, category=StatsCategory.AMOUNT_BET)] == 0
 
 
 def test_player_plays_hands_double_after_split_insufficient_bankroll(setup_player, setup_dealer, setup_shoe):
@@ -612,10 +612,10 @@ def test_player_plays_hands_double_after_split_insufficient_bankroll(setup_playe
 
     """
     rules = Rules(min_bet=10, max_bet=500, double_down=True, double_after_split=True)
-    setup_player.first_hand.add_card(card='2')
-    setup_player.first_hand.add_card(card='2')
-    setup_player.first_hand.add_to_total_bet(amount=10)
-    setup_player.update_bankroll(amount=-980)
+    setup_player.get_first_hand().add_card(card='2')
+    setup_player.get_first_hand().add_card(card='2')
+    setup_player.get_first_hand().add_to_total_bet(amount=10)
+    setup_player.adjust_bankroll(amount=-980)
     setup_dealer.hand.add_card(card='2')
     setup_dealer.hand.add_card(card='3')
     player_plays_hands(
@@ -626,18 +626,18 @@ def test_player_plays_hands_double_after_split_insufficient_bankroll(setup_playe
         dealer=setup_dealer,
         rules=rules
     )
-    assert setup_player.first_hand.cards == ['2', '2', 'A', 'K']
-    assert setup_player.first_hand.total_bet == 10
-    assert setup_player.first_hand.total_bet * 3 > setup_player.bankroll
-    assert setup_player.first_hand.status == HandStatus.SHOWDOWN
-    assert setup_player.stats.stats[StatsKey(count=None, category=StatsCategory.AMOUNT_WAGERED)] == 0
+    assert setup_player.get_first_hand().cards == ['2', '2', 'A', 'K']
+    assert setup_player.get_first_hand().total_bet == 10
+    assert setup_player.get_first_hand().total_bet * 3 > setup_player.bankroll
+    assert setup_player.get_first_hand().status == HandStatus.SHOWDOWN
+    assert setup_player.stats.stats[StatsKey(count=None, category=StatsCategory.AMOUNT_BET)] == 0
 
 
 def test_player_plays_hands_stand(setup_player, setup_dealer, setup_shoe, setup_rules):
     """Tests the player_plays_hands function when the player stands."""
-    setup_player.first_hand.add_card(card='6')
-    setup_player.first_hand.add_card(card='7')
-    setup_player.first_hand.add_to_total_bet(amount=10)
+    setup_player.get_first_hand().add_card(card='6')
+    setup_player.get_first_hand().add_card(card='7')
+    setup_player.get_first_hand().add_to_total_bet(amount=10)
     setup_dealer.hand.add_card(card='6')
     setup_dealer.hand.add_card(card='6')
     player_plays_hands(
@@ -648,15 +648,15 @@ def test_player_plays_hands_stand(setup_player, setup_dealer, setup_shoe, setup_
         dealer=setup_dealer,
         rules=setup_rules
     )
-    assert setup_player.first_hand.cards == ['6', '7']
-    assert setup_player.first_hand.status == HandStatus.SHOWDOWN
+    assert setup_player.get_first_hand().cards == ['6', '7']
+    assert setup_player.get_first_hand().status == HandStatus.SHOWDOWN
 
 
 def test_player_plays_hands_busted(setup_player, setup_dealer, setup_shoe, setup_rules):
     """Tests the player_plays_hands function when the hand is busted."""
-    setup_player.first_hand.add_card(card='6')
-    setup_player.first_hand.add_card(card='7')
-    setup_player.first_hand.add_to_total_bet(amount=10)
+    setup_player.get_first_hand().add_card(card='6')
+    setup_player.get_first_hand().add_card(card='7')
+    setup_player.get_first_hand().add_to_total_bet(amount=10)
     setup_dealer.hand.add_card(card='10')
     setup_dealer.hand.add_card(card='Q')
     player_plays_hands(
@@ -667,9 +667,9 @@ def test_player_plays_hands_busted(setup_player, setup_dealer, setup_shoe, setup
         dealer=setup_dealer,
         rules=setup_rules
     )
-    assert setup_player.first_hand.cards == ['6', '7', 'A', 'K']
-    assert setup_player.first_hand.status == HandStatus.SETTLED
-    assert setup_player.first_hand.total > 21
+    assert setup_player.get_first_hand().cards == ['6', '7', 'A', 'K']
+    assert setup_player.get_first_hand().status == HandStatus.SETTLED
+    assert setup_player.get_first_hand().total > 21
 
 
 @pytest.mark.parametrize(
@@ -694,9 +694,9 @@ def test_dealer_plays_hand(setup_shoe, setup_dealer, test_hole_card, test_up_car
 def test_dealer_turn(setup_table, setup_player):
     """Tests the dealer_turn function."""
     setup_table.add_player(player=setup_player)
-    setup_player.first_hand.status = HandStatus.SETTLED
+    setup_player.get_first_hand().status = HandStatus.SETTLED
     assert not dealer_turn(table=setup_table)
-    setup_player.first_hand.status = HandStatus.SHOWDOWN
+    setup_player.get_first_hand().status = HandStatus.SHOWDOWN
     assert dealer_turn(table=setup_table)
 
 
@@ -707,10 +707,10 @@ def test_all_hands_busted_true(setup_table, setup_player):
 
     """
     setup_table.add_player(player=setup_player)
-    setup_player.first_hand.add_card(card='4')
-    setup_player.first_hand.add_card(card='J')
-    setup_player.first_hand.add_card(card='K')
-    assert setup_player.first_hand.is_busted
+    setup_player.get_first_hand().add_card(card='4')
+    setup_player.get_first_hand().add_card(card='J')
+    setup_player.get_first_hand().add_card(card='K')
+    assert setup_player.get_first_hand().is_busted
     assert all_hands_busted(table=setup_table)
 
 
@@ -721,9 +721,9 @@ def test_all_hands_busted_false(setup_table, setup_player):
 
     """
     setup_table.add_player(player=setup_player)
-    setup_player.first_hand.add_card(card='J')
-    setup_player.first_hand.add_card(card='K')
-    assert not setup_player.first_hand.is_busted
+    setup_player.get_first_hand().add_card(card='J')
+    setup_player.get_first_hand().add_card(card='K')
+    assert not setup_player.get_first_hand().is_busted
     assert not all_hands_busted(table=setup_table)
 
 
@@ -733,14 +733,14 @@ def test_compare_hands_win_total(setup_player, setup_dealer):
     based on total.
 
     """
-    setup_player.first_hand.status = HandStatus.SHOWDOWN
-    setup_player.first_hand.add_card(card='J')
-    setup_player.first_hand.add_card(card='K')
-    setup_player.first_hand.add_to_total_bet(amount=10)
+    setup_player.get_first_hand().status = HandStatus.SHOWDOWN
+    setup_player.get_first_hand().add_card(card='J')
+    setup_player.get_first_hand().add_card(card='K')
+    setup_player.get_first_hand().add_to_total_bet(amount=10)
     setup_dealer.hand.add_card(card='10')
     setup_dealer.hand.add_card(card='8')
     compare_hands(player=setup_player, dealer=setup_dealer, count=3)
-    assert setup_player.first_hand.status == HandStatus.SETTLED
+    assert setup_player.get_first_hand().status == HandStatus.SETTLED
     assert setup_player.bankroll == 1020
     assert setup_player.stats.stats[StatsKey(count=3, category=StatsCategory.HANDS_WON)] == 1
     assert setup_player.stats.stats[StatsKey(count=3, category=StatsCategory.AMOUNT_EARNED)] == 10
@@ -752,15 +752,15 @@ def test_compare_hands_win_dealer_busts(setup_player, setup_dealer):
     and the dealer busts.
 
     """
-    setup_player.first_hand.status = HandStatus.SHOWDOWN
-    setup_player.first_hand.add_card(card='J')
-    setup_player.first_hand.add_card(card='K')
-    setup_player.first_hand.add_to_total_bet(amount=20)
+    setup_player.get_first_hand().status = HandStatus.SHOWDOWN
+    setup_player.get_first_hand().add_card(card='J')
+    setup_player.get_first_hand().add_card(card='K')
+    setup_player.get_first_hand().add_to_total_bet(amount=20)
     setup_dealer.hand.add_card(card='10')
     setup_dealer.hand.add_card(card='6')
     setup_dealer.hand.add_card(card='K')
     compare_hands(player=setup_player, dealer=setup_dealer, count=1)
-    assert setup_player.first_hand.status == HandStatus.SETTLED
+    assert setup_player.get_first_hand().status == HandStatus.SETTLED
     assert setup_player.bankroll == 1040
     assert setup_player.stats.stats[StatsKey(count=1, category=StatsCategory.HANDS_WON)] == 1
     assert setup_player.stats.stats[StatsKey(count=1, category=StatsCategory.AMOUNT_EARNED)] == 20
@@ -772,14 +772,14 @@ def test_compare_hands_push(setup_player, setup_dealer):
     dealer push.
 
     """
-    setup_player.first_hand.status = HandStatus.SHOWDOWN
-    setup_player.first_hand.add_card(card='J')
-    setup_player.first_hand.add_card(card='K')
-    setup_player.first_hand.add_to_total_bet(amount=10)
+    setup_player.get_first_hand().status = HandStatus.SHOWDOWN
+    setup_player.get_first_hand().add_card(card='J')
+    setup_player.get_first_hand().add_card(card='K')
+    setup_player.get_first_hand().add_to_total_bet(amount=10)
     setup_dealer.hand.add_card(card='10')
     setup_dealer.hand.add_card(card='Q')
     compare_hands(player=setup_player, dealer=setup_dealer, count=None)
-    assert setup_player.first_hand.status == HandStatus.SETTLED
+    assert setup_player.get_first_hand().status == HandStatus.SETTLED
     assert setup_player.bankroll == 1010
     assert setup_player.stats.stats[StatsKey(count=None, category=StatsCategory.HANDS_PUSHED)] == 1
 
@@ -790,14 +790,14 @@ def test_compare_hands_loss_total(setup_player, setup_dealer):
     based on total.
 
     """
-    setup_player.first_hand.status = HandStatus.SHOWDOWN
-    setup_player.first_hand.add_card(card='6')
-    setup_player.first_hand.add_card(card='K')
-    setup_player.first_hand.add_to_total_bet(amount=20)
+    setup_player.get_first_hand().status = HandStatus.SHOWDOWN
+    setup_player.get_first_hand().add_card(card='6')
+    setup_player.get_first_hand().add_card(card='K')
+    setup_player.get_first_hand().add_to_total_bet(amount=20)
     setup_dealer.hand.add_card(card='10')
     setup_dealer.hand.add_card(card='8')
     compare_hands(player=setup_player, dealer=setup_dealer, count=-2)
-    assert setup_player.first_hand.status == HandStatus.SETTLED
+    assert setup_player.get_first_hand().status == HandStatus.SETTLED
     assert setup_player.bankroll == 1000
     assert setup_player.stats.stats[StatsKey(count=-2, category=StatsCategory.HANDS_LOST)] == 1
     assert setup_player.stats.stats[StatsKey(count=-2, category=StatsCategory.AMOUNT_EARNED)] == -20
@@ -806,18 +806,18 @@ def test_compare_hands_loss_total(setup_player, setup_dealer):
 def test_clear_hands(setup_dealer_with_hand, setup_table, setup_player):
     """Test the clear_hands function."""
     setup_table.add_player(player=setup_player)
-    setup_player.first_hand.add_card(card='A')
-    setup_player.first_hand.add_card(card='A')
-    split_hand = setup_player.first_hand.split()
+    setup_player.get_first_hand().add_card(card='A')
+    setup_player.get_first_hand().add_card(card='A')
+    split_hand = setup_player.get_first_hand().split()
     setup_player.hands.append(split_hand)
-    setup_player.first_hand.add_card(card='2')
+    setup_player.get_first_hand().add_card(card='2')
     setup_player.hands[1].add_card(card='6')
     assert setup_dealer_with_hand.hand.cards == ['8', '6']
-    assert setup_player.first_hand.cards == ['A', '2']
+    assert setup_player.get_first_hand().cards == ['A', '2']
     assert setup_player.hands[1].cards == ['A', '6']
     clear_hands(dealer=setup_dealer_with_hand, table=setup_table)
     assert setup_dealer_with_hand.hand.cards == []
-    assert setup_player.first_hand.cards == []
+    assert setup_player.get_first_hand().cards == []
     assert len(setup_player.hands) == 1
 
 
@@ -829,10 +829,10 @@ def test_play_round_back_counters_added(setup_table, setup_shoe, setup_dealer, s
     setup_shoe.add_to_seen_cards(card='2')
     setup_shoe.add_to_seen_cards(card='2')
     play_round(table=setup_table, dealer=setup_dealer, shoe=setup_shoe, rules=setup_rules)
-    assert setup_card_counter.stats.stats[StatsKey(count=3, category=StatsCategory.AMOUNT_WAGERED)] == 40
+    assert setup_card_counter.stats.stats[StatsKey(count=3, category=StatsCategory.AMOUNT_BET)] == 40
     assert setup_card_counter.stats.stats[StatsKey(count=3, category=StatsCategory.AMOUNT_EARNED)] == 60
     assert setup_card_counter.stats.stats[StatsKey(count=3, category=StatsCategory.HANDS_WON)] == 1
-    assert setup_back_counter.stats.stats[StatsKey(count=3, category=StatsCategory.AMOUNT_WAGERED)] == 40
+    assert setup_back_counter.stats.stats[StatsKey(count=3, category=StatsCategory.AMOUNT_BET)] == 40
     assert setup_back_counter.stats.stats[StatsKey(count=3, category=StatsCategory.AMOUNT_EARNED)] == 40
     assert setup_back_counter.stats.stats[StatsKey(count=3, category=StatsCategory.HANDS_WON)] == 1
 
@@ -844,13 +844,13 @@ def test_play_round_back_counters_removed(setup_table, setup_shoe, setup_dealer,
     setup_shoe.add_to_seen_cards(card='2')
     setup_shoe.add_to_seen_cards(card='2')
     setup_shoe.add_to_seen_cards(card='2')
-    add_back_counters(table=setup_table, count_dict=get_initial_count(table=setup_table, shoe=setup_shoe))
+    add_back_counters(table=setup_table, count_dict=get_count(table=setup_table, shoe=setup_shoe))
     assert len(setup_table.players) == 2
     setup_shoe.add_to_seen_cards(card='K')
     setup_shoe.add_to_seen_cards(card='K')
     setup_shoe.add_to_seen_cards(card='K')
     play_round(table=setup_table, dealer=setup_dealer, shoe=setup_shoe, rules=setup_rules)
-    assert setup_card_counter.stats.stats[StatsKey(count=0, category=StatsCategory.AMOUNT_WAGERED)] == 10
+    assert setup_card_counter.stats.stats[StatsKey(count=0, category=StatsCategory.AMOUNT_BET)] == 10
     assert setup_card_counter.stats.stats[StatsKey(count=0, category=StatsCategory.AMOUNT_EARNED)] == 15
     assert setup_card_counter.stats.stats[StatsKey(count=0, category=StatsCategory.HANDS_WON)] == 1
 
@@ -858,7 +858,7 @@ def test_play_round_back_counters_removed(setup_table, setup_shoe, setup_dealer,
 def test_play_round_insufficient_funds(setup_table, setup_dealer, setup_player, setup_rules, setup_shoe):
     """Tests the play_round function when a player has insufficient funds."""
     setup_table.add_player(player=setup_player)
-    setup_player.update_bankroll(amount=-1000)
+    setup_player.adjust_bankroll(amount=-1000)
     assert setup_player.bankroll == 0
     play_round(table=setup_table, dealer=setup_dealer, shoe=setup_shoe, rules=setup_rules)
     assert len(setup_table.players) == 0
@@ -879,10 +879,10 @@ def test_play_round_insurance_win(setup_dealer, setup_shoe, setup_card_counter_u
     setup_shoe.add_to_seen_cards(card='2')
     setup_shoe.add_to_seen_cards(card='2')
     play_round(table=table, dealer=setup_dealer, shoe=setup_shoe, rules=rules)
-    assert setup_card_counter_unbalanced.stats.stats[StatsKey(count=3, category=StatsCategory.AMOUNT_WAGERED)] == 40
+    assert setup_card_counter_unbalanced.stats.stats[StatsKey(count=3, category=StatsCategory.AMOUNT_BET)] == 40
     assert setup_card_counter_unbalanced.stats.stats[StatsKey(count=3, category=StatsCategory.AMOUNT_EARNED)] == -40
     assert setup_card_counter_unbalanced.stats.stats[StatsKey(count=3, category=StatsCategory.HANDS_LOST)] == 1
-    assert setup_card_counter_unbalanced.stats.stats[StatsKey(count=2, category=StatsCategory.INSURANCE_AMOUNT_WAGERED)] == 20
+    assert setup_card_counter_unbalanced.stats.stats[StatsKey(count=2, category=StatsCategory.INSURANCE_AMOUNT_BET)] == 20
     assert setup_card_counter_unbalanced.stats.stats[StatsKey(count=2, category=StatsCategory.INSURANCE_AMOUNT_EARNED)] == 20
 
 
@@ -900,10 +900,10 @@ def test_play_round_insurance_loss(setup_dealer, setup_shoe, setup_card_counter_
     setup_shoe.add_to_seen_cards(card='2')
     setup_shoe.add_to_seen_cards(card='2')
     play_round(table=table, dealer=setup_dealer, shoe=setup_shoe, rules=rules)
-    assert setup_card_counter_unbalanced.stats.stats[StatsKey(count=3, category=StatsCategory.AMOUNT_WAGERED)] == 40
+    assert setup_card_counter_unbalanced.stats.stats[StatsKey(count=3, category=StatsCategory.AMOUNT_BET)] == 40
     assert setup_card_counter_unbalanced.stats.stats[StatsKey(count=3, category=StatsCategory.AMOUNT_EARNED)] == 40
     assert setup_card_counter_unbalanced.stats.stats[StatsKey(count=3, category=StatsCategory.HANDS_WON)] == 1
-    assert setup_card_counter_unbalanced.stats.stats[StatsKey(count=2, category=StatsCategory.INSURANCE_AMOUNT_WAGERED)] == 20
+    assert setup_card_counter_unbalanced.stats.stats[StatsKey(count=2, category=StatsCategory.INSURANCE_AMOUNT_BET)] == 20
     assert setup_card_counter_unbalanced.stats.stats[StatsKey(count=2, category=StatsCategory.INSURANCE_AMOUNT_EARNED)] == -20
 
 
@@ -912,7 +912,7 @@ def test_play_round_player_blackjack(setup_table, setup_player, setup_dealer, se
     setup_table.add_player(player=setup_player)
     setup_shoe._cards = ['K', 'K', '9', 'A']
     play_round(table=setup_table, dealer=setup_dealer, shoe=setup_shoe, rules=setup_rules)
-    assert setup_player.stats.stats[StatsKey(count=None, category=StatsCategory.AMOUNT_WAGERED)] == 10
+    assert setup_player.stats.stats[StatsKey(count=None, category=StatsCategory.AMOUNT_BET)] == 10
     assert setup_player.stats.stats[StatsKey(count=None, category=StatsCategory.AMOUNT_EARNED)] == 15
     assert setup_player.stats.stats[StatsKey(count=None, category=StatsCategory.HANDS_WON)] == 1
 
@@ -922,7 +922,7 @@ def test_play_round_dealer_blackjack(setup_table, setup_player, setup_dealer, se
     setup_table.add_player(player=setup_player)
     setup_shoe._cards = ['K', '9', 'A', 'A']
     play_round(table=setup_table, dealer=setup_dealer, shoe=setup_shoe, rules=setup_rules)
-    assert setup_player.stats.stats[StatsKey(count=None, category=StatsCategory.AMOUNT_WAGERED)] == 10
+    assert setup_player.stats.stats[StatsKey(count=None, category=StatsCategory.AMOUNT_BET)] == 10
     assert setup_player.stats.stats[StatsKey(count=None, category=StatsCategory.AMOUNT_EARNED)] == -10
     assert setup_player.stats.stats[StatsKey(count=None, category=StatsCategory.HANDS_LOST)] == 1
 
@@ -936,7 +936,7 @@ def test_play_round_player_dealer_blackjack(setup_table, setup_player, setup_dea
     setup_table.add_player(player=setup_player)
     setup_shoe._cards = ['K', 'K', 'A', 'A']
     play_round(table=setup_table, dealer=setup_dealer, shoe=setup_shoe, rules=setup_rules)
-    assert setup_player.stats.stats[StatsKey(count=None, category=StatsCategory.AMOUNT_WAGERED)] == 10
+    assert setup_player.stats.stats[StatsKey(count=None, category=StatsCategory.AMOUNT_BET)] == 10
     assert setup_player.stats.stats[StatsKey(count=None, category=StatsCategory.AMOUNT_EARNED)] == 0
     assert setup_player.stats.stats[StatsKey(count=None, category=StatsCategory.HANDS_PUSHED)] == 1
 
@@ -1002,4 +1002,4 @@ def test_play_round_clear_hands(setup_table, setup_player, setup_dealer, setup_s
     setup_table.add_player(player=setup_player)
     play_round(table=setup_table, dealer=setup_dealer, shoe=setup_shoe, rules=setup_rules)
     assert setup_dealer.hand.cards == []
-    assert setup_player.first_hand.cards == []
+    assert setup_player.get_first_hand().cards == []

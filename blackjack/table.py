@@ -38,7 +38,7 @@ class Table:
             if not self._rules.insurance and player.insurance:
                 raise ValueError(f"{player.name}'s insurance is not allowed according to the table rules.")
         else:
-            if (player.initial_wager() < self._rules.min_bet) or (player.initial_wager() > self._rules.max_bet):
+            if (player.placed_bet() < self._rules.min_bet) or (player.placed_bet() > self._rules.max_bet):
                 raise ValueError(f"{player.name}'s desired bet is not allowed according to the table rules.")
 
     def add_player(self, player: Player) -> None:

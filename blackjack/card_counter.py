@@ -64,7 +64,7 @@ class CardCounter(Player):
         return self._card_counting_system
 
     @override
-    def initial_wager(self, **kwargs: Any) -> float | int:
+    def placed_bet(self, **kwargs: Any) -> float | int:
         if 'count' not in kwargs:
             raise KeyError('"count" needs to be included in the kwargs.')
         count = kwargs['count']
