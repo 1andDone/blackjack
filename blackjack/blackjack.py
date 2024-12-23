@@ -1,4 +1,7 @@
 import random
+import sys
+import time
+from typing import Generator
 from blackjack.dealer import Dealer
 from blackjack.helpers import play_round
 from blackjack.player import Player
@@ -6,6 +9,26 @@ from blackjack.playing_strategy import PlayingStrategy
 from blackjack.rules import Rules
 from blackjack.shoe import Shoe
 from blackjack.table import Table
+
+
+def _shoe_progress_bar(shoe_range: range, size: int = 60) -> Generator[int, None, None]:
+    total_shoes = len(shoe_range)
+    start = time.time()
+    
+    def _show(shoe_number: int) -> None:
+        x = int(size * shoe_number / total_shoes)
+        remaining = ((time.time() - start) / shoe_number) * (total_shoes - shoe_number)        
+        minutes, seconds = divmod(remaining, 60)
+        minutes = int(minutes)
+        seconds = int(seconds)
+        time_str = f'{minutes if minutes > 10 else minutes:02}:{seconds if seconds > 10 else seconds:02}'
+        print(f"Shoes Simulated: [{u'█' * x}{('.' * (size - x))}] {shoe_number}/{total_shoes} Estimated wait {time_str}", end='\r', file=sys.stdout, flush=True)
+    
+    for index, shoe_number in enumerate(shoe_range):
+        _show(shoe_number=shoe_number + 1)
+        yield shoe_number
+    
+    print('\n', flush=True, file=sys.stdout)
 
 
 class Blackjack:
@@ -76,7 +99,7 @@ class Blackjack:
     def add_player(self, player: Player) -> None:
         return self._table.add_player(player=player)
 
-    def play_shoe(self, penetration: float, shoe_size: int) -> None:
+    def _play_shoe(self, penetration: float, shoe_size: int) -> None:
         if penetration > 0.9:
             raise ValueError('Penetration must be less than or equal to 0.9')
 
@@ -90,7 +113,7 @@ class Blackjack:
         if seed:
             random.seed(seed)
 
-        for _ in range(number_of_shoes):
+        for _ in _shoe_progress_bar(shoe_range=range(number_of_shoes)):
             if not self._table.players:
                 break
-            self.play_shoe(penetration=penetration, shoe_size=shoe_size)
+            self._play_shoe(penetration=penetration, shoe_size=shoe_size)

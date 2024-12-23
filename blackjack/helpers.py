@@ -48,9 +48,9 @@ def get_insurance_count(table: Table, shoe: Shoe) -> dict[Player, float | int | 
 
 def get_placed_bet(table: Table, count_dict: dict[Player, float | int | None]) -> dict[Player, float | int]:
     """
-    Gets the placed bet for every player at the table
-    and stores it in a dictionary.
-
+    Gets the placed bet for every player at the table and stores
+    it in a dictionary.
+    
     """
     placed_bet_dict: dict[Player, float | int] = {}
     for player in table.players.copy():
@@ -204,8 +204,8 @@ def player_initial_decision(
     playing_strategy: PlayingStrategy
 ) -> str | None:
     """
-    Determines a player's initial decision based on the
-    first two cards dealt to them by the dealer.
+    Determines a player's initial decision based on the first two cards dealt
+    to them by the dealer.
 
     """
     if not player.get_first_hand().is_blackjack and rules.insurance and dealer.up_card == 'A':
@@ -332,9 +332,8 @@ def player_plays_hands(
 
 def dealer_turn(table: Table) -> bool:
     """
-    Determines if any of the hands played
-    by players at the table were not previously
-    settled.
+    Determines if any of the hands played by players at the table were
+    not previously settled.
 
     """
     return any(hand.status == HandStatus.SHOWDOWN for player in table.players for hand in player.hands)
@@ -353,9 +352,8 @@ def dealer_plays_hand(shoe: Shoe, dealer: Dealer, rules: Rules) -> None:
 
 def compare_hands(player: Player, count: float | int | None, dealer: Dealer) -> None:
     """
-    Compares the dealer's hand to any hands
-    played by players at the table that were not
-    previously settled.
+    Compares the dealer's hand to any hands played by players at the
+    table that were not previously settled.
 
     """
     showdown_hands = [hand for hand in player.hands if hand.status == HandStatus.SHOWDOWN]
@@ -371,9 +369,8 @@ def compare_hands(player: Player, count: float | int | None, dealer: Dealer) -> 
 
 def clear_hands(dealer: Dealer, table: Table) -> None:
     """
-    Clears the dealer's hand as well as
-    any hands played by players at the table
-    when the outcome has been decided.
+    Clears the dealer's hand as well as any hands played by players at
+    the table when the outcome has been decided.
 
     """
     dealer.reset_hand()
@@ -388,11 +385,7 @@ def play_round(
     shoe: Shoe,
     playing_strategy: PlayingStrategy
 ) -> None:
-    """
-    Plays a round of blackjack between a
-    dealer and players at a table.
-
-    """
+    """Plays a round of blackjack between a dealer and players at a table."""
     count_dict = get_count(table=table, shoe=shoe)
     add_back_counters(table=table, count_dict=count_dict)
     remove_back_counters(table=table, count_dict=count_dict)
