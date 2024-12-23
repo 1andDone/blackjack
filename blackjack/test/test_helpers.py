@@ -56,11 +56,7 @@ def test_get_insurance_count(shoe, player, card_counter_balanced, card_counter_u
 
 
 def test_get_placed_bet_player_not_removed(shoe, player):
-    """
-    Tests the get_placed_bet function when a player
-    is not removed.
-
-    """
+    """Tests the get_placed_bet function when a player is not removed."""
     rules = Rules(min_bet=10, max_bet=500, s17=True)
     table = Table(rules=rules)
     table.add_player(player=player)
@@ -70,11 +66,7 @@ def test_get_placed_bet_player_not_removed(shoe, player):
 
 
 def test_get_placed_bet_player_removed(shoe):
-    """
-    Tests the get_placed_bet function when a player
-    is removed.
-
-    """
+    """Tests the get_placed_bet function when a player is removed."""
     rules = Rules(min_bet=10, max_bet=500, s17=True)
     table = Table(rules=rules)
     player = Player(name='Player 1', min_bet=10, bankroll=10)
@@ -115,9 +107,9 @@ def test_initialize_hands(player, dealer, shoe):
 
 def test_add_back_counters(shoe, card_counter_balanced, back_counter):
     """
-    Tests the add_back_counters function when the back counter's
-    partner is at the table.
-
+    Tests the add_back_counters function when the back counter's partner is at
+    the table.
+    
     """
     rules = Rules(min_bet=10, max_bet=500, s17=True)
     table = Table(rules=rules)
@@ -188,8 +180,8 @@ def test_player_initial_decision_insurance_dealer_blackjack(card_counter_unbalan
 
 def test_player_initial_decision_insurance_no_dealer_blackjack(card_counter_unbalanced, dealer):
     """
-    Tests the player_initial_decision function when the player buys
-    insurance and the dealer does not have blackjack.
+    Tests the player_initial_decision function when the player buys insurance
+    and the dealer does not have blackjack.
 
     """
     rules = Rules(min_bet=10, max_bet=500, s17=True, insurance=True)
@@ -215,8 +207,8 @@ def test_player_initial_decision_insurance_no_dealer_blackjack(card_counter_unba
 
 def test_player_initial_decision_no_insurance_dealer_blackjack(player, dealer):
     """
-    Tests the player_initial_decision function when the player cannot
-    or does not buy insurance and the dealer has a blackjack.
+    Tests the player_initial_decision function when the player cannot or does
+    not buy insurance and the dealer has a blackjack.
 
     """
     rules = Rules(min_bet=10, max_bet=500, s17=True, insurance=False)

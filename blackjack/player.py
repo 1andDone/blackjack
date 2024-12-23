@@ -1,7 +1,6 @@
 from typing import Any
 from blackjack.hand import Hand
 from blackjack.playing_strategy import PlayingStrategy
-from blackjack.rules import Rules
 from blackjack.stats import Stats
 
 

@@ -20,4 +20,4 @@ def test_reset_hand(dealer_with_hand):
     """Tests the reset_hand method within the Dealer class."""
     assert dealer_with_hand.hand.cards == ['8', '6']
     dealer_with_hand.reset_hand()
-    assert dealer_with_hand.hand.cards == []
+    assert not dealer_with_hand.hand.cards

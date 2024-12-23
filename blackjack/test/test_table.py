@@ -157,7 +157,7 @@ def test_remove_player(player):
     table = Table(rules=rules)
     table.add_player(player=player)
     table.remove_player(player=player)
-    assert table.players == []
+    assert not table.players
 
 
 def test_remove_player_not_at_table(player):

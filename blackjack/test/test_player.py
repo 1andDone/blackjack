@@ -1,7 +1,5 @@
 import pytest
 from blackjack.player import Player
-from blackjack.playing_strategy import PlayingStrategy
-from blackjack.rules import Rules
 
 
 def test_init_insufficient_bankroll():
@@ -186,4 +184,4 @@ def test_reset_hands(player_with_hand):
     assert hand.cards == ['8', '6']
     player_with_hand.reset_hands()
     reset_hand = player_with_hand.get_first_hand()
-    assert reset_hand.cards == []
+    assert not reset_hand.cards
