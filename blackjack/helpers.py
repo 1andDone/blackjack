@@ -31,14 +31,14 @@ def get_count(table: Table, shoe: Shoe) -> dict[Player, float | int | None]:
     return count_dict
 
 
-def get_insurance_count(table: Table, shoe: Shoe) -> dict[Player, float | int | None]:
+def get_insurance_count(players: list[Player], shoe: Shoe) -> dict[Player, float | int | None]:
     """
     Gets the count for every player at the table before
     an insurance bet is made and stores it in a dictionary.
 
     """
     count_dict: dict[Player, float | int | None] = {}
-    for player in table.players:
+    for player in players:
         if isinstance(player, CardCounter) and player.insurance:
             count_dict[player] = _get_count(card_counter=player, shoe=shoe)
         else:
@@ -171,10 +171,10 @@ def place_insurance_bet(player: Player, amount: float | int, count: float | int 
     )
 
 
-def initialize_hands(table: Table, dealer: Dealer, shoe: Shoe) -> None:
+def initialize_hands(dealer: Dealer, players: list[Player], shoe: Shoe) -> None:
     """Initializes the hands for the dealer and each player at the table."""
     for seen in [False, True]:
-        for player in table.players:
+        for player in players:
             player.get_first_hand().add_card(card=dealer.deal_card(shoe=shoe))
         dealer.hand.add_card(card=dealer.deal_card(shoe=shoe, seen=seen))
 
@@ -256,12 +256,12 @@ def player_plays_hands(
 ) -> None:
     """Player plays out their hand(s)."""
     decision = player_initial_decision(
-            player=player,
-            count=count,
-            insurance_count=insurance_count,
-            dealer=dealer,
-            rules=rules,
-            playing_strategy=playing_strategy
+        player=player,
+        count=count,
+        insurance_count=insurance_count,
+        dealer=dealer,
+        rules=rules,
+        playing_strategy=playing_strategy
     )
 
     if not decision:
@@ -272,38 +272,39 @@ def player_plays_hands(
     while True:
 
         current_hand = player.hands[hand_number]
+        current_hand_total_bet = current_hand.total_bet
 
         if current_hand.number_of_cards == 1:
             current_hand.add_card(card=dealer.deal_card(shoe=shoe))
-            if current_hand.cards[0] == 'A' and (len(player.hands) == rules.max_hands or \
+            if current_hand.cards[0] == 'A' and (player.number_of_hands == rules.max_hands or \
                 not rules.resplit_aces or current_hand.cards[1] != 'A'):
                 current_hand.status = HandStatus.SHOWDOWN
 
         # a sufficient bankroll check for the 'Rp' and 'P' decisions is performed in Player class
         elif decision in {'Rp', 'P'} or (decision == 'Ph' and rules.double_after_split and \
-            player.has_sufficient_bankroll(amount=current_hand.total_bet * 3)):
-            _update_betting_stats(player=player, hand_bet=current_hand.total_bet, count=count)
+            player.has_sufficient_bankroll(amount=current_hand_total_bet * 3)):
+            _update_betting_stats(player=player, hand_bet=current_hand_total_bet, count=count)
             player.hands.append(current_hand.split())
             current_hand.add_card(card=dealer.deal_card(shoe=shoe))
             another_hand += 1
-            if current_hand.cards[0] == 'A' and (len(player.hands) == rules.max_hands or \
+            if current_hand.cards[0] == 'A' and (player.number_of_hands == rules.max_hands or \
                 not rules.resplit_aces or current_hand.cards[1] != 'A'):
                 current_hand.status = HandStatus.SHOWDOWN
 
         elif rules.double_down and decision in {'Dh', 'Ds'} and current_hand.number_of_cards == 2 and \
             not current_hand.was_split and not current_hand.is_split and \
-            player.has_sufficient_bankroll(amount=current_hand.total_bet):
-            _update_betting_stats(player=player, hand_bet=current_hand.total_bet, count=count)
+            player.has_sufficient_bankroll(amount=current_hand_total_bet):
+            _update_betting_stats(player=player, hand_bet=current_hand_total_bet, count=count)
             current_hand.add_card(card=dealer.deal_card(shoe=shoe))
-            current_hand.add_to_total_bet(amount=current_hand.total_bet)
+            current_hand.add_to_total_bet(amount=current_hand_total_bet)
             current_hand.status = HandStatus.SHOWDOWN
 
         elif rules.double_after_split and decision in {'Dh', 'Ds'} and current_hand.number_of_cards == 2 and \
             (current_hand.was_split or current_hand.is_split) and \
-            player.has_sufficient_bankroll(amount=current_hand.total_bet):
-            _update_betting_stats(player=player, hand_bet=current_hand.total_bet, count=count)
+            player.has_sufficient_bankroll(amount=current_hand_total_bet):
+            _update_betting_stats(player=player, hand_bet=current_hand_total_bet, count=count)
             current_hand.add_card(card=dealer.deal_card(shoe=shoe))
-            current_hand.add_to_total_bet(amount=current_hand.total_bet)
+            current_hand.add_to_total_bet(amount=current_hand_total_bet)
             current_hand.status = HandStatus.SHOWDOWN
 
         elif decision in {'Rh', 'Dh', 'Ph', 'H'}:
@@ -313,15 +314,15 @@ def player_plays_hands(
             current_hand.status = HandStatus.SHOWDOWN
 
         if current_hand.is_busted:
-            _update_loss_stats(player=player, hand_bet=current_hand.total_bet, count=count)
+            _update_loss_stats(player=player, hand_bet=current_hand_total_bet, count=count)
             current_hand.status = HandStatus.SETTLED
 
         if current_hand.status == HandStatus.IN_PLAY:
             decision = player.decision(
-                    hand=current_hand,
-                    dealer_up_card=dealer.up_card,
-                    max_hands=rules.max_hands,
-                    playing_strategy=playing_strategy
+                hand=current_hand,
+                dealer_up_card=dealer.up_card,
+                max_hands=rules.max_hands,
+                playing_strategy=playing_strategy
             )
         elif another_hand > 0:
             another_hand -= 1
@@ -330,23 +331,18 @@ def player_plays_hands(
             break
 
 
-def dealer_turn(table: Table) -> bool:
+def dealer_turn(players: list[Player]) -> bool:
     """
     Determines if any of the hands played by players at the table were
     not previously settled.
 
     """
-    return any(hand.status == HandStatus.SHOWDOWN for player in table.players for hand in player.hands)
+    return any(hand.status == HandStatus.SHOWDOWN for player in players for hand in player.hands)
 
 
-def all_hands_busted(table: Table) -> bool:
-    """Determines if all player's hands at the table are busted."""
-    return all(hand.is_busted for player in table.players for hand in player.hands)
-
-
-def dealer_plays_hand(shoe: Shoe, dealer: Dealer, rules: Rules) -> None:
+def dealer_plays_hand(shoe: Shoe, dealer: Dealer, s17: bool) -> None:
     """Dealer plays out their hand."""
-    while dealer.hand.total < 17 or (dealer.hand.total == 17 and dealer.hand.is_soft and not rules.s17):
+    while dealer.hand.total < 17 or (dealer.hand.total == 17 and dealer.hand.is_soft and not s17):
         dealer.hand.add_card(card=dealer.deal_card(shoe=shoe))
 
 
@@ -367,14 +363,14 @@ def compare_hands(player: Player, count: float | int | None, dealer: Dealer) -> 
         hand.status = HandStatus.SETTLED
 
 
-def clear_hands(dealer: Dealer, table: Table) -> None:
+def clear_hands(dealer: Dealer, players: list[Player]) -> None:
     """
     Clears the dealer's hand as well as any hands played by players at
     the table when the outcome has been decided.
 
     """
     dealer.reset_hand()
-    for player in table.players:
+    for player in players:
         player.reset_hands()
 
 
@@ -387,8 +383,8 @@ def play_round(
 ) -> None:
     """Plays a round of blackjack between a dealer and players at a table."""
     count_dict = get_count(table=table, shoe=shoe)
-    add_back_counters(table=table, count_dict=count_dict)
     remove_back_counters(table=table, count_dict=count_dict)
+    add_back_counters(table=table, count_dict=count_dict)
     placed_bet_dict = get_placed_bet(table=table, count_dict=count_dict)
 
     for player in table.players:
@@ -398,11 +394,12 @@ def play_round(
             count=count_dict[player]
         )
 
-    if table.players:
-        initialize_hands(table=table, dealer=dealer, shoe=shoe)
-        insurance_count_dict = get_insurance_count(table=table, shoe=shoe)
+    players = table.players
+    if players:
+        initialize_hands(dealer=dealer, players=players, shoe=shoe)
+        insurance_count_dict = get_insurance_count(players=players, shoe=shoe)
 
-        for player in table.players:
+        for player in players:
             player_plays_hands(
                 player=player,
                 shoe=shoe,
@@ -413,12 +410,12 @@ def play_round(
                 playing_strategy=playing_strategy
             )
 
-        if (all_hands_busted(table=table) and rules.dealer_shows_hole_card) or not all_hands_busted(table=table):
+        if dealer_turn(players=players):
+            shoe.add_to_seen_cards(card=dealer.hole_card)
+            dealer_plays_hand(shoe=shoe, dealer=dealer, s17=rules.s17)
+            for player in players:
+                compare_hands(player=player, count=count_dict[player], dealer=dealer)
+        elif dealer.hand.is_blackjack or rules.dealer_shows_hole_card:
             shoe.add_to_seen_cards(card=dealer.hole_card)
 
-        if dealer_turn(table=table):
-            dealer_plays_hand(shoe=shoe, dealer=dealer, rules=rules)
-            for player in table.players:
-                compare_hands(player=player, count=count_dict[player], dealer=dealer)
-
-        clear_hands(dealer=dealer, table=table)
+        clear_hands(dealer=dealer, players=players)

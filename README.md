@@ -53,18 +53,15 @@ player1 = Player(
 
 player2 = CardCounter(
     name='Player 2',
-    bankroll=10000,
+    bankroll=50000,
     min_bet=10,
     card_counting_system=CardCountingSystem.HI_LO,
     bet_ramp={
-        1: 15,
+        1: 10,
         2: 20,
         3: 40,
-        4: 50,
-        5: 70,
-        6: 100,
-        7: 150,
-        8: 200
+        4: 80,
+        5: 150
     },
     insurance=None
 )
@@ -73,19 +70,16 @@ player3 = BackCounter(
     name='Player 3',
     bankroll=15000,
     min_bet=10,
-    card_counting_system=CardCountingSystem.OMEGA_II,
+    card_counting_system=CardCountingSystem.HI_LO,
     bet_ramp={
-        1: 15,
+        1: 10,
         2: 20,
-        3: 50,
-        4: 100,
-        5: 150,
-        6: 250,
-        7: 400,
-        8: 500
+        3: 40,
+        4: 80,
+        5: 150
     },
-    insurance=10,
-    entry_point=5,
+    insurance=3,
+    entry_point=2,
     exit_point=1
 )
 ```
@@ -108,17 +102,17 @@ print(player3.stats.summary)
 ```
 
 ```
->> HANDS PLAYED: 238,545
->> HANDS WON: 102,706
->> HANDS LOST: 115,391
->> HANDS PUSHED: 20,448
->> AMOUNT EARNED: $764,635.00
->> AMOUNT WAGERED: $64,313,200.00
->> INSURANCE AMOUNT EARNED: -$143,650.00
->> INSURANCE AMOUNT BET: $546,850.00
->> TOTAL AMOUNT EARNED: $620,985.00
->> TOTAL AMOUNT BET: $64,860,050.00
->> ELEMENT OF RISK: 0.96%
+>> HANDS PLAYED: 274,062
+>> HANDS WON: 117,821
+>> HANDS LOST: 132,534
+>> HANDS PUSHED: 23,707
+>> AMOUNT EARNED: $158,225.00
+>> AMOUNT BET: $14,306,490.00
+>> INSURANCE AMOUNT EARNED: -$120,750.00
+>> INSURANCE AMOUNT BET: $376,810.00
+>> TOTAL AMOUNT EARNED: $37,475.00
+>> TOTAL AMOUNT BET: $14,683,300.00
+>> ELEMENT OF RISK: 0.26%
 ```
 
 If desired, the statistics at each count can be accessed as well.

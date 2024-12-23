@@ -35,7 +35,6 @@ def test_decision_one_card(player, playing_strategy_s17):
 
     """
     player.get_first_hand().add_card(card='8')
-    player.get_first_hand().add_to_total_bet(amount=10)
     assert player.decision(
         playing_strategy=playing_strategy_s17,
         hand=player.get_first_hand(),
@@ -52,7 +51,6 @@ def test_decision_number_of_hands_less_than_max_hands(player, playing_strategy_s
     """
     player.get_first_hand().add_card(card='8')
     player.get_first_hand().add_card(card='8')
-    player.get_first_hand().add_to_total_bet(amount=10)
     assert player.decision(
         playing_strategy=playing_strategy_s17,
         hand=player.get_first_hand(),
@@ -72,7 +70,6 @@ def test_decision_number_of_hands_equals_max_hands(player, playing_strategy_s17)
     split_card = player.get_first_hand().split()
     player.hands.append(split_card)
     player.get_first_hand().add_card(card='J')
-    player.get_first_hand().add_to_total_bet(amount=10)
     assert player.decision(
         playing_strategy=playing_strategy_s17,
         hand=player.get_first_hand(),
@@ -81,7 +78,6 @@ def test_decision_number_of_hands_equals_max_hands(player, playing_strategy_s17)
     ) == 'S'
     split_hand = player.hands[1]
     split_hand.add_card(card='8')
-    player.hands[1].add_to_total_bet(amount=10)
     assert player.decision(
         playing_strategy=playing_strategy_s17,
         hand=split_hand,
@@ -98,7 +94,6 @@ def test_decision_soft(player, playing_strategy_s17):
     """
     player.get_first_hand().add_card(card='7')
     player.get_first_hand().add_card(card='A')
-    player.get_first_hand().add_to_total_bet(amount=10)
     assert player.decision(
         playing_strategy=playing_strategy_s17,
         hand=player.get_first_hand(),
@@ -115,7 +110,6 @@ def test_decision_hard(player, playing_strategy_s17):
     """
     player.get_first_hand().add_card(card='8')
     player.get_first_hand().add_card(card='K')
-    player.get_first_hand().add_to_total_bet(amount=10)
     assert player.decision(
         playing_strategy=playing_strategy_s17,
         hand=player.get_first_hand(),
@@ -133,7 +127,6 @@ def test_decision_busted(player, playing_strategy_s17):
     player.get_first_hand().add_card(card='K')
     player.get_first_hand().add_card(card='J')
     player.get_first_hand().add_card(card='2')
-    player.get_first_hand().add_to_total_bet(amount=10)
     with pytest.raises(KeyError):
         player.decision(
             playing_strategy=playing_strategy_s17,
@@ -151,7 +144,6 @@ def test_decision_pair(player, playing_strategy_s17):
     """
     player.get_first_hand().add_card(card='8')
     player.get_first_hand().add_card(card='8')
-    player.get_first_hand().add_to_total_bet(amount=10)
     assert player.decision(
         playing_strategy=playing_strategy_s17,
         hand=player.get_first_hand(),
@@ -178,10 +170,17 @@ def test_decision_pair_insufficient_bankroll(player, playing_strategy_s17):
     ) == 'Rh'
 
 
-def test_reset_hands(player_with_hand):
+def test_reset_hands(player):
     """Tests the reset_hands method within the Player class."""
-    hand = player_with_hand.get_first_hand()
-    assert hand.cards == ['8', '6']
-    player_with_hand.reset_hands()
-    reset_hand = player_with_hand.get_first_hand()
+    player.get_first_hand().add_card(card='8')
+    player.get_first_hand().add_card(card='8')
+    split_card = player.get_first_hand().split()
+    player.hands.append(split_card)
+    player.get_first_hand().add_card(card='J')
+    split_hand = player.hands[1]
+    split_hand.add_card(card='9')
+    assert player.number_of_hands == 2
+    player.reset_hands()
+    reset_hand = player.get_first_hand()
     assert not reset_hand.cards
+    assert player.number_of_hands == 1

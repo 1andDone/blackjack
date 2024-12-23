@@ -6,8 +6,7 @@ from blackjack.helpers import get_placed_bet, place_bet
 from blackjack.helpers import place_insurance_bet, initialize_hands
 from blackjack.helpers import add_back_counters, remove_back_counters
 from blackjack.helpers import player_initial_decision, player_plays_hands
-from blackjack.helpers import dealer_turn, all_hands_busted
-from blackjack.helpers import dealer_plays_hand, compare_hands
+from blackjack.helpers import dealer_turn, dealer_plays_hand, compare_hands
 from blackjack.helpers import clear_hands, play_round
 from blackjack.player import Player
 from blackjack.playing_strategy import PlayingStrategy
@@ -44,7 +43,7 @@ def test_get_insurance_count(shoe, player, table, card_counter_balanced, card_co
     table.add_player(player=card_counter_balanced)
     table.add_player(player=card_counter_unbalanced)
     table.add_player(player=back_counter)
-    insurance_count = get_insurance_count(table=table, shoe=shoe)
+    insurance_count = get_insurance_count(players=table.players, shoe=shoe)
     assert insurance_count[player] is None
     assert insurance_count[card_counter_balanced] is None
     assert insurance_count[card_counter_unbalanced] == -2
@@ -88,7 +87,7 @@ def test_place_insurance_bet(card_counter_unbalanced):
 def test_initialize_hands(player, dealer, shoe, table):
     """Tests the initialize_hands function."""
     table.add_player(player=player)
-    initialize_hands(table=table, dealer=dealer, shoe=shoe)
+    initialize_hands(dealer=dealer, players=table.players, shoe=shoe)
     assert player.get_first_hand().cards == ['A', 'Q']
     assert dealer.hand.cards == ['K', 'J']
     assert shoe.seen_cards['A'] == 1
@@ -763,10 +762,9 @@ def test_player_plays_hands_busted(player, dealer, shoe, rules):
 )
 def test_dealer_plays_hand(shoe, dealer, test_hole_card, test_up_card, test_s17, expected):
     """Tests the dealer_plays_hand function."""
-    rules = Rules(min_bet=10, max_bet=500, s17=test_s17)
     dealer.hand.add_card(card=test_hole_card)
     dealer.hand.add_card(card=test_up_card)
-    dealer_plays_hand(shoe=shoe, dealer=dealer, rules=rules)
+    dealer_plays_hand(shoe=shoe, dealer=dealer, s17=test_s17)
     assert dealer.hand.total == expected
 
 
@@ -774,36 +772,9 @@ def test_dealer_turn(player, table):
     """Tests the dealer_turn function."""
     table.add_player(player=player)
     player.get_first_hand().status = HandStatus.SETTLED
-    assert not dealer_turn(table=table)
+    assert not dealer_turn(players=table.players)
     player.get_first_hand().status = HandStatus.SHOWDOWN
-    assert dealer_turn(table=table)
-
-
-def test_all_hands_busted_true(player, table):
-    """
-    Tests the all_hands_busted function
-    when all hands at the table are busted.
-
-    """
-    table.add_player(player=player)
-    player.get_first_hand().add_card(card='4')
-    player.get_first_hand().add_card(card='J')
-    player.get_first_hand().add_card(card='K')
-    assert player.get_first_hand().is_busted
-    assert all_hands_busted(table=table)
-
-
-def test_all_hands_busted_false(player, table):
-    """
-    Tests the all_hands_busted function
-    when not all hands at the table are busted.
-
-    """
-    table.add_player(player=player)
-    player.get_first_hand().add_card(card='J')
-    player.get_first_hand().add_card(card='K')
-    assert not player.get_first_hand().is_busted
-    assert not all_hands_busted(table=table)
+    assert dealer_turn(players=table.players)
 
 
 def test_compare_hands_win_total(player, dealer):
@@ -895,7 +866,7 @@ def test_clear_hands(dealer_with_hand, player, rules):
     assert dealer_with_hand.hand.cards == ['8', '6']
     assert player.get_first_hand().cards == ['A', '2']
     assert player.hands[1].cards == ['A', '6']
-    clear_hands(dealer=dealer_with_hand, table=table)
+    clear_hands(dealer=dealer_with_hand, players=table.players)
     assert not dealer_with_hand.hand.cards
     assert not player.get_first_hand().cards
     assert len(player.hands) == 1
@@ -1002,6 +973,9 @@ def test_play_round_player_blackjack(player, dealer, shoe, rules):
     table.add_player(player=player)
     shoe._cards = ['K', 'K', '9', 'A']
     play_round(table=table, dealer=dealer, shoe=shoe, rules=rules, playing_strategy=playing_strategy)
+    assert shoe.seen_cards['A'] == 1
+    assert shoe.seen_cards['10-J-Q-K'] == 2
+    assert shoe.seen_cards['9'] == 0
     assert player.stats.stats[StatsKey(count=None, category=StatsCategory.AMOUNT_BET)] == 10
     assert player.stats.stats[StatsKey(count=None, category=StatsCategory.AMOUNT_EARNED)] == 15
     assert player.stats.stats[StatsKey(count=None, category=StatsCategory.HANDS_WON)] == 1
@@ -1014,6 +988,9 @@ def test_play_round_dealer_blackjack(player, dealer, shoe, rules):
     table.add_player(player=player)
     shoe._cards = ['K', '9', 'A', 'A']
     play_round(table=table, dealer=dealer, shoe=shoe, rules=rules, playing_strategy=playing_strategy)
+    assert shoe.seen_cards['A'] == 2
+    assert shoe.seen_cards['10-J-Q-K'] == 1
+    assert shoe.seen_cards['9'] == 1
     assert player.stats.stats[StatsKey(count=None, category=StatsCategory.AMOUNT_BET)] == 10
     assert player.stats.stats[StatsKey(count=None, category=StatsCategory.AMOUNT_EARNED)] == -10
     assert player.stats.stats[StatsKey(count=None, category=StatsCategory.HANDS_LOST)] == 1
@@ -1030,41 +1007,36 @@ def test_play_round_player_dealer_blackjack(player, dealer, shoe, rules):
     table.add_player(player=player)
     shoe._cards = ['K', 'K', 'A', 'A']
     play_round(table=table, dealer=dealer, shoe=shoe, rules=rules, playing_strategy=playing_strategy)
+    assert shoe.seen_cards['A'] == 2
+    assert shoe.seen_cards['10-J-Q-K'] == 2
     assert player.stats.stats[StatsKey(count=None, category=StatsCategory.AMOUNT_BET)] == 10
     assert player.stats.stats[StatsKey(count=None, category=StatsCategory.AMOUNT_EARNED)] == 0
     assert player.stats.stats[StatsKey(count=None, category=StatsCategory.HANDS_PUSHED)] == 1
 
 
-def test_play_round_all_hands_busted_dealer_shows_hole_card(player, dealer, shoe):
+@pytest.mark.parametrize(
+    'test_dealer_shows_hole_card, test_seen_cards',
+    [
+        (True, 5),
+        (False, 4)
+     ]
+)
+def test_play_round_all_hands_settled(player, card_counter_balanced, dealer, shoe, test_dealer_shows_hole_card, test_seen_cards):
     """
     Tests the play_round function when all hands
-    are busted and the dealer shows their hole card.
+    are settled.
 
     """
-    rules = Rules(min_bet=10, max_bet=500, dealer_shows_hole_card=True)
+    rules = Rules(min_bet=10, max_bet=500, dealer_shows_hole_card=test_dealer_shows_hole_card)
     table = Table(rules=rules)
     playing_strategy = PlayingStrategy(s17=rules.s17)
     table.add_player(player=player)
-    shoe._cards = ['10', 'J', 'Q', 'K', '4']
+    table.add_player(player=card_counter_balanced)
+    shoe._cards = ['10', 'J', 'J', 'Q', 'K', 'A', '4']
     play_round(table=table, dealer=dealer, shoe=shoe, rules=rules, playing_strategy=playing_strategy)
+    assert shoe.seen_cards['A'] == 1
     assert shoe.seen_cards['4'] == 1
-    assert shoe.seen_cards['10-J-Q-K'] == 4
-
-
-def test_play_round_all_hands_busted_dealer_does_not_show_hole_card(player, dealer, shoe):
-    """
-    Tests the play_round function when all hands
-    are busted and the dealer does not show their hole card.
-
-    """
-    rules = Rules(min_bet=10, max_bet=500, dealer_shows_hole_card=False)
-    table = Table(rules=rules)
-    playing_strategy = PlayingStrategy(s17=rules.s17)
-    table.add_player(player=player)
-    shoe._cards = ['10', 'J', 'Q', 'K', '4']
-    play_round(table=table, dealer=dealer, shoe=shoe, rules=rules, playing_strategy=playing_strategy)
-    assert shoe.seen_cards['4'] == 1
-    assert shoe.seen_cards['10-J-Q-K'] == 3
+    assert shoe.seen_cards['10-J-Q-K'] == test_seen_cards
 
 
 @pytest.mark.parametrize(
@@ -1074,10 +1046,10 @@ def test_play_round_all_hands_busted_dealer_does_not_show_hole_card(player, deal
         (False)
      ]
 )
-def test_play_round_all_hands_do_not_bust(player, dealer, shoe, test_dealer_shows_hole_card):
+def test_play_round_showdown_hands(player, dealer, shoe, test_dealer_shows_hole_card):
     """
     Tests the play_round function when there are
-    hands that are not busted.
+    showdown hands.
 
     """
     rules = Rules(min_bet=10, max_bet=500, dealer_shows_hole_card=test_dealer_shows_hole_card)

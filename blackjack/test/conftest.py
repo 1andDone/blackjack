@@ -77,13 +77,6 @@ def player():
 
 
 @pytest.fixture
-def player_with_hand(player):
-    player.get_first_hand().add_card(card='8')
-    player.get_first_hand().add_card(card='6')
-    return player
-
-
-@pytest.fixture
 def card_counter_balanced():
     return CardCounter(
         name='Player 2',
