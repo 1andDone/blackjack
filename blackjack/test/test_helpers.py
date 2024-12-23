@@ -17,10 +17,8 @@ from blackjack.stats import StatsKey
 from blackjack.table import Table
 
 
-def test_get_count(player, card_counter_unbalanced, back_counter):
+def test_get_count(player, table, card_counter_unbalanced, back_counter):
     """Tests the get_count function."""
-    rules = Rules(min_bet=10, max_bet=500, s17=True)
-    table = Table(rules=rules)
     shoe = Shoe(shoe_size=6)
     # burn an entire 52 card deck and make them all visible 'K'
     # exactly 5 decks remain
@@ -36,10 +34,8 @@ def test_get_count(player, card_counter_unbalanced, back_counter):
     assert count[back_counter] == -10
 
 
-def test_get_insurance_count(shoe, player, card_counter_balanced, card_counter_unbalanced, back_counter):
+def test_get_insurance_count(shoe, player, table, card_counter_balanced, card_counter_unbalanced, back_counter):
     """Tests the get_insurance_count function."""
-    rules = Rules(min_bet=10, max_bet=500, s17=True)
-    table = Table(rules=rules)
     shoe.add_to_seen_cards(card='K')
     shoe.add_to_seen_cards(card='K')
     shoe.add_to_seen_cards(card='K')
@@ -55,20 +51,16 @@ def test_get_insurance_count(shoe, player, card_counter_balanced, card_counter_u
     assert back_counter not in insurance_count
 
 
-def test_get_placed_bet_player_not_removed(shoe, player):
+def test_get_placed_bet_player_not_removed(shoe, player, table):
     """Tests the get_placed_bet function when a player is not removed."""
-    rules = Rules(min_bet=10, max_bet=500, s17=True)
-    table = Table(rules=rules)
     table.add_player(player=player)
     count_dict = get_count(table=table, shoe=shoe)
     placed_bet_dict = get_placed_bet(table=table, count_dict=count_dict)
     assert placed_bet_dict[player] == player.placed_bet()
 
 
-def test_get_placed_bet_player_removed(shoe):
+def test_get_placed_bet_player_removed(shoe, table):
     """Tests the get_placed_bet function when a player is removed."""
-    rules = Rules(min_bet=10, max_bet=500, s17=True)
-    table = Table(rules=rules)
     player = Player(name='Player 1', min_bet=10, bankroll=10)
     table.add_player(player=player)
     player.adjust_bankroll(amount=-10)
@@ -93,10 +85,8 @@ def test_place_insurance_bet(card_counter_unbalanced):
     assert card_counter_unbalanced.stats.stats[StatsKey(count=2, category=StatsCategory.INSURANCE_AMOUNT_BET)] == 25
 
 
-def test_initialize_hands(player, dealer, shoe):
+def test_initialize_hands(player, dealer, shoe, table):
     """Tests the initialize_hands function."""
-    rules = Rules(min_bet=10, max_bet=500, s17=True)
-    table = Table(rules=rules)
     table.add_player(player=player)
     initialize_hands(table=table, dealer=dealer, shoe=shoe)
     assert player.get_first_hand().cards == ['A', 'Q']
@@ -105,14 +95,12 @@ def test_initialize_hands(player, dealer, shoe):
     assert shoe.seen_cards['10-J-Q-K'] == 2
 
 
-def test_add_back_counters(shoe, card_counter_balanced, back_counter):
+def test_add_back_counters(shoe, table, card_counter_balanced, back_counter):
     """
     Tests the add_back_counters function when the back counter's partner is at
     the table.
     
     """
-    rules = Rules(min_bet=10, max_bet=500, s17=True)
-    table = Table(rules=rules)
     table.add_player(player=card_counter_balanced)
     table.add_player(player=back_counter)
     shoe.add_to_seen_cards(card='2')
@@ -126,10 +114,8 @@ def test_add_back_counters(shoe, card_counter_balanced, back_counter):
     assert shoe.running_count(card_counting_system=back_counter.card_counting_system) == back_counter.entry_point
 
 
-def test_remove_back_counters(shoe, card_counter_balanced, back_counter):
+def test_remove_back_counters(shoe, table, card_counter_balanced, back_counter):
     """Tests the remove_back_counters function."""
-    rules = Rules(min_bet=10, max_bet=500, s17=True)
-    table = Table(rules=rules)
     table.add_player(player=card_counter_balanced)
     table.add_player(player=back_counter)
     shoe.add_to_seen_cards(card='2')
@@ -155,7 +141,7 @@ def test_player_initial_decision_insurance_dealer_blackjack(card_counter_unbalan
     insurance and the dealer has blackjack.
 
     """
-    rules = Rules(min_bet=10, max_bet=500, s17=True, insurance=True)
+    rules = Rules(min_bet=10, max_bet=500, insurance=True)
     playing_strategy = PlayingStrategy(s17=rules.s17)
     card_counter_unbalanced.get_first_hand().add_card(card='5')
     card_counter_unbalanced.get_first_hand().add_card(card='6')
@@ -184,7 +170,7 @@ def test_player_initial_decision_insurance_no_dealer_blackjack(card_counter_unba
     and the dealer does not have blackjack.
 
     """
-    rules = Rules(min_bet=10, max_bet=500, s17=True, insurance=True)
+    rules = Rules(min_bet=10, max_bet=500, insurance=True)
     playing_strategy = PlayingStrategy(s17=rules.s17)
     card_counter_unbalanced.get_first_hand().add_card(card='2')
     card_counter_unbalanced.get_first_hand().add_card(card='2')
@@ -211,7 +197,7 @@ def test_player_initial_decision_no_insurance_dealer_blackjack(player, dealer):
     not buy insurance and the dealer has a blackjack.
 
     """
-    rules = Rules(min_bet=10, max_bet=500, s17=True, insurance=False)
+    rules = Rules(min_bet=10, max_bet=500, insurance=False)
     playing_strategy = PlayingStrategy(s17=rules.s17)
     player.get_first_hand().add_card(card='5')
     player.get_first_hand().add_card(card='6')
@@ -238,7 +224,7 @@ def test_player_initial_decision_no_insurance_no_dealer_blackjack(player, dealer
     or does not buy insurance and the dealer does not have a blackjack.
 
     """
-    rules = Rules(min_bet=10, max_bet=500, s17=True, insurance=False)
+    rules = Rules(min_bet=10, max_bet=500, insurance=False)
     playing_strategy = PlayingStrategy(s17=rules.s17)
     player.get_first_hand().add_card(card='2')
     player.get_first_hand().add_card(card='3')
@@ -255,13 +241,12 @@ def test_player_initial_decision_no_insurance_no_dealer_blackjack(player, dealer
     assert player.get_first_hand().status == HandStatus.IN_PLAY
 
 
-def test_player_initial_decision_player_blackjack(player, dealer):
+def test_player_initial_decision_player_blackjack(player, dealer, rules):
     """
     Tests the player_initial_decision function when the player has a
     blackjack and the dealer does not.
 
     """
-    rules = Rules(min_bet=10, max_bet=500, s17=True)
     playing_strategy = PlayingStrategy(s17=rules.s17)
     player.get_first_hand().add_card(card='A')
     player.get_first_hand().add_card(card='K')
@@ -288,7 +273,7 @@ def test_player_initial_decision_late_surrender(player, dealer):
     the option to late surrender and does.
 
     """
-    rules = Rules(min_bet=10, max_bet=500, s17=True, late_surrender=True)
+    rules = Rules(min_bet=10, max_bet=500, late_surrender=True)
     playing_strategy = PlayingStrategy(s17=rules.s17)
     player.get_first_hand().add_card(card='K')
     player.get_first_hand().add_card(card='5')
@@ -315,7 +300,7 @@ def test_player_initial_decision_no_late_surrender(player, dealer):
     not have the option to late surrender.
 
     """
-    rules = Rules(min_bet=10, max_bet=500, s17=True, late_surrender=False)
+    rules = Rules(min_bet=10, max_bet=500, late_surrender=False)
     playing_strategy = PlayingStrategy(s17=rules.s17)
     player.get_first_hand().add_card(card='K')
     player.get_first_hand().add_card(card='5')
@@ -339,7 +324,7 @@ def test_player_plays_hands_settled(player, shoe, dealer):
     is already settled.
 
     """
-    rules = Rules(min_bet=10, max_bet=500, s17=True, late_surrender=True)
+    rules = Rules(min_bet=10, max_bet=500, late_surrender=True)
     playing_strategy = PlayingStrategy(s17=rules.s17)
     player.get_first_hand().add_card(card='K')
     player.get_first_hand().add_card(card='5')
@@ -358,13 +343,12 @@ def test_player_plays_hands_settled(player, shoe, dealer):
     assert player.get_first_hand().status == HandStatus.SETTLED
 
 
-def test_player_plays_hands_split(shoe, dealer, player):
+def test_player_plays_hands_split(shoe, dealer, player, rules):
     """
     Tests the player_plays_hands function when the player is dealt
     a pair and the hand is split.
 
     """
-    rules = Rules(min_bet=10, max_bet=500, s17=True)
     playing_strategy = PlayingStrategy(s17=rules.s17)
     player.get_first_hand().add_card(card='8')
     player.get_first_hand().add_card(card='8')
@@ -388,13 +372,12 @@ def test_player_plays_hands_split(shoe, dealer, player):
     assert player.stats.stats[StatsKey(count=None, category=StatsCategory.AMOUNT_BET)] == 10
 
 
-def test_player_plays_hands_split_insufficient_bankroll(shoe, dealer):
+def test_player_plays_hands_split_insufficient_bankroll(shoe, dealer, rules):
     """
     Tests the player_plays_hands function when the player is dealt
     a pair and the player has insufficient bankroll to split a hand.
 
     """
-    rules = Rules(min_bet=10, max_bet=500, s17=True)
     playing_strategy = PlayingStrategy(s17=rules.s17)
     player = Player(name='Player 1', min_bet=10, bankroll=10)
     player.get_first_hand().add_card(card='6')
@@ -423,7 +406,7 @@ def test_player_plays_hands_resplit_aces(player, shoe, dealer):
     a pair of aces and aces can be re-split.
 
     """
-    rules = Rules(min_bet=10, max_bet=500, s17=True, resplit_aces=True)
+    rules = Rules(min_bet=10, max_bet=500, resplit_aces=True)
     playing_strategy = PlayingStrategy(s17=rules.s17)
     player.get_first_hand().add_card(card='A')
     player.get_first_hand().add_card(card='A')
@@ -456,7 +439,7 @@ def test_player_plays_hands_resplit_aces_insufficient_bankroll(shoe, dealer):
     has insufficient bankroll to split their hand again.
 
     """
-    rules = Rules(min_bet=10, max_bet=500, s17=True, resplit_aces=True)
+    rules = Rules(min_bet=10, max_bet=500, resplit_aces=True)
     playing_strategy = PlayingStrategy(s17=rules.s17)
     player = Player(name='Player 1', min_bet=10, bankroll=10)
     player.get_first_hand().add_card(card='A')
@@ -489,7 +472,7 @@ def test_player_plays_hands_resplit_aces_max_hands(player, shoe, dealer):
     the max hands limit and is unable to split their hand again.
 
     """
-    rules = Rules(min_bet=10, max_bet=500, s17=True, resplit_aces=True, max_hands=3)
+    rules = Rules(min_bet=10, max_bet=500, resplit_aces=True, max_hands=3)
     playing_strategy = PlayingStrategy(s17=rules.s17)
     player.get_first_hand().add_card(card='A')
     player.get_first_hand().add_card(card='A')
@@ -522,7 +505,7 @@ def test_player_plays_hands_resplit_aces_not_allowed(player, shoe, dealer):
     a pair of aces and aces cannot be re-split.
 
     """
-    rules = Rules(min_bet=10, max_bet=500, s17=True, resplit_aces=False)
+    rules = Rules(min_bet=10, max_bet=500, resplit_aces=False)
     playing_strategy = PlayingStrategy(s17=rules.s17)
     player.get_first_hand().add_card(card='A')
     player.get_first_hand().add_card(card='A')
@@ -552,7 +535,7 @@ def test_player_plays_hands_double_down(player, dealer, shoe):
     can double down.
 
     """
-    rules = Rules(min_bet=10, max_bet=500, s17=True, double_down=True)
+    rules = Rules(min_bet=10, max_bet=500, double_down=True)
     playing_strategy = PlayingStrategy(s17=rules.s17)
     player.get_first_hand().add_card(card='5')
     player.get_first_hand().add_card(card='6')
@@ -581,7 +564,7 @@ def test_player_plays_hands_double_down_not_allowed(player, dealer, shoe):
     cannot double down.
 
     """
-    rules = Rules(min_bet=10, max_bet=500, s17=True, double_down=False)
+    rules = Rules(min_bet=10, max_bet=500, double_down=False)
     playing_strategy = PlayingStrategy(s17=rules.s17)
     player.get_first_hand().add_card(card='5')
     player.get_first_hand().add_card(card='6')
@@ -610,7 +593,7 @@ def test_player_plays_hands_double_down_insufficient_bankroll(player, dealer, sh
     has insufficient bankroll to double down.
 
     """
-    rules = Rules(min_bet=10, max_bet=500, s17=True, double_down=True)
+    rules = Rules(min_bet=10, max_bet=500, double_down=True)
     playing_strategy = PlayingStrategy(s17=rules.s17)
     player.get_first_hand().add_card(card='5')
     player.get_first_hand().add_card(card='6')
@@ -640,7 +623,7 @@ def test_player_plays_hands_double_after_split(player, dealer, shoe):
     doubles after splitting.
 
     """
-    rules = Rules(min_bet=10, max_bet=500, s17=True, double_down=True, double_after_split=True)
+    rules = Rules(min_bet=10, max_bet=500, double_down=True, double_after_split=True)
     playing_strategy = PlayingStrategy(s17=rules.s17)
     player.get_first_hand().add_card(card='2')
     player.get_first_hand().add_card(card='2')
@@ -673,7 +656,7 @@ def test_player_plays_hands_double_after_split_not_allowed(player, dealer, shoe)
     is not allowed to double after splitting.
 
     """
-    rules = Rules(min_bet=10, max_bet=500, s17=True, double_down=True, double_after_split=False)
+    rules = Rules(min_bet=10, max_bet=500, double_down=True, double_after_split=False)
     playing_strategy = PlayingStrategy(s17=rules.s17)
     player.get_first_hand().add_card(card='2')
     player.get_first_hand().add_card(card='2')
@@ -701,7 +684,7 @@ def test_player_plays_hands_double_after_split_insufficient_bankroll(player, dea
     has insufficient bankroll to double after splitting.
 
     """
-    rules = Rules(min_bet=10, max_bet=500, s17=True, double_down=True, double_after_split=True)
+    rules = Rules(min_bet=10, max_bet=500, double_down=True, double_after_split=True)
     playing_strategy = PlayingStrategy(s17=rules.s17)
     player.get_first_hand().add_card(card='2')
     player.get_first_hand().add_card(card='2')
@@ -725,9 +708,8 @@ def test_player_plays_hands_double_after_split_insufficient_bankroll(player, dea
     assert player.stats.stats[StatsKey(count=None, category=StatsCategory.AMOUNT_BET)] == 0
 
 
-def test_player_plays_hands_stand(player, dealer, shoe):
+def test_player_plays_hands_stand(player, dealer, shoe, rules):
     """Tests the player_plays_hands function when the player stands."""
-    rules = Rules(min_bet=10, max_bet=500, s17=True)
     playing_strategy = PlayingStrategy(s17=rules.s17)
     player.get_first_hand().add_card(card='6')
     player.get_first_hand().add_card(card='7')
@@ -747,9 +729,8 @@ def test_player_plays_hands_stand(player, dealer, shoe):
     assert player.get_first_hand().status == HandStatus.SHOWDOWN
 
 
-def test_player_plays_hands_busted(player, dealer, shoe):
+def test_player_plays_hands_busted(player, dealer, shoe, rules):
     """Tests the player_plays_hands function when the hand is busted."""
-    rules = Rules(min_bet=10, max_bet=500, s17=True)
     playing_strategy = PlayingStrategy(s17=rules.s17)
     player.get_first_hand().add_card(card='6')
     player.get_first_hand().add_card(card='7')
@@ -789,10 +770,8 @@ def test_dealer_plays_hand(shoe, dealer, test_hole_card, test_up_card, test_s17,
     assert dealer.hand.total == expected
 
 
-def test_dealer_turn(player):
+def test_dealer_turn(player, table):
     """Tests the dealer_turn function."""
-    rules = Rules(min_bet=10, max_bet=500, s17=True)
-    table = Table(rules=rules)
     table.add_player(player=player)
     player.get_first_hand().status = HandStatus.SETTLED
     assert not dealer_turn(table=table)
@@ -800,14 +779,12 @@ def test_dealer_turn(player):
     assert dealer_turn(table=table)
 
 
-def test_all_hands_busted_true(player):
+def test_all_hands_busted_true(player, table):
     """
     Tests the all_hands_busted function
     when all hands at the table are busted.
 
     """
-    rules = Rules(min_bet=10, max_bet=500, s17=True)
-    table = Table(rules=rules)
     table.add_player(player=player)
     player.get_first_hand().add_card(card='4')
     player.get_first_hand().add_card(card='J')
@@ -816,14 +793,12 @@ def test_all_hands_busted_true(player):
     assert all_hands_busted(table=table)
 
 
-def test_all_hands_busted_false(player):
+def test_all_hands_busted_false(player, table):
     """
     Tests the all_hands_busted function
     when not all hands at the table are busted.
 
     """
-    rules = Rules(min_bet=10, max_bet=500, s17=True)
-    table = Table(rules=rules)
     table.add_player(player=player)
     player.get_first_hand().add_card(card='J')
     player.get_first_hand().add_card(card='K')
@@ -907,9 +882,8 @@ def test_compare_hands_loss_total(player, dealer):
     assert player.stats.stats[StatsKey(count=-2, category=StatsCategory.AMOUNT_EARNED)] == -20
 
 
-def test_clear_hands(dealer_with_hand, player):
+def test_clear_hands(dealer_with_hand, player, rules):
     """Test the clear_hands function."""
-    rules = Rules(min_bet=10, max_bet=500, s17=True)
     table = Table(rules=rules)
     table.add_player(player=player)
     player.get_first_hand().add_card(card='A')
@@ -922,14 +896,13 @@ def test_clear_hands(dealer_with_hand, player):
     assert player.get_first_hand().cards == ['A', '2']
     assert player.hands[1].cards == ['A', '6']
     clear_hands(dealer=dealer_with_hand, table=table)
-    assert dealer_with_hand.hand.cards == []
-    assert player.get_first_hand().cards == []
+    assert not dealer_with_hand.hand.cards
+    assert not player.get_first_hand().cards
     assert len(player.hands) == 1
 
 
-def test_play_round_back_counters_added(shoe, dealer, card_counter_balanced, back_counter):
+def test_play_round_back_counters_added(shoe, dealer, rules, card_counter_balanced, back_counter):
     """Tests the play_round function when back counters are added."""
-    rules = Rules(min_bet=10, max_bet=500, s17=True)
     table = Table(rules=rules)
     playing_strategy = PlayingStrategy(s17=rules.s17)
     table.add_player(player=card_counter_balanced)
@@ -946,9 +919,8 @@ def test_play_round_back_counters_added(shoe, dealer, card_counter_balanced, bac
     assert back_counter.stats.stats[StatsKey(count=3, category=StatsCategory.HANDS_WON)] == 1
 
 
-def test_play_round_back_counters_removed(shoe, dealer, card_counter_balanced, back_counter):
+def test_play_round_back_counters_removed(shoe, dealer, rules, card_counter_balanced, back_counter):
     """Tests the play_round function when back counters are removed."""
-    rules = Rules(min_bet=10, max_bet=500, s17=True)
     table = Table(rules=rules)
     playing_strategy = PlayingStrategy(s17=rules.s17)
     table.add_player(player=card_counter_balanced)
@@ -967,9 +939,8 @@ def test_play_round_back_counters_removed(shoe, dealer, card_counter_balanced, b
     assert card_counter_balanced.stats.stats[StatsKey(count=0, category=StatsCategory.HANDS_WON)] == 1
 
 
-def test_play_round_insufficient_funds(dealer, player, shoe):
+def test_play_round_insufficient_funds(dealer, player, shoe, rules):
     """Tests the play_round function when a player has insufficient funds."""
-    rules = Rules(min_bet=10, max_bet=500, s17=True)
     table = Table(rules=rules)
     playing_strategy = PlayingStrategy(s17=rules.s17)
     table.add_player(player=player)
@@ -986,7 +957,7 @@ def test_play_round_insurance_win(dealer, shoe, card_counter_unbalanced):
     purchases insurance and the dealer has blackjack.
 
     """
-    rules = Rules(min_bet=10, max_bet=500, s17=True, insurance=True)
+    rules = Rules(min_bet=10, max_bet=500, insurance=True)
     table = Table(rules=rules)
     playing_strategy = PlayingStrategy(s17=rules.s17)
     table.add_player(player=card_counter_unbalanced)
@@ -1008,7 +979,7 @@ def test_play_round_insurance_loss(dealer, shoe, card_counter_unbalanced):
     purchases insurance and the dealer does not have blackjack.
 
     """
-    rules = Rules(min_bet=10, max_bet=500, s17=True, insurance=True)
+    rules = Rules(min_bet=10, max_bet=500, insurance=True)
     table = Table(rules=rules)
     playing_strategy = PlayingStrategy(s17=rules.s17)
     table.add_player(player=card_counter_unbalanced)
@@ -1024,9 +995,8 @@ def test_play_round_insurance_loss(dealer, shoe, card_counter_unbalanced):
     assert card_counter_unbalanced.stats.stats[StatsKey(count=2, category=StatsCategory.INSURANCE_AMOUNT_EARNED)] == -20
 
 
-def test_play_round_player_blackjack(player, dealer, shoe):
+def test_play_round_player_blackjack(player, dealer, shoe, rules):
     """Tests the play_round function when a player has a blackjack."""
-    rules = Rules(min_bet=10, max_bet=500, s17=True)
     table = Table(rules=rules)
     playing_strategy = PlayingStrategy(s17=rules.s17)
     table.add_player(player=player)
@@ -1037,9 +1007,8 @@ def test_play_round_player_blackjack(player, dealer, shoe):
     assert player.stats.stats[StatsKey(count=None, category=StatsCategory.HANDS_WON)] == 1
 
 
-def test_play_round_dealer_blackjack(player, dealer, shoe):
+def test_play_round_dealer_blackjack(player, dealer, shoe, rules):
     """Tests the play_round function when the dealer has a blackjack."""
-    rules = Rules(min_bet=10, max_bet=500, s17=True)
     table = Table(rules=rules)
     playing_strategy = PlayingStrategy(s17=rules.s17)
     table.add_player(player=player)
@@ -1050,13 +1019,12 @@ def test_play_round_dealer_blackjack(player, dealer, shoe):
     assert player.stats.stats[StatsKey(count=None, category=StatsCategory.HANDS_LOST)] == 1
 
 
-def test_play_round_player_dealer_blackjack(player, dealer, shoe):
+def test_play_round_player_dealer_blackjack(player, dealer, shoe, rules):
     """
     Tests the play_round function when a player
     and the dealer have a blackjack.
 
     """
-    rules = Rules(min_bet=10, max_bet=500, s17=True)
     table = Table(rules=rules)
     playing_strategy = PlayingStrategy(s17=rules.s17)
     table.add_player(player=player)
@@ -1073,7 +1041,7 @@ def test_play_round_all_hands_busted_dealer_shows_hole_card(player, dealer, shoe
     are busted and the dealer shows their hole card.
 
     """
-    rules = Rules(min_bet=10, max_bet=500, s17=True, dealer_shows_hole_card=True)
+    rules = Rules(min_bet=10, max_bet=500, dealer_shows_hole_card=True)
     table = Table(rules=rules)
     playing_strategy = PlayingStrategy(s17=rules.s17)
     table.add_player(player=player)
@@ -1089,7 +1057,7 @@ def test_play_round_all_hands_busted_dealer_does_not_show_hole_card(player, deal
     are busted and the dealer does not show their hole card.
 
     """
-    rules = Rules(min_bet=10, max_bet=500, s17=True, dealer_shows_hole_card=False)
+    rules = Rules(min_bet=10, max_bet=500, dealer_shows_hole_card=False)
     table = Table(rules=rules)
     playing_strategy = PlayingStrategy(s17=rules.s17)
     table.add_player(player=player)
@@ -1112,7 +1080,7 @@ def test_play_round_all_hands_do_not_bust(player, dealer, shoe, test_dealer_show
     hands that are not busted.
 
     """
-    rules = Rules(min_bet=10, max_bet=500, s17=True, dealer_shows_hole_card=test_dealer_shows_hole_card)
+    rules = Rules(min_bet=10, max_bet=500, dealer_shows_hole_card=test_dealer_shows_hole_card)
     table = Table(rules=rules)
     playing_strategy = PlayingStrategy(s17=rules.s17)
     table.add_player(player=player)
@@ -1121,17 +1089,16 @@ def test_play_round_all_hands_do_not_bust(player, dealer, shoe, test_dealer_show
     assert shoe.seen_cards['10-J-Q-K'] == 4
 
 
-def test_play_round_clear_hands(player, dealer, shoe):
+def test_play_round_clear_hands(player, dealer, shoe, rules):
     """
     Tests the play_round function to check
     that the hands are properly cleared after
     each round.
 
     """
-    rules = Rules(min_bet=10, max_bet=500, s17=True)
     table = Table(rules=rules)
     playing_strategy = PlayingStrategy(s17=rules.s17)
     table.add_player(player=player)
     play_round(table=table, dealer=dealer, shoe=shoe, rules=rules, playing_strategy=playing_strategy)
-    assert dealer.hand.cards == []
-    assert player.get_first_hand().cards == []
+    assert not dealer.hand.cards
+    assert not player.get_first_hand().cards

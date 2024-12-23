@@ -7,8 +7,15 @@ from blackjack.enums import StatsCategory
 from blackjack.hand import Hand
 from blackjack.player import Player
 from blackjack.playing_strategy import PlayingStrategy
+from blackjack.rules import Rules
 from blackjack.shoe import Shoe
 from blackjack.stats import Stats
+from blackjack.table import Table
+
+
+@pytest.fixture
+def rules():
+    return Rules(min_bet=10, max_bet=500)
 
 
 @pytest.fixture
@@ -152,3 +159,8 @@ def stats():
     stats.update_amount(count=None, category=StatsCategory.AMOUNT_BET, increment=20.425)
     stats.update_amount(count=None, category=StatsCategory.AMOUNT_EARNED, increment=-20.425)
     return stats
+
+
+@pytest.fixture
+def table(rules):
+    return Table(rules=rules)

@@ -53,14 +53,14 @@ class Table:
             raise ValueError(f'{player.name} is not seated at the table or a back counter.')
         self._players.remove(player)
 
-    def remove_back_counter(self, back_counter: BackCounter) -> None:
-        if not isinstance(back_counter, BackCounter):
-            raise TypeError('Expected a BackCounter object.')
-        self._players.remove(back_counter)
-        self._observers.append(back_counter)
-
     def add_back_counter(self, back_counter: BackCounter) -> None:
         if not isinstance(back_counter, BackCounter):
             raise TypeError('Expected a BackCounter object.')
         self._observers.remove(back_counter)
         self._players.append(back_counter)
+
+    def remove_back_counter(self, back_counter: BackCounter) -> None:
+        if not isinstance(back_counter, BackCounter):
+            raise TypeError('Expected a BackCounter object.')
+        self._players.remove(back_counter)
+        self._observers.append(back_counter)
