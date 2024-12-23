@@ -1,5 +1,6 @@
 import pytest
 from blackjack.player import Player
+from blackjack.playing_strategy import PlayingStrategy
 from blackjack.rules import Rules
 
 
@@ -14,131 +15,175 @@ def test_init_insufficient_bankroll():
     assert str(e.value) == "Insufficient bankroll to place Player 1's desired bet."
 
 
-def test_adjust_bankroll(setup_player):
+def test_adjust_bankroll(player):
     """Tests the adjust_bankroll method within the Player class."""
-    setup_player.adjust_bankroll(amount=10)
-    assert setup_player.bankroll == 1010
-    setup_player.adjust_bankroll(amount=-20)
-    assert setup_player.bankroll == 990
+    player.adjust_bankroll(amount=10)
+    assert player.bankroll == 1010
+    player.adjust_bankroll(amount=-20)
+    assert player.bankroll == 990
 
 
-def test_has_sufficient_bankroll(setup_player):
+def test_has_sufficient_bankroll(player):
     """Tests the has_sufficient_bankroll method within the Player class."""
-    assert setup_player.has_sufficient_bankroll(amount=999)
-    assert setup_player.has_sufficient_bankroll(amount=1000)
-    assert not setup_player.has_sufficient_bankroll(amount=1001)
+    assert player.has_sufficient_bankroll(amount=999)
+    assert player.has_sufficient_bankroll(amount=1000)
+    assert not player.has_sufficient_bankroll(amount=1001)
 
 
-def test_decision_one_card(setup_player, setup_rules):
+def test_decision_one_card(player, playing_strategy_s17):
     """
     Tests the decision method within the Player class
     when there is one card in the hand.
 
     """
-    setup_player.get_first_hand().add_card(card='8')
-    setup_player.get_first_hand().add_to_total_bet(amount=10)
-    assert setup_player.decision(hand=setup_player.get_first_hand(), dealer_up_card='J', rules=setup_rules) == 'H'
+    player.get_first_hand().add_card(card='8')
+    player.get_first_hand().add_to_total_bet(amount=10)
+    assert player.decision(
+        playing_strategy=playing_strategy_s17,
+        hand=player.get_first_hand(),
+        dealer_up_card='J',
+        max_hands=4
+    ) == 'H'
 
 
-def test_decision_number_of_hands_less_than_max_hands(setup_player, setup_rules):
+def test_decision_number_of_hands_less_than_max_hands(player, playing_strategy_s17):
     """
     Tests the decision method within the Player class
     when the number of hands is less than the max hands.
 
     """
-    setup_player.get_first_hand().add_card(card='8')
-    setup_player.get_first_hand().add_card(card='8')
-    setup_player.get_first_hand().add_to_total_bet(amount=10)
-    assert setup_player.decision(hand=setup_player.get_first_hand(), dealer_up_card='J', rules=setup_rules) == 'P'
+    player.get_first_hand().add_card(card='8')
+    player.get_first_hand().add_card(card='8')
+    player.get_first_hand().add_to_total_bet(amount=10)
+    assert player.decision(
+        playing_strategy=playing_strategy_s17,
+        hand=player.get_first_hand(),
+        dealer_up_card='J',
+        max_hands=4
+    ) == 'P'
 
 
-def test_decision_number_of_hands_equals_max_hands(setup_player):
+def test_decision_number_of_hands_equals_max_hands(player, playing_strategy_s17):
     """
     Tests the decision method within the Player class
     when the number of hands equals the max hands.
 
     """
-    rules = Rules(min_bet=10, max_bet=500, max_hands=2)
-    setup_player.get_first_hand().add_card(card='8')
-    setup_player.get_first_hand().add_card(card='8')
-    split_card = setup_player.get_first_hand().split()
-    setup_player.hands.append(split_card)
-    setup_player.get_first_hand().add_card(card='J')
-    setup_player.get_first_hand().add_to_total_bet(amount=10)
-    assert setup_player.decision(hand=setup_player.get_first_hand(), dealer_up_card='J', rules=rules) == 'S'
-    split_hand = setup_player.hands[1]
+    player.get_first_hand().add_card(card='8')
+    player.get_first_hand().add_card(card='8')
+    split_card = player.get_first_hand().split()
+    player.hands.append(split_card)
+    player.get_first_hand().add_card(card='J')
+    player.get_first_hand().add_to_total_bet(amount=10)
+    assert player.decision(
+        playing_strategy=playing_strategy_s17,
+        hand=player.get_first_hand(),
+        dealer_up_card='J',
+        max_hands=2
+    ) == 'S'
+    split_hand = player.hands[1]
     split_hand.add_card(card='8')
-    setup_player.hands[1].add_to_total_bet(amount=10)
-    assert setup_player.decision(hand=split_hand, dealer_up_card='J', rules=rules) == 'Rh'
+    player.hands[1].add_to_total_bet(amount=10)
+    assert player.decision(
+        playing_strategy=playing_strategy_s17,
+        hand=split_hand,
+        dealer_up_card='J',
+        max_hands=2
+    ) == 'Rh'
 
 
-def test_decision_soft(setup_player, setup_rules):
+def test_decision_soft(player, playing_strategy_s17):
     """
     Tests the decision method within the Player class
     when the hand is soft.
 
     """
-    setup_player.get_first_hand().add_card(card='7')
-    setup_player.get_first_hand().add_card(card='A')
-    setup_player.get_first_hand().add_to_total_bet(amount=10)
-    assert setup_player.decision(hand=setup_player.get_first_hand(), dealer_up_card='J', rules=setup_rules) == 'H'
+    player.get_first_hand().add_card(card='7')
+    player.get_first_hand().add_card(card='A')
+    player.get_first_hand().add_to_total_bet(amount=10)
+    assert player.decision(
+        playing_strategy=playing_strategy_s17,
+        hand=player.get_first_hand(),
+        dealer_up_card='J',
+        max_hands=4
+    ) == 'H'
 
 
-def test_decision_hard(setup_player, setup_rules):
+def test_decision_hard(player, playing_strategy_s17):
     """
     Tests the decision method within the Player class
     when the hand is hard.
 
     """
-    setup_player.get_first_hand().add_card(card='8')
-    setup_player.get_first_hand().add_card(card='K')
-    setup_player.get_first_hand().add_to_total_bet(amount=10)
-    assert setup_player.decision(hand=setup_player.get_first_hand(), dealer_up_card='J', rules=setup_rules) == 'S'
+    player.get_first_hand().add_card(card='8')
+    player.get_first_hand().add_card(card='K')
+    player.get_first_hand().add_to_total_bet(amount=10)
+    assert player.decision(
+        playing_strategy=playing_strategy_s17,
+        hand=player.get_first_hand(),
+        dealer_up_card='J',
+        max_hands=4
+    ) == 'S'
 
 
-def test_decision_busted(setup_player, setup_rules):
+def test_decision_busted(player, playing_strategy_s17):
     """
     Tests the decision method within the Player class
     when the hand is busted.
 
     """
-    setup_player.get_first_hand().add_card(card='K')
-    setup_player.get_first_hand().add_card(card='J')
-    setup_player.get_first_hand().add_card(card='2')
-    setup_player.get_first_hand().add_to_total_bet(amount=10)
+    player.get_first_hand().add_card(card='K')
+    player.get_first_hand().add_card(card='J')
+    player.get_first_hand().add_card(card='2')
+    player.get_first_hand().add_to_total_bet(amount=10)
     with pytest.raises(KeyError):
-        setup_player.decision(hand=setup_player.get_first_hand(), dealer_up_card='J', rules=setup_rules)
+        player.decision(
+            playing_strategy=playing_strategy_s17,
+            hand=player.get_first_hand(),
+            dealer_up_card='J',
+            max_hands=4
+        )
 
 
-def test_decision_pair(setup_player, setup_rules):
+def test_decision_pair(player, playing_strategy_s17):
     """
     Tests the decision method within the Player class when
     the hand is a pair.
 
     """
-    setup_player.get_first_hand().add_card(card='8')
-    setup_player.get_first_hand().add_card(card='8')
-    setup_player.get_first_hand().add_to_total_bet(amount=10)
-    assert setup_player.decision(hand=setup_player.get_first_hand(), dealer_up_card='J', rules=setup_rules) == 'P'
+    player.get_first_hand().add_card(card='8')
+    player.get_first_hand().add_card(card='8')
+    player.get_first_hand().add_to_total_bet(amount=10)
+    assert player.decision(
+        playing_strategy=playing_strategy_s17,
+        hand=player.get_first_hand(),
+        dealer_up_card='J',
+        max_hands=4
+    ) == 'P'
 
 
-def test_decision_pair_insufficient_bankroll(setup_player, setup_rules):
+def test_decision_pair_insufficient_bankroll(player, playing_strategy_s17):
     """
     Tests the decision method within the Player class when
     the hand is a pair and the hand cannot be split
     due to insufficient bankroll.
 
     """
-    setup_player.get_first_hand().add_card(card='8')
-    setup_player.get_first_hand().add_card(card='8')
-    setup_player.get_first_hand().add_to_total_bet(amount=2000)
-    assert setup_player.decision(hand=setup_player.get_first_hand(), dealer_up_card='J', rules=setup_rules) == 'Rh'
+    player.get_first_hand().add_card(card='8')
+    player.get_first_hand().add_card(card='8')
+    player.get_first_hand().add_to_total_bet(amount=2000)
+    assert player.decision(
+        playing_strategy=playing_strategy_s17,
+        hand=player.get_first_hand(),
+        dealer_up_card='J',
+        max_hands=4
+    ) == 'Rh'
 
 
-def test_reset_hands(setup_player_with_hand):
+def test_reset_hands(player_with_hand):
     """Tests the reset_hands method within the Player class."""
-    hand = setup_player_with_hand.get_first_hand()
+    hand = player_with_hand.get_first_hand()
     assert hand.cards == ['8', '6']
-    setup_player_with_hand.reset_hands()
-    reset_hand = setup_player_with_hand.get_first_hand()
+    player_with_hand.reset_hands()
+    reset_hand = player_with_hand.get_first_hand()
     assert reset_hand.cards == []

@@ -98,17 +98,17 @@ def test_init_bet_ramp_count_does_not_exist_integer():
         (6, 70)
      ]
 )
-def test_placed_bet(test_count, expected, setup_card_counter):
+def test_placed_bet(card_counter_balanced, test_count, expected):
     """Tests the placed_bet method within the CardCounter class."""
-    assert setup_card_counter.placed_bet(count=test_count) == expected
+    assert card_counter_balanced.placed_bet(count=test_count) == expected
 
 
-def test_placed_bet_missing_count(setup_card_counter):
+def test_placed_bet_missing_count(card_counter_balanced):
     """
     Tests the placed_bet method within the CardCounter class
     when the kwargs is missing a count.
 
     """
     with pytest.raises(KeyError) as e:
-        setup_card_counter.placed_bet()
+        card_counter_balanced.placed_bet()
     assert str(e.value) == "'" + '"count" needs to be included in the kwargs.' + "'"

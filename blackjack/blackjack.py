@@ -1,10 +1,11 @@
 import random
 from blackjack.dealer import Dealer
+from blackjack.helpers import play_round
 from blackjack.player import Player
+from blackjack.playing_strategy import PlayingStrategy
 from blackjack.rules import Rules
 from blackjack.shoe import Shoe
 from blackjack.table import Table
-from blackjack.helpers import play_round
 
 
 class Blackjack:
@@ -69,6 +70,7 @@ class Blackjack:
             dealer_shows_hole_card=dealer_shows_hole_card
         )
         self._table = Table(rules=self._rules)
+        self._playing_strategy = PlayingStrategy(s17=s17)
         self._dealer = Dealer()
 
     def add_player(self, player: Player) -> None:
@@ -82,7 +84,7 @@ class Blackjack:
         shoe.shuffle()
 
         while not shoe.cut_card_reached(penetration=penetration) and self._table.players:
-            play_round(table=self._table, dealer=self._dealer, rules=self._rules, shoe=shoe)
+            play_round(table=self._table, dealer=self._dealer, rules=self._rules, shoe=shoe, playing_strategy=self._playing_strategy)
 
     def simulate(self, penetration: float, number_of_shoes: int, shoe_size: int, seed: int | None = None) -> None:
         if seed:

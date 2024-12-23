@@ -6,41 +6,49 @@ from blackjack.rules import Rules
 from blackjack.table import Table
 
 
-def test_add_player(setup_table, setup_player):
+def test_add_player(player):
     """Tests the add_player method within the Table class."""
-    setup_table.add_player(player=setup_player)
-    assert setup_table.players == [setup_player]
+    rules = Rules(min_bet=10, max_bet=500, s17=True)
+    table = Table(rules=rules)
+    table.add_player(player=player)
+    assert table.players == [player]
 
 
-def test_add_player_back_counter(setup_table, setup_back_counter):
+def test_add_player_back_counter(back_counter):
     """
     Tests the add_player method within the Table class
     with a back counter.
 
     """
-    setup_table.add_player(player=setup_back_counter)
-    assert setup_table.observers == [setup_back_counter]
+    rules = Rules(min_bet=10, max_bet=500, s17=True)
+    table = Table(rules=rules)
+    table.add_player(player=back_counter)
+    assert table.observers == [back_counter]
 
 
-def test_add_player_not_player_instance(setup_table, setup_rules):
+def test_add_player_not_player_instance():
     """
     Tests the add_player method within the Table class
     with an object that is not an instance of the Player
     class.
 
     """
+    rules = Rules(min_bet=10, max_bet=500, s17=True)
+    table = Table(rules=rules)
     with pytest.raises(TypeError) as e:
-        setup_table.add_player(player=setup_rules)
+        table.add_player(player=rules)
     assert str(e.value) == 'Expected a Player, CardCounter, or BackCounter object.'
 
 
-def test_add_player_bet_ramp_minimum_less_than_table_minimum(setup_table):
+def test_add_player_bet_ramp_minimum_less_than_table_minimum():
     """
     Tests the add_player method within the Table class
     when the player's bet ramp minimum bet is less than the
     minimum allowed bet at the table.
 
     """
+    rules = Rules(min_bet=10, max_bet=500, s17=True)
+    table = Table(rules=rules)
     player = CardCounter(
         name='Player 2',
         bankroll=1000,
@@ -56,17 +64,19 @@ def test_add_player_bet_ramp_minimum_less_than_table_minimum(setup_table):
         insurance=None
     )
     with pytest.raises(ValueError) as e:
-        setup_table.add_player(player=player)
+        table.add_player(player=player)
     assert str(e.value) == "Player 2's desired bet is not allowed according to the table rules."
 
 
-def test_add_player_bet_ramp_maximum_exceeds_table_maximum(setup_table):
+def test_add_player_bet_ramp_maximum_exceeds_table_maximum():
     """
     Tests the add_player method within the Table class
     when the player's bet ramp maximum bet exceeds the maximum
     allowed bet at the table.
 
     """
+    rules = Rules(min_bet=10, max_bet=500, s17=True)
+    table = Table(rules=rules)
     player =  CardCounter(
         name='Player 2',
         bankroll=10000,
@@ -82,7 +92,7 @@ def test_add_player_bet_ramp_maximum_exceeds_table_maximum(setup_table):
         insurance=None
     )
     with pytest.raises(ValueError) as e:
-        setup_table.add_player(player=player)
+        table.add_player(player=player)
     assert str(e.value) == "Player 2's desired bet is not allowed according to the table rules."
 
 
@@ -92,7 +102,7 @@ def test_add_player_no_insurance():
     when the player wants to buy insurance but it is not allowed.
 
     """
-    rules = Rules(min_bet=10, max_bet=500, insurance=False)
+    rules = Rules(min_bet=10, max_bet=500, s17=True, insurance=False)
     table = Table(rules=rules)
     player =  CardCounter(
         name='Player 2',
@@ -113,64 +123,76 @@ def test_add_player_no_insurance():
     assert str(e.value) == "Player 2's insurance is not allowed according to the table rules."
 
 
-def test_add_player_minimum_bet_less_than_table_minimum(setup_table):
+def test_add_player_minimum_bet_less_than_table_minimum():
     """
     Tests the add_player method within the Table class
     when the player's minimum bet is less than the table minimum.
 
     """
+    rules = Rules(min_bet=10, max_bet=500, s17=True)
+    table = Table(rules=rules)
     player = Player(name='Player 1', bankroll=1000, min_bet=5)
     with pytest.raises(ValueError) as e:
-        setup_table.add_player(player=player)
+        table.add_player(player=player)
     assert str(e.value) == "Player 1's desired bet is not allowed according to the table rules."
 
 
-def test_add_player_minimum_bet_greater_than_table_maximum(setup_table):
+def test_add_player_minimum_bet_greater_than_table_maximum():
     """
     Tests the add_player method within the Table class
     when player's minimum bet is greater than the table maximum.
 
     """
+    rules = Rules(min_bet=10, max_bet=500, s17=True)
+    table = Table(rules=rules)
     player = Player(name='Player 1', bankroll=5000, min_bet=1500)
     with pytest.raises(ValueError) as e:
-        setup_table.add_player(player=player)
+        table.add_player(player=player)
     assert str(e.value) == "Player 1's desired bet is not allowed according to the table rules."
 
 
-def test_remove_player(setup_table, setup_player):
+def test_remove_player(player):
     """Tests the remove_player method within the Table class."""
-    setup_table.add_player(player=setup_player)
-    setup_table.remove_player(player=setup_player)
-    assert setup_table.players == []
+    rules = Rules(min_bet=10, max_bet=500, s17=True)
+    table = Table(rules=rules)
+    table.add_player(player=player)
+    table.remove_player(player=player)
+    assert table.players == []
 
 
-def test_remove_player_not_at_table(setup_table, setup_player):
+def test_remove_player_not_at_table(player):
     """
     Tests the remove_player method within the Table class
     when a player is not at the table.
 
     """
+    rules = Rules(min_bet=10, max_bet=500, s17=True)
+    table = Table(rules=rules)
     with pytest.raises(ValueError) as e:
-        setup_table.remove_player(player=setup_player)
+        table.remove_player(player=player)
     assert str(e.value) == 'Player 1 is not seated at the table or a back counter.'
 
 
-def test_remove_back_counter(setup_table, setup_back_counter):
+def test_remove_back_counter(back_counter):
     """Tests the remove_back_counter method within the Table class."""
-    setup_table.add_player(player=setup_back_counter)
-    setup_table.add_back_counter(back_counter=setup_back_counter)
-    assert setup_back_counter in setup_table.players
-    assert setup_back_counter not in setup_table.observers
-    setup_table.remove_back_counter(back_counter=setup_back_counter)
-    assert setup_back_counter not in setup_table.players
-    assert setup_back_counter in setup_table.observers
+    rules = Rules(min_bet=10, max_bet=500, s17=True)
+    table = Table(rules=rules)
+    table.add_player(player=back_counter)
+    table.add_back_counter(back_counter=back_counter)
+    assert back_counter in table.players
+    assert back_counter not in table.observers
+    table.remove_back_counter(back_counter=back_counter)
+    assert back_counter not in table.players
+    assert back_counter in table.observers
 
 
-def test_add_back_counter(setup_table, setup_back_counter):
+def test_add_back_counter(back_counter):
     """Tests the add_back_counter method within the Table class."""
-    setup_table.add_player(player=setup_back_counter)
-    assert setup_back_counter not in setup_table.players
-    assert setup_back_counter in setup_table.observers
-    setup_table.add_back_counter(back_counter=setup_back_counter)
-    assert setup_back_counter in setup_table.players
-    assert setup_back_counter not in setup_table.observers
+    rules = Rules(min_bet=10, max_bet=500, s17=True)
+    table = Table(rules=rules)
+    table.add_player(player=back_counter)
+    assert back_counter not in table.players
+    assert back_counter in table.observers
+    table.add_back_counter(back_counter=back_counter)
+    assert back_counter in table.players
+    assert back_counter not in table.observers

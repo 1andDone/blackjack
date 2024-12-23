@@ -60,16 +60,13 @@ class Player:
     def has_sufficient_bankroll(self, amount: float | int) -> bool:
         return amount <= self._bankroll
 
-    def _is_split_allowed(self, hand: Hand, rules: Rules) -> bool:
+    def _is_split_allowed(self, hand: Hand, max_hands: int) -> bool:
         if self.has_sufficient_bankroll(amount=hand.total_bet):
-            return hand.number_of_cards == 2 and (hand.cards[0] == hand.cards[1]) and \
-                len(self._hands) < rules.max_hands
+            return hand.number_of_cards == 2 and (hand.cards[0] == hand.cards[1]) and len(self._hands) < max_hands
         return False
 
-    # TODO: PlayingStrategy should NOT be instantiated every time there is a decision...
-    def decision(self, hand: Hand, dealer_up_card: str, rules: Rules) -> str:
-        playing_strategy = PlayingStrategy(s17=rules.s17)
-        if self._is_split_allowed(hand=hand, rules=rules):
+    def decision(self, playing_strategy: PlayingStrategy, hand: Hand, dealer_up_card: str, max_hands: int) -> str:
+        if self._is_split_allowed(hand=hand, max_hands=max_hands):
             return playing_strategy.pair(card=hand.cards[0], dealer_up_card=dealer_up_card)
         if hand.is_soft:
             return playing_strategy.soft(total=hand.total, dealer_up_card=dealer_up_card)

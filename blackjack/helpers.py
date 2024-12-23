@@ -3,6 +3,7 @@ from blackjack.card_counter import CardCounter
 from blackjack.dealer import Dealer
 from blackjack.enums import CardCountingSystem, HandStatus
 from blackjack.player import Player
+from blackjack.playing_strategy import PlayingStrategy
 from blackjack.rules import Rules
 from blackjack.shoe import Shoe
 from blackjack.stats import StatsCategory
@@ -199,7 +200,8 @@ def player_initial_decision(
     count: float | int | None,
     insurance_count: float | int | None,
     rules: Rules,
-    dealer: Dealer
+    dealer: Dealer,
+    playing_strategy: PlayingStrategy
 ) -> str | None:
     """
     Determines a player's initial decision based on the
@@ -231,7 +233,8 @@ def player_initial_decision(
     decision = player.decision(
             hand=player.get_first_hand(),
             dealer_up_card=dealer.up_card,
-            rules=rules
+            max_hands=rules.max_hands,
+            playing_strategy=playing_strategy
     )
 
     if rules.late_surrender and decision in {'Rh', 'Rs', 'Rp'}:
@@ -248,7 +251,8 @@ def player_plays_hands(
     count: float | int | None,
     insurance_count: float | int | None,
     dealer: Dealer,
-    rules: Rules
+    rules: Rules,
+    playing_strategy: PlayingStrategy
 ) -> None:
     """Player plays out their hand(s)."""
     decision = player_initial_decision(
@@ -256,7 +260,8 @@ def player_plays_hands(
             count=count,
             insurance_count=insurance_count,
             dealer=dealer,
-            rules=rules
+            rules=rules,
+            playing_strategy=playing_strategy
     )
 
     if not decision:
@@ -315,7 +320,8 @@ def player_plays_hands(
             decision = player.decision(
                     hand=current_hand,
                     dealer_up_card=dealer.up_card,
-                    rules=rules
+                    max_hands=rules.max_hands,
+                    playing_strategy=playing_strategy
             )
         elif another_hand > 0:
             another_hand -= 1
@@ -331,20 +337,12 @@ def dealer_turn(table: Table) -> bool:
     settled.
 
     """
-    return any(
-        hand.status == HandStatus.SHOWDOWN
-        for player in table.players
-        for hand in player.hands
-    )
+    return any(hand.status == HandStatus.SHOWDOWN for player in table.players for hand in player.hands)
 
 
 def all_hands_busted(table: Table) -> bool:
     """Determines if all player's hands at the table are busted."""
-    return all(
-        hand.is_busted
-        for player in table.players
-        for hand in player.hands
-    )
+    return all(hand.is_busted for player in table.players for hand in player.hands)
 
 
 def dealer_plays_hand(shoe: Shoe, dealer: Dealer, rules: Rules) -> None:
@@ -383,7 +381,13 @@ def clear_hands(dealer: Dealer, table: Table) -> None:
         player.reset_hands()
 
 
-def play_round(table: Table, dealer: Dealer, rules: Rules, shoe: Shoe) -> None:
+def play_round(
+    table: Table,
+    dealer: Dealer,
+    rules: Rules,
+    shoe: Shoe,
+    playing_strategy: PlayingStrategy
+) -> None:
     """
     Plays a round of blackjack between a
     dealer and players at a table.
@@ -412,7 +416,8 @@ def play_round(table: Table, dealer: Dealer, rules: Rules, shoe: Shoe) -> None:
                 count=count_dict[player],
                 insurance_count=insurance_count_dict[player],
                 dealer=dealer,
-                rules=rules
+                rules=rules,
+                playing_strategy=playing_strategy
             )
 
         if (all_hands_busted(table=table) and rules.dealer_shows_hole_card) or not all_hands_busted(table=table):

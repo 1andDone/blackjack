@@ -72,20 +72,20 @@ def test_init_exit_point_gt_insurance():
         (2, False)
      ]
 )
-def test_can_enter(setup_back_counter, test_count, expected):
+def test_can_enter(back_counter, test_count, expected):
     """Tests the can_enter method within the BackCounter class."""
-    assert setup_back_counter.can_enter(count=test_count) is expected
+    assert back_counter.can_enter(count=test_count) is expected
 
 
-def test_can_enter_insufficient_bankroll(setup_back_counter):
+def test_can_enter_insufficient_bankroll(back_counter):
     """
     Tests the can_enter method within the BackCounter class
     when the back counter has insufficient bankroll to place
     a wager at the current count.
 
     """
-    setup_back_counter.adjust_bankroll(amount=-1000)
-    assert setup_back_counter.can_enter(count=10) is False
+    back_counter.adjust_bankroll(amount=-1000)
+    assert back_counter.can_enter(count=10) is False
 
 
 @pytest.mark.parametrize(
@@ -96,6 +96,6 @@ def test_can_enter_insufficient_bankroll(setup_back_counter):
         (-1, True)
      ]
 )
-def test_can_exit(setup_back_counter, test_count, expected):
+def test_can_exit(back_counter, test_count, expected):
     """Tests the can_exit method within the BackCounter class."""
-    assert setup_back_counter.can_exit(count=test_count) is expected
+    assert back_counter.can_exit(count=test_count) is expected
