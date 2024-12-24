@@ -14,20 +14,20 @@ from blackjack.table import Table
 def _shoe_progress_bar(shoe_range: range, size: int = 60) -> Generator[int, None, None]:
     total_shoes = len(shoe_range)
     start = time.time()
-    
+
     def _show(shoe_number: int) -> None:
         x = int(size * shoe_number / total_shoes)
-        remaining = ((time.time() - start) / shoe_number) * (total_shoes - shoe_number)        
+        remaining = ((time.time() - start) / shoe_number) * (total_shoes - shoe_number)
         minutes, seconds = divmod(remaining, 60)
         minutes = int(minutes)
         seconds = int(seconds)
         time_str = f'{minutes if minutes > 10 else minutes:02}:{seconds if seconds > 10 else seconds:02}'
-        print(f"Shoes Simulated: [{u'█' * x}{('.' * (size - x))}] {shoe_number}/{total_shoes} Estimated wait {time_str}", end='\r', file=sys.stdout, flush=True)
-    
-    for index, shoe_number in enumerate(shoe_range):
+        print(f"Shoes Simulated: [{'█' * x}{('.' * (size - x))}] {shoe_number}/{total_shoes} Estimated wait {time_str}", end='\r', file=sys.stdout, flush=True)
+
+    for shoe_number in shoe_range:
         _show(shoe_number=shoe_number + 1)
         yield shoe_number
-    
+
     print('\n', flush=True, file=sys.stdout)
 
 

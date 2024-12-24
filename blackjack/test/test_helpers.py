@@ -771,6 +771,8 @@ def test_dealer_plays_hand(shoe, dealer, test_hole_card, test_up_card, test_s17,
 def test_dealer_turn(player, table):
     """Tests the dealer_turn function."""
     table.add_player(player=player)
+    player.get_first_hand().status = HandStatus.IN_PLAY
+    assert not dealer_turn(players=table.players)
     player.get_first_hand().status = HandStatus.SETTLED
     assert not dealer_turn(players=table.players)
     player.get_first_hand().status = HandStatus.SHOWDOWN

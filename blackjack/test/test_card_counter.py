@@ -49,7 +49,7 @@ def test_init_bet_ramp_count_does_not_exist_float():
         },
         insurance=None
     )
-    assert card_counter._bet_ramp == {
+    assert card_counter.bet_ramp == {
         1.5: 15,
         2: 20,
         2.5: 40,
@@ -80,7 +80,7 @@ def test_init_bet_ramp_count_does_not_exist_integer():
         },
         insurance=None
     )
-    assert card_counter._bet_ramp == {
+    assert card_counter.bet_ramp == {
         1: 15,
         2: 20,
         3: 40,

@@ -52,7 +52,7 @@ class Player:
     @property
     def number_of_hands(self) -> int:
         return len(self._hands)
-    
+
     @property
     def stats(self) -> Stats:
         return self._stats

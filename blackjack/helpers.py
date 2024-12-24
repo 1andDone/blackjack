@@ -2,6 +2,7 @@ from blackjack.back_counter import BackCounter
 from blackjack.card_counter import CardCounter
 from blackjack.dealer import Dealer
 from blackjack.enums import CardCountingSystem, HandStatus
+from blackjack.hand import Hand
 from blackjack.player import Player
 from blackjack.playing_strategy import PlayingStrategy
 from blackjack.rules import Rules
@@ -208,9 +209,11 @@ def player_initial_decision(
     to them by the dealer.
 
     """
-    if not player.get_first_hand().is_blackjack and rules.insurance and dealer.up_card == 'A':
-        if isinstance(player, CardCounter) and player.insurance and insurance_count and insurance_count >= player.insurance:
-            insurance_bet = player.get_first_hand().total_bet * 0.5
+    first_hand = player.get_first_hand()
+    if rules.insurance and dealer.up_card == 'A' and not first_hand.is_blackjack:
+        if isinstance(player, CardCounter) and player.insurance and insurance_count and \
+            insurance_count >= player.insurance:
+            insurance_bet = first_hand.total_bet * 0.5
             place_insurance_bet(player=player, amount=insurance_bet, count=insurance_count)
             _update_insurance_stats(
                 dealer=dealer,
@@ -219,30 +222,36 @@ def player_initial_decision(
                 insurance_count=insurance_count
             )
 
-    if player.get_first_hand().is_blackjack or dealer.hand.is_blackjack:
+    if first_hand.is_blackjack or dealer.hand.is_blackjack:
         _update_blackjack_stats(
             dealer=dealer,
             player=player,
-            placed_bet=player.get_first_hand().total_bet,
+            placed_bet=first_hand.total_bet,
             blackjack_payout=rules.blackjack_payout,
             count=count
         )
-        player.get_first_hand().status = HandStatus.SETTLED
+        first_hand.status = HandStatus.SETTLED
         return None
 
     decision = player.decision(
-            hand=player.get_first_hand(),
+            hand=first_hand,
             dealer_up_card=dealer.up_card,
             max_hands=rules.max_hands,
             playing_strategy=playing_strategy
     )
 
     if rules.late_surrender and decision in {'Rh', 'Rs', 'Rp'}:
-        _update_late_surrender_stats(player=player, placed_bet=player.get_first_hand().total_bet, count=count)
-        player.get_first_hand().status = HandStatus.SETTLED
+        _update_late_surrender_stats(player=player, placed_bet=first_hand.total_bet, count=count)
+        first_hand.status = HandStatus.SETTLED
         return None
 
     return decision
+
+
+def _finished_splitting_aces(current_hand: Hand, player: Player, rules: Rules) -> bool:
+    """Determines if a player is finished splitting Aces."""
+    return current_hand.cards[0] == 'A' and (player.number_of_hands == rules.max_hands or \
+        not rules.resplit_aces or current_hand.cards[1] != 'A')
 
 
 def player_plays_hands(
@@ -276,8 +285,7 @@ def player_plays_hands(
 
         if current_hand.number_of_cards == 1:
             current_hand.add_card(card=dealer.deal_card(shoe=shoe))
-            if current_hand.cards[0] == 'A' and (player.number_of_hands == rules.max_hands or \
-                not rules.resplit_aces or current_hand.cards[1] != 'A'):
+            if _finished_splitting_aces(current_hand=current_hand, player=player, rules=rules):
                 current_hand.status = HandStatus.SHOWDOWN
 
         # a sufficient bankroll check for the 'Rp' and 'P' decisions is performed in Player class
@@ -287,8 +295,7 @@ def player_plays_hands(
             player.hands.append(current_hand.split())
             current_hand.add_card(card=dealer.deal_card(shoe=shoe))
             another_hand += 1
-            if current_hand.cards[0] == 'A' and (player.number_of_hands == rules.max_hands or \
-                not rules.resplit_aces or current_hand.cards[1] != 'A'):
+            if _finished_splitting_aces(current_hand=current_hand, player=player, rules=rules):
                 current_hand.status = HandStatus.SHOWDOWN
 
         elif rules.double_down and decision in {'Dh', 'Ds'} and current_hand.number_of_cards == 2 and \
@@ -352,8 +359,7 @@ def compare_hands(player: Player, count: float | int | None, dealer: Dealer) -> 
     table that were not previously settled.
 
     """
-    showdown_hands = [hand for hand in player.hands if hand.status == HandStatus.SHOWDOWN]
-    for hand in showdown_hands:
+    for hand in (hand for hand in player.hands if hand.status == HandStatus.SHOWDOWN):
         if dealer.hand.is_busted or (hand.total > dealer.hand.total):
             _update_win_stats(player=player, hand_bet=hand.total_bet, count=count)
         elif hand.total == dealer.hand.total:

@@ -24,10 +24,10 @@ class CardCounter(Player):
         card_counting_system
             Card counting system used by the player
         bet_ramp
-            Dictionary where each key value is the running or
-            true count and each value indicates the amount of money
-            wagered at that running or true count. In the event
-            of a missing count, the amount of money wagered is inferred
+            Dictionary where each key value is the running/true
+            count and each value indicates the amount of money
+            bet at that running/true count. In the event of a
+            missing count, the amount of money bet is inferred
             from the previous running/true count
         insurance
             Minimum running or true count at which a player will
@@ -62,6 +62,10 @@ class CardCounter(Player):
     @property
     def card_counting_system(self) -> CardCountingSystem:
         return self._card_counting_system
+
+    @property
+    def bet_ramp(self) -> dict[float | int, float | int]:
+        return self._bet_ramp
 
     @override
     def placed_bet(self, **kwargs: Any) -> float | int:
