@@ -28,7 +28,7 @@ def _shoe_progress_bar(shoe_range: range, size: int = 60) -> Generator[int, None
         _show(shoe_number=shoe_number + 1)
         yield shoe_number
 
-    print('\n', flush=True, file=sys.stdout)
+    print(flush=True, file=sys.stdout)
 
 
 class Blackjack:

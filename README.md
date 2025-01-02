@@ -95,24 +95,28 @@ blackjack.simulate(penetration=0.75, number_of_shoes=50000, shoe_size=8, seed=1)
 
 ## Results
 
-Summary statistics are available after each run by using each player's `stats` method.
+Summary statistics are available as either a string or dictionary after each run by using each player's `stats` method.
 
 ```python
-print(player3.stats.summary)
+print(player3.stats.summary(string=True))
 ```
 
 ```
->> HANDS PLAYED: 274,062
->> HANDS WON: 117,821
->> HANDS LOST: 132,534
->> HANDS PUSHED: 23,707
->> AMOUNT EARNED: $158,225.00
->> AMOUNT BET: $14,306,490.00
->> INSURANCE AMOUNT EARNED: -$120,750.00
->> INSURANCE AMOUNT BET: $376,810.00
->> TOTAL AMOUNT EARNED: $37,475.00
->> TOTAL AMOUNT BET: $14,683,300.00
->> ELEMENT OF RISK: 0.26%
+TOTAL ROUNDS PLAYED: 267,773
+TOTAL HANDS PLAYED: 274,062
+PLAYER HANDS WON: 117,821
+PLAYER HANDS LOST: 132,534
+PLAYER HANDS PUSHED: 23,707
+PLAYER BLACKJACKS: 14,450
+DEALER BLACKJACKS: 14,484
+PLAYER DOUBLE DOWNS: 22,497
+PLAYER SURRENDERS: 12,349
+INSURANCE AMOUNT BET: $376,810.00
+INSURANCE NET WINNINGS: -$120,750.00
+AMOUNT BET: $14,306,490.00
+NET WINNINGS: $158,225.00
+TOTAL AMOUNT BET: $14,683,300.00
+TOTAL NET WINNINGS: $37,475.00
 ```
 
 If desired, the statistics at each count can be accessed as well.

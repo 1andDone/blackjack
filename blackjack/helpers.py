@@ -51,7 +51,7 @@ def get_placed_bet(table: Table, count_dict: dict[Player, float | int | None]) -
     """
     Gets the placed bet for every player at the table and stores
     it in a dictionary.
-    
+
     """
     placed_bet_dict: dict[Player, float | int] = {}
     for player in table.players.copy():
@@ -71,16 +71,16 @@ def _update_insurance_stats(
 ) -> None:
     if dealer.hand.is_blackjack:
         player.adjust_bankroll(amount=insurance_bet * 2)
-        player.stats.update_amount(
+        player.stats.add_value(
             count=insurance_count,
-            category=StatsCategory.INSURANCE_AMOUNT_EARNED,
-            increment=insurance_bet
+            category=StatsCategory.INSURANCE_NET_WINNINGS,
+            value=insurance_bet
         )
     else:
-        player.stats.update_amount(
+        player.stats.add_value(
             count=insurance_count,
-            category=StatsCategory.INSURANCE_AMOUNT_EARNED,
-            increment=insurance_bet * -1
+            category=StatsCategory.INSURANCE_NET_WINNINGS,
+            value=insurance_bet * -1
         )
 
 
@@ -94,65 +94,70 @@ def _update_blackjack_stats(
     if player.get_first_hand().is_blackjack:
         if dealer.hand.is_blackjack:
             player.adjust_bankroll(amount=placed_bet)
-            player.stats.add_hand(count=count, category=StatsCategory.HANDS_PUSHED)
+            player.stats.add_hand(count=count, category=StatsCategory.PLAYER_HANDS_PUSHED)
+            player.stats.add_value(count=count, category=StatsCategory.PLAYER_BLACKJACKS)
+            player.stats.add_value(count=count, category=StatsCategory.DEALER_BLACKJACKS)
         else:
             player.adjust_bankroll(amount=placed_bet * (1 + blackjack_payout))
-            player.stats.add_hand(count=count, category=StatsCategory.HANDS_WON)
-            player.stats.update_amount(
+            player.stats.add_hand(count=count, category=StatsCategory.PLAYER_HANDS_WON)
+            player.stats.add_value(count=count, category=StatsCategory.PLAYER_BLACKJACKS)
+            player.stats.add_value(
                 count=count,
-                category=StatsCategory.AMOUNT_EARNED,
-                increment=placed_bet * blackjack_payout
+                category=StatsCategory.NET_WINNINGS,
+                value=placed_bet * blackjack_payout
             )
     else:
-        player.stats.add_hand(count=count, category=StatsCategory.HANDS_LOST)
-        player.stats.update_amount(
+        player.stats.add_hand(count=count, category=StatsCategory.PLAYER_HANDS_LOST)
+        player.stats.add_value(count=count, category=StatsCategory.DEALER_BLACKJACKS)
+        player.stats.add_value(
             count=count,
-            category=StatsCategory.AMOUNT_EARNED,
-            increment=placed_bet * -1
+            category=StatsCategory.NET_WINNINGS,
+            value=placed_bet * -1
         )
 
 
 def _update_late_surrender_stats(player: Player, placed_bet: float | int, count: float | int | None) -> None:
     player.adjust_bankroll(amount=placed_bet * 0.5)
-    player.stats.add_hand(count=count, category=StatsCategory.HANDS_LOST)
-    player.stats.update_amount(
+    player.stats.add_hand(count=count, category=StatsCategory.PLAYER_HANDS_LOST)
+    player.stats.add_value(count=count, category=StatsCategory.PLAYER_SURRENDERS)
+    player.stats.add_value(
         count=count,
-        category=StatsCategory.AMOUNT_EARNED,
-        increment=placed_bet * -0.5
+        category=StatsCategory.NET_WINNINGS,
+        value=placed_bet * -0.5
     )
 
 
 def _update_betting_stats(player: Player, hand_bet: float | int, count: float | int | None) -> None:
     player.adjust_bankroll(amount=hand_bet * -1)
-    player.stats.update_amount(
+    player.stats.add_value(
         count=count,
         category=StatsCategory.AMOUNT_BET,
-        increment=hand_bet
+        value=hand_bet
     )
 
 
 def _update_win_stats(player: Player, hand_bet: float | int, count: float | int | None) -> None:
     player.adjust_bankroll(amount=hand_bet * 2)
-    player.stats.add_hand(count=count, category=StatsCategory.HANDS_WON)
-    player.stats.update_amount(
+    player.stats.add_hand(count=count, category=StatsCategory.PLAYER_HANDS_WON)
+    player.stats.add_value(
         count=count,
-        category=StatsCategory.AMOUNT_EARNED,
-        increment=hand_bet
+        category=StatsCategory.NET_WINNINGS,
+        value=hand_bet
     )
 
 
 def _update_loss_stats(player: Player, hand_bet: float | int, count: float | int | None) -> None:
-    player.stats.add_hand(count=count, category=StatsCategory.HANDS_LOST)
-    player.stats.update_amount(
+    player.stats.add_hand(count=count, category=StatsCategory.PLAYER_HANDS_LOST)
+    player.stats.add_value(
         count=count,
-        category=StatsCategory.AMOUNT_EARNED,
-        increment=hand_bet * -1
+        category=StatsCategory.NET_WINNINGS,
+        value=hand_bet * -1
     )
 
 
 def _update_push_stats(player: Player, hand_bet: float | int, count: float | int | None) -> None:
     player.adjust_bankroll(amount=hand_bet)
-    player.stats.add_hand(count=count, category=StatsCategory.HANDS_PUSHED)
+    player.stats.add_hand(count=count, category=StatsCategory.PLAYER_HANDS_PUSHED)
 
 
 def place_bet(player: Player, amount: float | int, count: float | int | None) -> None:
@@ -165,10 +170,10 @@ def place_insurance_bet(player: Player, amount: float | int, count: float | int 
     """Adjusts the side bet based on a player's insurance bet."""
     player.get_first_hand().add_to_side_bet(amount=amount)
     player.adjust_bankroll(amount=amount * -1)
-    player.stats.update_amount(
+    player.stats.add_value(
         count=count,
         category=StatsCategory.INSURANCE_AMOUNT_BET,
-        increment=amount
+        value=amount
     )
 
 
@@ -302,6 +307,7 @@ def player_plays_hands(
             not current_hand.was_split and not current_hand.is_split and \
             player.has_sufficient_bankroll(amount=current_hand_total_bet):
             _update_betting_stats(player=player, hand_bet=current_hand_total_bet, count=count)
+            player.stats.add_value(count=count, category=StatsCategory.PLAYER_DOUBLE_DOWNS)
             current_hand.add_card(card=dealer.deal_card(shoe=shoe))
             current_hand.add_to_total_bet(amount=current_hand_total_bet)
             current_hand.status = HandStatus.SHOWDOWN
@@ -310,6 +316,7 @@ def player_plays_hands(
             (current_hand.was_split or current_hand.is_split) and \
             player.has_sufficient_bankroll(amount=current_hand_total_bet):
             _update_betting_stats(player=player, hand_bet=current_hand_total_bet, count=count)
+            player.stats.add_value(count=count, category=StatsCategory.PLAYER_DOUBLE_DOWNS)
             current_hand.add_card(card=dealer.deal_card(shoe=shoe))
             current_hand.add_to_total_bet(amount=current_hand_total_bet)
             current_hand.status = HandStatus.SHOWDOWN
@@ -394,6 +401,7 @@ def play_round(
     placed_bet_dict = get_placed_bet(table=table, count_dict=count_dict)
 
     for player in table.players:
+        player.stats.add_value(count=count_dict[player], category=StatsCategory.TOTAL_ROUNDS_PLAYED)
         place_bet(
             player=player,
             amount=placed_bet_dict[player],

@@ -98,7 +98,7 @@ def test_add_back_counters(shoe, table, card_counter_balanced, back_counter):
     """
     Tests the add_back_counters function when the back counter's partner is at
     the table.
-    
+
     """
     table.add_player(player=card_counter_balanced)
     table.add_player(player=back_counter)
@@ -157,10 +157,11 @@ def test_player_initial_decision_insurance_dealer_blackjack(card_counter_unbalan
     ) is None
     assert card_counter_unbalanced.get_first_hand().status == HandStatus.SETTLED
     assert card_counter_unbalanced.bankroll == 1005
-    assert card_counter_unbalanced.stats.stats[StatsKey(count=3, category=StatsCategory.HANDS_LOST)] == 1
-    assert card_counter_unbalanced.stats.stats[StatsKey(count=3, category=StatsCategory.AMOUNT_EARNED)] == -10
+    assert card_counter_unbalanced.stats.stats[StatsKey(count=3, category=StatsCategory.PLAYER_HANDS_LOST)] == 1
+    assert card_counter_unbalanced.stats.stats[StatsKey(count=3, category=StatsCategory.DEALER_BLACKJACKS)] == 1
+    assert card_counter_unbalanced.stats.stats[StatsKey(count=3, category=StatsCategory.NET_WINNINGS)] == -10
     assert card_counter_unbalanced.stats.stats[StatsKey(count=4, category=StatsCategory.INSURANCE_AMOUNT_BET)] == 5
-    assert card_counter_unbalanced.stats.stats[StatsKey(count=4, category=StatsCategory.INSURANCE_AMOUNT_EARNED)] == 5
+    assert card_counter_unbalanced.stats.stats[StatsKey(count=4, category=StatsCategory.INSURANCE_NET_WINNINGS)] == 5
 
 
 def test_player_initial_decision_insurance_no_dealer_blackjack(card_counter_unbalanced, dealer):
@@ -187,7 +188,7 @@ def test_player_initial_decision_insurance_no_dealer_blackjack(card_counter_unba
     assert card_counter_unbalanced.get_first_hand().status == HandStatus.IN_PLAY
     assert card_counter_unbalanced.bankroll == 995
     assert card_counter_unbalanced.stats.stats[StatsKey(count=4, category=StatsCategory.INSURANCE_AMOUNT_BET)] == 5
-    assert card_counter_unbalanced.stats.stats[StatsKey(count=4, category=StatsCategory.INSURANCE_AMOUNT_EARNED)] == -5
+    assert card_counter_unbalanced.stats.stats[StatsKey(count=4, category=StatsCategory.INSURANCE_NET_WINNINGS)] == -5
 
 
 def test_player_initial_decision_no_insurance_dealer_blackjack(player, dealer):
@@ -213,8 +214,9 @@ def test_player_initial_decision_no_insurance_dealer_blackjack(player, dealer):
     ) is None
     assert player.get_first_hand().status == HandStatus.SETTLED
     assert player.bankroll == 1000
-    assert player.stats.stats[StatsKey(count=0, category=StatsCategory.HANDS_LOST)] == 1
-    assert player.stats.stats[StatsKey(count=0, category=StatsCategory.AMOUNT_EARNED)] == -10
+    assert player.stats.stats[StatsKey(count=0, category=StatsCategory.PLAYER_HANDS_LOST)] == 1
+    assert player.stats.stats[StatsKey(count=0, category=StatsCategory.DEALER_BLACKJACKS)] == 1
+    assert player.stats.stats[StatsKey(count=0, category=StatsCategory.NET_WINNINGS)] == -10
 
 
 def test_player_initial_decision_no_insurance_no_dealer_blackjack(player, dealer):
@@ -262,8 +264,9 @@ def test_player_initial_decision_player_blackjack(player, dealer, rules):
     ) is None
     assert player.get_first_hand().status == HandStatus.SETTLED
     assert player.bankroll == 1050
-    assert player.stats.stats[StatsKey(count=1, category=StatsCategory.HANDS_WON)] == 1
-    assert player.stats.stats[StatsKey(count=1, category=StatsCategory.AMOUNT_EARNED)] == 30
+    assert player.stats.stats[StatsKey(count=1, category=StatsCategory.PLAYER_HANDS_WON)] == 1
+    assert player.stats.stats[StatsKey(count=1, category=StatsCategory.PLAYER_BLACKJACKS)] == 1
+    assert player.stats.stats[StatsKey(count=1, category=StatsCategory.NET_WINNINGS)] == 30
 
 
 def test_player_initial_decision_late_surrender(player, dealer):
@@ -289,8 +292,9 @@ def test_player_initial_decision_late_surrender(player, dealer):
     ) is None
     assert player.get_first_hand().status == HandStatus.SETTLED
     assert player.bankroll == 1025
-    assert player.stats.stats[StatsKey(count=None, category=StatsCategory.HANDS_LOST)] == 1
-    assert player.stats.stats[StatsKey(count=None, category=StatsCategory.AMOUNT_EARNED)] == -25
+    assert player.stats.stats[StatsKey(count=None, category=StatsCategory.PLAYER_HANDS_LOST)] == 1
+    assert player.stats.stats[StatsKey(count=None, category=StatsCategory.PLAYER_SURRENDERS)] == 1
+    assert player.stats.stats[StatsKey(count=None, category=StatsCategory.NET_WINNINGS)] == -25
 
 
 def test_player_initial_decision_no_late_surrender(player, dealer):
@@ -554,6 +558,7 @@ def test_player_plays_hands_double_down(player, dealer, shoe):
     assert player.get_first_hand().total_bet == 20
     assert player.get_first_hand().status == HandStatus.SHOWDOWN
     assert player.bankroll == 990
+    assert player.stats.stats[StatsKey(count=None, category=StatsCategory.PLAYER_DOUBLE_DOWNS)] == 1
     assert player.stats.stats[StatsKey(count=None, category=StatsCategory.AMOUNT_BET)] == 10
 
 
@@ -583,6 +588,7 @@ def test_player_plays_hands_double_down_not_allowed(player, dealer, shoe):
     assert player.get_first_hand().total_bet == 10
     assert player.get_first_hand().status == HandStatus.SETTLED
     assert player.bankroll == 1000
+    assert player.stats.stats[StatsKey(count=None, category=StatsCategory.PLAYER_DOUBLE_DOWNS)] == 0
     assert player.stats.stats[StatsKey(count=None, category=StatsCategory.AMOUNT_BET)] == 0
 
 
@@ -613,6 +619,7 @@ def test_player_plays_hands_double_down_insufficient_bankroll(player, dealer, sh
     assert player.get_first_hand().total_bet == 10
     assert player.get_first_hand().status == HandStatus.SETTLED
     assert player.bankroll == 0
+    assert player.stats.stats[StatsKey(count=None, category=StatsCategory.PLAYER_DOUBLE_DOWNS)] == 0
     assert player.stats.stats[StatsKey(count=None, category=StatsCategory.AMOUNT_BET)] == 0
 
 
@@ -646,6 +653,7 @@ def test_player_plays_hands_double_after_split(player, dealer, shoe):
     assert player.hands[1].cards == ['2', '8', 'J']
     assert player.hands[1].total_bet == 20
     assert player.hands[1].status == HandStatus.SHOWDOWN
+    assert player.stats.stats[StatsKey(count=None, category=StatsCategory.PLAYER_DOUBLE_DOWNS)] == 2
     assert player.stats.stats[StatsKey(count=None, category=StatsCategory.AMOUNT_BET)] == 30
 
 
@@ -674,6 +682,7 @@ def test_player_plays_hands_double_after_split_not_allowed(player, dealer, shoe)
     assert player.get_first_hand().cards == ['2', '2', 'A', 'K']
     assert player.get_first_hand().total_bet == 10
     assert player.get_first_hand().status == HandStatus.SHOWDOWN
+    assert player.stats.stats[StatsKey(count=None, category=StatsCategory.PLAYER_DOUBLE_DOWNS)] == 0
     assert player.stats.stats[StatsKey(count=None, category=StatsCategory.AMOUNT_BET)] == 0
 
 
@@ -704,6 +713,7 @@ def test_player_plays_hands_double_after_split_insufficient_bankroll(player, dea
     assert player.get_first_hand().total_bet == 10
     assert player.get_first_hand().total_bet * 3 > player.bankroll
     assert player.get_first_hand().status == HandStatus.SHOWDOWN
+    assert player.stats.stats[StatsKey(count=None, category=StatsCategory.PLAYER_DOUBLE_DOWNS)] == 0
     assert player.stats.stats[StatsKey(count=None, category=StatsCategory.AMOUNT_BET)] == 0
 
 
@@ -794,8 +804,8 @@ def test_compare_hands_win_total(player, dealer):
     compare_hands(player=player, dealer=dealer, count=3)
     assert player.get_first_hand().status == HandStatus.SETTLED
     assert player.bankroll == 1020
-    assert player.stats.stats[StatsKey(count=3, category=StatsCategory.HANDS_WON)] == 1
-    assert player.stats.stats[StatsKey(count=3, category=StatsCategory.AMOUNT_EARNED)] == 10
+    assert player.stats.stats[StatsKey(count=3, category=StatsCategory.PLAYER_HANDS_WON)] == 1
+    assert player.stats.stats[StatsKey(count=3, category=StatsCategory.NET_WINNINGS)] == 10
 
 
 def test_compare_hands_win_dealer_busts(player, dealer):
@@ -814,8 +824,8 @@ def test_compare_hands_win_dealer_busts(player, dealer):
     compare_hands(player=player, dealer=dealer, count=1)
     assert player.get_first_hand().status == HandStatus.SETTLED
     assert player.bankroll == 1040
-    assert player.stats.stats[StatsKey(count=1, category=StatsCategory.HANDS_WON)] == 1
-    assert player.stats.stats[StatsKey(count=1, category=StatsCategory.AMOUNT_EARNED)] == 20
+    assert player.stats.stats[StatsKey(count=1, category=StatsCategory.PLAYER_HANDS_WON)] == 1
+    assert player.stats.stats[StatsKey(count=1, category=StatsCategory.NET_WINNINGS)] == 20
 
 
 def test_compare_hands_push(player, dealer):
@@ -833,7 +843,8 @@ def test_compare_hands_push(player, dealer):
     compare_hands(player=player, dealer=dealer, count=None)
     assert player.get_first_hand().status == HandStatus.SETTLED
     assert player.bankroll == 1010
-    assert player.stats.stats[StatsKey(count=None, category=StatsCategory.HANDS_PUSHED)] == 1
+    assert player.stats.stats[StatsKey(count=None, category=StatsCategory.PLAYER_HANDS_PUSHED)] == 1
+    assert player.stats.stats[StatsKey(count=1, category=StatsCategory.NET_WINNINGS)] == 0
 
 
 def test_compare_hands_loss_total(player, dealer):
@@ -851,8 +862,8 @@ def test_compare_hands_loss_total(player, dealer):
     compare_hands(player=player, dealer=dealer, count=-2)
     assert player.get_first_hand().status == HandStatus.SETTLED
     assert player.bankroll == 1000
-    assert player.stats.stats[StatsKey(count=-2, category=StatsCategory.HANDS_LOST)] == 1
-    assert player.stats.stats[StatsKey(count=-2, category=StatsCategory.AMOUNT_EARNED)] == -20
+    assert player.stats.stats[StatsKey(count=-2, category=StatsCategory.PLAYER_HANDS_LOST)] == 1
+    assert player.stats.stats[StatsKey(count=-2, category=StatsCategory.NET_WINNINGS)] == -20
 
 
 def test_clear_hands(dealer_with_hand, player, rules):
@@ -884,12 +895,16 @@ def test_play_round_back_counters_added(shoe, dealer, rules, card_counter_balanc
     shoe.add_to_seen_cards(card='2')
     shoe.add_to_seen_cards(card='2')
     play_round(table=table, dealer=dealer, shoe=shoe, rules=rules, playing_strategy=playing_strategy)
+    assert card_counter_balanced.stats.stats[StatsKey(count=3, category=StatsCategory.TOTAL_ROUNDS_PLAYED)] == 1
+    assert card_counter_balanced.stats.stats[StatsKey(count=3, category=StatsCategory.TOTAL_HANDS_PLAYED)] == 1
     assert card_counter_balanced.stats.stats[StatsKey(count=3, category=StatsCategory.AMOUNT_BET)] == 40
-    assert card_counter_balanced.stats.stats[StatsKey(count=3, category=StatsCategory.AMOUNT_EARNED)] == 60
-    assert card_counter_balanced.stats.stats[StatsKey(count=3, category=StatsCategory.HANDS_WON)] == 1
+    assert card_counter_balanced.stats.stats[StatsKey(count=3, category=StatsCategory.NET_WINNINGS)] == 60
+    assert card_counter_balanced.stats.stats[StatsKey(count=3, category=StatsCategory.PLAYER_HANDS_WON)] == 1
+    assert back_counter.stats.stats[StatsKey(count=3, category=StatsCategory.TOTAL_ROUNDS_PLAYED)] == 1
+    assert back_counter.stats.stats[StatsKey(count=3, category=StatsCategory.TOTAL_HANDS_PLAYED)] == 1
     assert back_counter.stats.stats[StatsKey(count=3, category=StatsCategory.AMOUNT_BET)] == 40
-    assert back_counter.stats.stats[StatsKey(count=3, category=StatsCategory.AMOUNT_EARNED)] == 40
-    assert back_counter.stats.stats[StatsKey(count=3, category=StatsCategory.HANDS_WON)] == 1
+    assert back_counter.stats.stats[StatsKey(count=3, category=StatsCategory.NET_WINNINGS)] == 40
+    assert back_counter.stats.stats[StatsKey(count=3, category=StatsCategory.PLAYER_HANDS_WON)] == 1
 
 
 def test_play_round_back_counters_removed(shoe, dealer, rules, card_counter_balanced, back_counter):
@@ -907,9 +922,11 @@ def test_play_round_back_counters_removed(shoe, dealer, rules, card_counter_bala
     shoe.add_to_seen_cards(card='K')
     shoe.add_to_seen_cards(card='K')
     play_round(table=table, dealer=dealer, shoe=shoe, rules=rules, playing_strategy=playing_strategy)
+    assert card_counter_balanced.stats.stats[StatsKey(count=0, category=StatsCategory.TOTAL_ROUNDS_PLAYED)] == 1
+    assert card_counter_balanced.stats.stats[StatsKey(count=0, category=StatsCategory.TOTAL_HANDS_PLAYED)] == 1
     assert card_counter_balanced.stats.stats[StatsKey(count=0, category=StatsCategory.AMOUNT_BET)] == 10
-    assert card_counter_balanced.stats.stats[StatsKey(count=0, category=StatsCategory.AMOUNT_EARNED)] == 15
-    assert card_counter_balanced.stats.stats[StatsKey(count=0, category=StatsCategory.HANDS_WON)] == 1
+    assert card_counter_balanced.stats.stats[StatsKey(count=0, category=StatsCategory.NET_WINNINGS)] == 15
+    assert card_counter_balanced.stats.stats[StatsKey(count=0, category=StatsCategory.PLAYER_HANDS_WON)] == 1
 
 
 def test_play_round_insufficient_funds(dealer, player, shoe, rules):
@@ -939,11 +956,13 @@ def test_play_round_insurance_win(dealer, shoe, card_counter_unbalanced):
     shoe.add_to_seen_cards(card='2')
     shoe.add_to_seen_cards(card='2')
     play_round(table=table, dealer=dealer, shoe=shoe, rules=rules, playing_strategy=playing_strategy)
+    assert card_counter_unbalanced.stats.stats[StatsKey(count=3, category=StatsCategory.TOTAL_ROUNDS_PLAYED)] == 1
+    assert card_counter_unbalanced.stats.stats[StatsKey(count=3, category=StatsCategory.TOTAL_HANDS_PLAYED)] == 1
     assert card_counter_unbalanced.stats.stats[StatsKey(count=3, category=StatsCategory.AMOUNT_BET)] == 40
-    assert card_counter_unbalanced.stats.stats[StatsKey(count=3, category=StatsCategory.AMOUNT_EARNED)] == -40
-    assert card_counter_unbalanced.stats.stats[StatsKey(count=3, category=StatsCategory.HANDS_LOST)] == 1
+    assert card_counter_unbalanced.stats.stats[StatsKey(count=3, category=StatsCategory.NET_WINNINGS)] == -40
+    assert card_counter_unbalanced.stats.stats[StatsKey(count=3, category=StatsCategory.PLAYER_HANDS_LOST)] == 1
     assert card_counter_unbalanced.stats.stats[StatsKey(count=2, category=StatsCategory.INSURANCE_AMOUNT_BET)] == 20
-    assert card_counter_unbalanced.stats.stats[StatsKey(count=2, category=StatsCategory.INSURANCE_AMOUNT_EARNED)] == 20
+    assert card_counter_unbalanced.stats.stats[StatsKey(count=2, category=StatsCategory.INSURANCE_NET_WINNINGS)] == 20
 
 
 def test_play_round_insurance_loss(dealer, shoe, card_counter_unbalanced):
@@ -961,11 +980,13 @@ def test_play_round_insurance_loss(dealer, shoe, card_counter_unbalanced):
     shoe.add_to_seen_cards(card='2')
     shoe.add_to_seen_cards(card='2')
     play_round(table=table, dealer=dealer, shoe=shoe, rules=rules, playing_strategy=playing_strategy)
+    assert card_counter_unbalanced.stats.stats[StatsKey(count=3, category=StatsCategory.TOTAL_ROUNDS_PLAYED)] == 1
+    assert card_counter_unbalanced.stats.stats[StatsKey(count=3, category=StatsCategory.TOTAL_HANDS_PLAYED)] == 1
     assert card_counter_unbalanced.stats.stats[StatsKey(count=3, category=StatsCategory.AMOUNT_BET)] == 40
-    assert card_counter_unbalanced.stats.stats[StatsKey(count=3, category=StatsCategory.AMOUNT_EARNED)] == 40
-    assert card_counter_unbalanced.stats.stats[StatsKey(count=3, category=StatsCategory.HANDS_WON)] == 1
+    assert card_counter_unbalanced.stats.stats[StatsKey(count=3, category=StatsCategory.NET_WINNINGS)] == 40
+    assert card_counter_unbalanced.stats.stats[StatsKey(count=3, category=StatsCategory.PLAYER_HANDS_WON)] == 1
     assert card_counter_unbalanced.stats.stats[StatsKey(count=2, category=StatsCategory.INSURANCE_AMOUNT_BET)] == 20
-    assert card_counter_unbalanced.stats.stats[StatsKey(count=2, category=StatsCategory.INSURANCE_AMOUNT_EARNED)] == -20
+    assert card_counter_unbalanced.stats.stats[StatsKey(count=2, category=StatsCategory.INSURANCE_NET_WINNINGS)] == -20
 
 
 def test_play_round_player_blackjack(player, dealer, shoe, rules):
@@ -978,9 +999,11 @@ def test_play_round_player_blackjack(player, dealer, shoe, rules):
     assert shoe.seen_cards['A'] == 1
     assert shoe.seen_cards['10-J-Q-K'] == 2
     assert shoe.seen_cards['9'] == 0
+    assert player.stats.stats[StatsKey(count=None, category=StatsCategory.TOTAL_ROUNDS_PLAYED)] == 1
+    assert player.stats.stats[StatsKey(count=None, category=StatsCategory.TOTAL_HANDS_PLAYED)] == 1
     assert player.stats.stats[StatsKey(count=None, category=StatsCategory.AMOUNT_BET)] == 10
-    assert player.stats.stats[StatsKey(count=None, category=StatsCategory.AMOUNT_EARNED)] == 15
-    assert player.stats.stats[StatsKey(count=None, category=StatsCategory.HANDS_WON)] == 1
+    assert player.stats.stats[StatsKey(count=None, category=StatsCategory.NET_WINNINGS)] == 15
+    assert player.stats.stats[StatsKey(count=None, category=StatsCategory.PLAYER_HANDS_WON)] == 1
 
 
 def test_play_round_dealer_blackjack(player, dealer, shoe, rules):
@@ -993,9 +1016,11 @@ def test_play_round_dealer_blackjack(player, dealer, shoe, rules):
     assert shoe.seen_cards['A'] == 2
     assert shoe.seen_cards['10-J-Q-K'] == 1
     assert shoe.seen_cards['9'] == 1
+    assert player.stats.stats[StatsKey(count=None, category=StatsCategory.TOTAL_ROUNDS_PLAYED)] == 1
+    assert player.stats.stats[StatsKey(count=None, category=StatsCategory.TOTAL_HANDS_PLAYED)] == 1
     assert player.stats.stats[StatsKey(count=None, category=StatsCategory.AMOUNT_BET)] == 10
-    assert player.stats.stats[StatsKey(count=None, category=StatsCategory.AMOUNT_EARNED)] == -10
-    assert player.stats.stats[StatsKey(count=None, category=StatsCategory.HANDS_LOST)] == 1
+    assert player.stats.stats[StatsKey(count=None, category=StatsCategory.NET_WINNINGS)] == -10
+    assert player.stats.stats[StatsKey(count=None, category=StatsCategory.PLAYER_HANDS_LOST)] == 1
 
 
 def test_play_round_player_dealer_blackjack(player, dealer, shoe, rules):
@@ -1011,9 +1036,11 @@ def test_play_round_player_dealer_blackjack(player, dealer, shoe, rules):
     play_round(table=table, dealer=dealer, shoe=shoe, rules=rules, playing_strategy=playing_strategy)
     assert shoe.seen_cards['A'] == 2
     assert shoe.seen_cards['10-J-Q-K'] == 2
+    assert player.stats.stats[StatsKey(count=None, category=StatsCategory.TOTAL_ROUNDS_PLAYED)] == 1
+    assert player.stats.stats[StatsKey(count=None, category=StatsCategory.TOTAL_HANDS_PLAYED)] == 1
     assert player.stats.stats[StatsKey(count=None, category=StatsCategory.AMOUNT_BET)] == 10
-    assert player.stats.stats[StatsKey(count=None, category=StatsCategory.AMOUNT_EARNED)] == 0
-    assert player.stats.stats[StatsKey(count=None, category=StatsCategory.HANDS_PUSHED)] == 1
+    assert player.stats.stats[StatsKey(count=None, category=StatsCategory.NET_WINNINGS)] == 0
+    assert player.stats.stats[StatsKey(count=None, category=StatsCategory.PLAYER_HANDS_PUSHED)] == 1
 
 
 @pytest.mark.parametrize(

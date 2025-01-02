@@ -1,4 +1,4 @@
-from collections import defaultdict
+from collections import defaultdict, OrderedDict
 from dataclasses import dataclass
 from blackjack.enums import StatsCategory
 
@@ -24,10 +24,10 @@ class Stats:
 
     def add_hand(self, count: float | int | None, category: StatsCategory) -> None:
         self._stats[StatsKey(count=count, category=category)] += 1
-        self._stats[StatsKey(count=count, category=StatsCategory.HANDS_PLAYED)] += 1
+        self._stats[StatsKey(count=count, category=StatsCategory.TOTAL_HANDS_PLAYED)] += 1
 
-    def update_amount(self, count: float | int | None, category: StatsCategory, increment: float | int) -> None:
-        self._stats[StatsKey(count=count, category=category)] += increment
+    def add_value(self, count: float | int | None, category: StatsCategory, value: float | int = 1) -> None:
+        self._stats[StatsKey(count=count, category=category)] += value
 
     def _compute_totals(self) -> defaultdict[str, float]:
         totals: defaultdict[str, float] = defaultdict(float)
@@ -38,35 +38,33 @@ class Stats:
     def _get_total(self, totals: defaultdict[str, float], *categories: StatsCategory) -> float:
         return sum(totals.get(category.value, 0) for category in categories)
 
-    def _format_currency(self, category: str, amount: float | int) -> str:
-        formatted_amount = f'${abs(amount):,.2f}\n'
-        sign = '-' if amount < 0 else ''
-        return f'{category}: {sign}{formatted_amount}'
-
-    @property
-    def summary(self) -> str:
+    def summary(self, string: bool = True) -> OrderedDict[str, float | int] | str:
         totals = self._compute_totals()
-        result = []
+        result = OrderedDict()
+
+        monetary_stats = {
+            StatsCategory.INSURANCE_AMOUNT_BET,
+            StatsCategory.INSURANCE_NET_WINNINGS,
+            StatsCategory.AMOUNT_BET,
+            StatsCategory.NET_WINNINGS,
+            StatsCategory.TOTAL_AMOUNT_BET,
+            StatsCategory.TOTAL_NET_WINNINGS
+        }
 
         for category in StatsCategory:
-            value = totals.get(category.value, 0)
-            if category in {
-                StatsCategory.AMOUNT_EARNED,
-                StatsCategory.AMOUNT_BET,
-                StatsCategory.INSURANCE_AMOUNT_EARNED,
-                StatsCategory.INSURANCE_AMOUNT_BET
-            }:
-                result.append(self._format_currency(category=category.value, amount=value))
+            if category in monetary_stats:
+                result[category.value] = totals.get(category.value, 0)
             else:
-                result.append(f'{category.value}: {int(value):,}\n')
+                result[category.value] = int(totals.get(category.value, 0))
 
-        total_earned = self._get_total(totals, StatsCategory.AMOUNT_EARNED, StatsCategory.INSURANCE_AMOUNT_EARNED)
-        total_bet = self._get_total(totals, StatsCategory.AMOUNT_BET, StatsCategory.INSURANCE_AMOUNT_BET)
+        result[StatsCategory.TOTAL_AMOUNT_BET.value] = self._get_total(totals, StatsCategory.AMOUNT_BET, StatsCategory.INSURANCE_AMOUNT_BET)
+        result[StatsCategory.TOTAL_NET_WINNINGS.value] = self._get_total(totals, StatsCategory.NET_WINNINGS, StatsCategory.INSURANCE_NET_WINNINGS)
 
-        result.append(self._format_currency(category='TOTAL AMOUNT EARNED', amount=total_earned))
-        result.append(self._format_currency(category='TOTAL AMOUNT BET', amount=total_bet))
-
-        if total_bet > 0:
-            element_of_risk = (total_earned / total_bet) * 100
-            result.append(f'ELEMENT OF RISK: {element_of_risk:.2f}%\n')
-        return ''.join(result)
+        if string:
+            monetary_stats_values = {stat.value for stat in monetary_stats}
+            return '\n'.join(
+                (f'{key}: ${value:,.2f}' if value >= 0 else f'{key}: -${abs(value):,.2f}')
+                if key in monetary_stats_values else f'{key}: {value:,}'
+                for key, value in result.items()
+            )
+        return result

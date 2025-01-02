@@ -145,12 +145,17 @@ def playing_strategy_s17():
 @pytest.fixture
 def stats():
     stats = Stats()
-    stats.add_hand(count=1, category=StatsCategory.HANDS_LOST)
-    stats.update_amount(count=1, category=StatsCategory.AMOUNT_BET, increment=10)
-    stats.update_amount(count=1, category=StatsCategory.AMOUNT_EARNED, increment=-10)
-    stats.add_hand(count=None, category=StatsCategory.HANDS_LOST)
-    stats.update_amount(count=None, category=StatsCategory.AMOUNT_BET, increment=20.425)
-    stats.update_amount(count=None, category=StatsCategory.AMOUNT_EARNED, increment=-20.425)
+    stats.add_value(count=1, category=StatsCategory.TOTAL_ROUNDS_PLAYED)
+    stats.add_hand(count=1, category=StatsCategory.PLAYER_HANDS_LOST)
+    stats.add_value(count=1, category=StatsCategory.DEALER_BLACKJACKS)
+    stats.add_value(count=1, category=StatsCategory.AMOUNT_BET, value=25)
+    stats.add_value(count=1, category=StatsCategory.NET_WINNINGS, value=-25)
+    stats.add_value(count=2, category=StatsCategory.INSURANCE_AMOUNT_BET, value=12.5)
+    stats.add_value(count=2, category=StatsCategory.INSURANCE_NET_WINNINGS, value=25)
+    stats.add_value(count=3, category=StatsCategory.TOTAL_ROUNDS_PLAYED)
+    stats.add_hand(count=3, category=StatsCategory.PLAYER_HANDS_LOST)
+    stats.add_value(count=3, category=StatsCategory.AMOUNT_BET, value=10)
+    stats.add_value(count=3, category=StatsCategory.NET_WINNINGS, value=-10)
     return stats
 
 
