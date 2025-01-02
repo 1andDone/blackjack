@@ -95,7 +95,7 @@ blackjack.simulate(penetration=0.75, number_of_shoes=50000, shoe_size=8, seed=1)
 
 ## Results
 
-Summary statistics are available as either a string or dictionary after each run by using each player's `stats` method.
+Summary statistics are available after each run by using each player's `stats` method.
 
 ```python
 print(player3.stats.summary(string=True))
