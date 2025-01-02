@@ -1,40 +1,30 @@
 import pytest
-from blackjack import CardCounter, BackCounter, CountingStrategy
-from blackjack import Player
+from blackjack.back_counter import BackCounter
+from blackjack.card_counter import CardCounter
 from blackjack.dealer import Dealer
+from blackjack.enums import CardCountingSystem
+from blackjack.enums import StatsCategory
 from blackjack.hand import Hand
-from blackjack.house_rules import HouseRules
-from blackjack.shoe import Shoe
-from blackjack.table import Table
+from blackjack.player import Player
 from blackjack.playing_strategy import PlayingStrategy
-from blackjack.simulation_stats import StatsCategory, SimulationStats
+from blackjack.rules import Rules
+from blackjack.shoe import Shoe
+from blackjack.stats import Stats
+from blackjack.table import Table
 
 
 @pytest.fixture
-def setup_rules():
-    return HouseRules(
-        min_bet=10,
-        max_bet=500,
-        s17=True,
-        blackjack_payout=1.5,
-        max_hands=4,
-        double_down=True,
-        split_unlike_tens=False,
-        double_after_split=False,
-        resplit_aces=False,
-        insurance=True,
-        late_surrender=True,
-        dealer_shows_hole_card=False
-    )
+def rules():
+    return Rules(min_bet=10, max_bet=500)
 
 
 @pytest.fixture
-def setup_shoe():
+def shoe():
     return Shoe(shoe_size=1)
 
 
 @pytest.fixture
-def setup_hand_with_ace():
+def hand_with_ace():
     hand = Hand()
     hand.add_card(card='A')
     hand.add_card(card='6')
@@ -42,7 +32,7 @@ def setup_hand_with_ace():
 
 
 @pytest.fixture
-def setup_hand_without_ace():
+def hand_without_ace():
     hand = Hand()
     hand.add_card(card='J')
     hand.add_card(card='8')
@@ -50,7 +40,7 @@ def setup_hand_without_ace():
 
 
 @pytest.fixture
-def setup_hand_split():
+def hand_pair():
     hand = Hand()
     hand.add_card(card='7')
     hand.add_card(card='7')
@@ -58,7 +48,7 @@ def setup_hand_split():
 
 
 @pytest.fixture
-def setup_hand_blackjack():
+def hand_blackjack():
     hand = Hand()
     hand.add_card(card='K')
     hand.add_card(card='A')
@@ -66,20 +56,19 @@ def setup_hand_blackjack():
 
 
 @pytest.fixture
-def setup_dealer():
+def dealer():
     return Dealer()
 
 
 @pytest.fixture
-def setup_dealer_with_hand():
-    dealer = Dealer()
+def dealer_with_hand(dealer):
     dealer.hand.add_card(card='8')
     dealer.hand.add_card(card='6')
     return dealer
 
 
 @pytest.fixture
-def setup_player():
+def player():
     return Player(
         name='Player 1',
         min_bet=10,
@@ -88,19 +77,12 @@ def setup_player():
 
 
 @pytest.fixture
-def setup_player_with_hand(setup_player):
-    setup_player.first_hand.add_card(card='8')
-    setup_player.first_hand.add_card(card='6')
-    return setup_player
-
-
-@pytest.fixture
-def setup_card_counter():
+def card_counter_balanced():
     return CardCounter(
         name='Player 2',
         bankroll=1000,
         min_bet=10,
-        counting_strategy=CountingStrategy.HI_LO,
+        card_counting_system=CardCountingSystem.HI_LO,
         bet_ramp={
             1: 15,
             2: 20,
@@ -113,12 +95,12 @@ def setup_card_counter():
 
 
 @pytest.fixture
-def setup_card_counter_unbalanced():
+def card_counter_unbalanced():
     return CardCounter(
         name='Player 2',
         bankroll=1000,
         min_bet=10,
-        counting_strategy=CountingStrategy.KO,
+        card_counting_system=CardCountingSystem.KO,
         bet_ramp={
             1: 15,
             2: 20,
@@ -131,12 +113,12 @@ def setup_card_counter_unbalanced():
 
 
 @pytest.fixture
-def setup_back_counter(setup_card_counter):
+def back_counter():
     return BackCounter(
         name='Player 3',
         bankroll=1000,
         min_bet=10,
-        counting_strategy=CountingStrategy.HI_LO,
+        card_counting_system=CardCountingSystem.HI_LO,
         bet_ramp={
             1: 15,
             2: 20,
@@ -145,34 +127,38 @@ def setup_back_counter(setup_card_counter):
             5: 70
         },
         insurance=None,
-        partner=setup_card_counter,
         entry_point=3,
         exit_point=0
     )
 
 
 @pytest.fixture
-def setup_playing_strategy_h17():
+def playing_strategy_h17():
     return PlayingStrategy(s17=False)
 
 
 @pytest.fixture
-def setup_playing_strategy_s17():
+def playing_strategy_s17():
     return PlayingStrategy(s17=True)
 
 
 @pytest.fixture
-def setup_simulation_stats():
-    s = SimulationStats()
-    s.add_hand(count=1, category=StatsCategory.HANDS_LOST)
-    s.add_amount(count=1, category=StatsCategory.AMOUNT_WAGERED, increment=10)
-    s.add_amount(count=1, category=StatsCategory.AMOUNT_EARNED, increment=-10)
-    s.add_hand(count=None, category=StatsCategory.HANDS_LOST)
-    s.add_amount(count=None, category=StatsCategory.AMOUNT_WAGERED, increment=20.425)
-    s.add_amount(count=None, category=StatsCategory.AMOUNT_EARNED, increment=-20.425)
-    return s
+def stats():
+    stats = Stats()
+    stats.add_value(count=1, category=StatsCategory.TOTAL_ROUNDS_PLAYED)
+    stats.add_hand(count=1, category=StatsCategory.PLAYER_HANDS_LOST)
+    stats.add_value(count=1, category=StatsCategory.DEALER_BLACKJACKS)
+    stats.add_value(count=1, category=StatsCategory.AMOUNT_BET, value=25)
+    stats.add_value(count=1, category=StatsCategory.NET_WINNINGS, value=-25)
+    stats.add_value(count=2, category=StatsCategory.INSURANCE_AMOUNT_BET, value=12.5)
+    stats.add_value(count=2, category=StatsCategory.INSURANCE_NET_WINNINGS, value=25)
+    stats.add_value(count=3, category=StatsCategory.TOTAL_ROUNDS_PLAYED)
+    stats.add_hand(count=3, category=StatsCategory.PLAYER_HANDS_LOST)
+    stats.add_value(count=3, category=StatsCategory.AMOUNT_BET, value=10)
+    stats.add_value(count=3, category=StatsCategory.NET_WINNINGS, value=-10)
+    return stats
 
 
 @pytest.fixture
-def setup_table(setup_rules):
-    return Table(rules=setup_rules)
+def table(rules):
+    return Table(rules=rules)

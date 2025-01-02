@@ -11,7 +11,7 @@
 
 # player's hand (y-axis) vs. dealer up card (x-axis)
 
-h17_hard_array = [
+H17_HARD_ARRAY = [
     # 2      3       4       5       6       7       8       9      10       J       Q       K       A
     ['H',	'H',	'H',	'H',	'H',	'H',	'H',	'H',	'H',	'H',	'H',	'H',	'H'],   # 4
     ['H',	'H',	'H',	'H',	'H',	'H',	'H',	'H',	'H',	'H',	'H',	'H',	'H'],   # 5
@@ -34,8 +34,9 @@ h17_hard_array = [
 ]
 
 
-h17_soft_array = [
+H17_SOFT_ARRAY = [
     # 2      3       4       5       6       7       8       9      10       J       Q       K       A
+    ['H',	'H',	'H',	'H',	'Dh',	'H',	'H',	'H',	'H',	'H',	'H',	'H',	'H'],  # 12
     ['H',	'H',	'H',	'Dh',	'Dh',	'H',	'H',	'H',	'H',	'H',	'H',	'H',	'H'],  # 13
     ['H',	'H',	'H',	'Dh',	'Dh',	'H',	'H',	'H',	'H',	'H',	'H',	'H',	'H'],  # 14
     ['H',	'H',	'Dh',	'Dh',	'Dh',	'H',	'H',	'H',	'H',	'H',	'H',	'H',	'H'],  # 15
@@ -48,7 +49,7 @@ h17_soft_array = [
 ]
 
 
-h17_pair_array = [
+H17_PAIR_ARRAY = [
     # 2      3       4       5       6       7       8       9      10       J       Q       K       A
     ['Ph',	'Ph',	'P',	'P',	'P',	'P',	'H',	'H',	'H',	'H',	'H',	'H',	'H'],   # 2
     ['Ph',	'Ph',	'P',	'P',	'P',	'P',	'H',	'H',	'H',	'H',	'H',	'H',	'H'],   # 3
@@ -66,7 +67,7 @@ h17_pair_array = [
 ]
 
 
-s17_hard_array = [
+S17_HARD_ARRAY = [
     # 2      3       4       5       6       7       8       9      10       J       Q       K       A
     ['H',	'H',	'H',	'H',	'H',	'H',	'H',	'H',	'H',	'H',	'H',	'H',	'H'],   # 4
     ['H',	'H',	'H',	'H',	'H',	'H',	'H',	'H',	'H',	'H',	'H',	'H',	'H'],   # 5
@@ -89,8 +90,9 @@ s17_hard_array = [
 ]
 
 
-s17_soft_array = [
+S17_SOFT_ARRAY = [
     # 2      3       4       5       6       7       8       9      10       J       Q       K       A
+    ['H',	'H',	'H',	'H',	'Dh',	'H',	'H',	'H',	'H',	'H',	'H',	'H',	'H'],  # 12
     ['H',	'H',	'H',	'Dh',	'Dh',	'H',	'H',	'H',	'H',	'H',	'H',	'H',	'H'],  # 13
     ['H',	'H',	'H',	'Dh',	'Dh',	'H',	'H',	'H',	'H',	'H',	'H',	'H',	'H'],  # 14
     ['H',	'H',	'Dh',	'Dh',	'Dh',	'H',	'H',	'H',	'H',	'H',	'H',	'H',	'H'],  # 15
@@ -103,7 +105,7 @@ s17_soft_array = [
 ]
 
 
-s17_pair_array = [
+S17_PAIR_ARRAY = [
     # 2      3       4       5       6       7       8       9      10       J       Q       K       A
     ['Ph',	'Ph',	'P',	'P',	'P',	'P',	'H',	'H',	'H',	'H',	'H',	'H',	'H'],  # 2
     ['Ph',	'Ph',	'P',	'P',	'P',	'P',	'H',	'H',	'H',	'H',	'H',	'H',	'H'],  # 3
@@ -120,47 +122,31 @@ s17_pair_array = [
     ['P',	'P',	'P',	'P',	'P',	'P',	'P',	'P',	'P',	'P',	'P',	'P',	'P']   # A
 ]
 
-cards_list = ['2', '3', '4', '5', '6', '7', '8', '9', '10', 'J', 'Q', 'K', 'A']
 
-# dealer hits on soft 17
-h17_hard = {}
-for row_ix, i in enumerate(range(4, 22)):
-    h17_hard[i] = {}
-    for col_ix, j in enumerate(cards_list):
-        h17_hard[i][j] = h17_hard_array[row_ix][col_ix]
+CARDS: list[str] = ['2', '3', '4', '5', '6', '7', '8', '9', '10', 'J', 'Q', 'K', 'A']
 
 
-h17_soft = {}
-for row_ix, i in enumerate(range(13, 22)):
-    h17_soft[i] = {}
-    for col_ix, j in enumerate(cards_list):
-        h17_soft[i][j] = h17_soft_array[row_ix][col_ix]
+def _array_to_integer_dict(array: list[list[str]], rows: range) -> dict[int, dict[str, str]]:
+    d: dict[int, dict[str, str]] = {}
+    for row_ix, i in enumerate(rows):
+        d[i] = {}
+        for col_ix, j in enumerate(CARDS):
+            d[i][j] = array[row_ix][col_ix]
+    return d
 
 
-h17_pair = {}
-for row_ix, i in enumerate(cards_list):
-    h17_pair[i] = {}
-    for col_ix, j in enumerate(cards_list):
-        h17_pair[i][j] = h17_pair_array[row_ix][col_ix]
+def _array_to_string_dict(array: list[list[str]], rows: list[str]) -> dict[str, dict[str, str]]:
+    d: dict[str, dict[str, str]] = {}
+    for row_ix, i in enumerate(rows):
+        d[i] = {}
+        for col_ix, j in enumerate(CARDS):
+            d[i][j] = array[row_ix][col_ix]
+    return d
 
 
-# dealer stands on soft 17
-s17_hard = {}
-for row_ix, i in enumerate(range(4, 22)):
-    s17_hard[i] = {}
-    for col_ix, j in enumerate(cards_list):
-        s17_hard[i][j] = s17_hard_array[row_ix][col_ix]
-
-
-s17_soft = {}
-for row_ix, i in enumerate(range(13, 22)):
-    s17_soft[i] = {}
-    for col_ix, j in enumerate(cards_list):
-        s17_soft[i][j] = s17_soft_array[row_ix][col_ix]
-
-
-s17_pair = {}
-for row_ix, i in enumerate(cards_list):
-    s17_pair[i] = {}
-    for col_ix, j in enumerate(cards_list):
-        s17_pair[i][j] = s17_pair_array[row_ix][col_ix]
+H17_HARD_DICT: dict[int, dict[str, str]] = _array_to_integer_dict(array=H17_HARD_ARRAY, rows=range(4, 22))
+H17_SOFT_DICT: dict[int, dict[str, str]] = _array_to_integer_dict(array=H17_SOFT_ARRAY, rows=range(12, 22))
+H17_PAIR_DICT: dict[str, dict[str, str]] = _array_to_string_dict(array=H17_PAIR_ARRAY, rows=CARDS)
+S17_HARD_DICT: dict[int, dict[str, str]] = _array_to_integer_dict(array=S17_HARD_ARRAY, rows=range(4, 22))
+S17_SOFT_DICT: dict[int, dict[str, str]] = _array_to_integer_dict(array=S17_SOFT_ARRAY, rows=range(12, 22))
+S17_PAIR_DICT: dict[str, dict[str, str]] = _array_to_string_dict(array=S17_PAIR_ARRAY, rows=CARDS)
