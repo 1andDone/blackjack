@@ -40,7 +40,7 @@ class Stats:
 
     def summary(self, string: bool = True) -> dict[str, float | int] | str:
         totals = self._compute_totals()
-        result = dict()
+        result = {}
 
         monetary_stats = {
             StatsCategory.INSURANCE_AMOUNT_BET,
