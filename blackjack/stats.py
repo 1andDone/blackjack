@@ -1,4 +1,4 @@
-from collections import defaultdict, OrderedDict
+from collections import defaultdict
 from dataclasses import dataclass
 from blackjack.enums import StatsCategory
 
@@ -38,9 +38,9 @@ class Stats:
     def _get_total(self, totals: defaultdict[str, float], *categories: StatsCategory) -> float:
         return sum(totals.get(category.value, 0) for category in categories)
 
-    def summary(self, string: bool = True) -> OrderedDict[str, float | int] | str:
+    def summary(self, string: bool = True) -> dict[str, float | int] | str:
         totals = self._compute_totals()
-        result = OrderedDict()
+        result = dict()
 
         monetary_stats = {
             StatsCategory.INSURANCE_AMOUNT_BET,
