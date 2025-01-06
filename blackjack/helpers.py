@@ -217,7 +217,7 @@ def player_initial_decision(
     first_hand = player.get_first_hand()
     if rules.insurance and dealer.up_card == 'A' and not first_hand.is_blackjack:
         if isinstance(player, CardCounter) and player.insurance and insurance_count and \
-            insurance_count >= player.insurance:
+            insurance_count >= player.insurance and player.has_sufficient_bankroll(amount=first_hand.total_bet * 0.5):
             insurance_bet = first_hand.total_bet * 0.5
             place_insurance_bet(player=player, amount=insurance_bet, count=insurance_count)
             _update_insurance_stats(

@@ -134,6 +134,37 @@ def test_remove_back_counters(shoe, table, card_counter_balanced, back_counter):
     assert shoe.running_count(card_counting_system=back_counter.card_counting_system) == back_counter.exit_point
 
 
+def test_player_initial_decision_insufficient_bankroll_insurance(card_counter_unbalanced, dealer):
+    """
+    Tests the player_initial_decision function when the player wants to buy
+    insurance but has insufficient funds to purchase it.
+
+    """
+    rules = Rules(min_bet=10, max_bet=500, insurance=True)
+    playing_strategy = PlayingStrategy(s17=rules.s17)
+    card_counter_unbalanced.get_first_hand().add_card(card='5')
+    card_counter_unbalanced.get_first_hand().add_card(card='6')
+    card_counter_unbalanced.get_first_hand().add_to_total_bet(amount=10)
+    card_counter_unbalanced.adjust_bankroll(amount=-1000)
+    dealer.hand.add_card(card='K')
+    dealer.hand.add_card(card='A')
+    assert player_initial_decision(
+        player=card_counter_unbalanced,
+        count=3,
+        insurance_count=4,
+        rules=rules,
+        dealer=dealer,
+        playing_strategy=playing_strategy
+    ) is None
+    assert card_counter_unbalanced.get_first_hand().status == HandStatus.SETTLED
+    assert card_counter_unbalanced.bankroll == 0
+    assert card_counter_unbalanced.stats.stats[StatsKey(count=3, category=StatsCategory.PLAYER_HANDS_LOST)] == 1
+    assert card_counter_unbalanced.stats.stats[StatsKey(count=3, category=StatsCategory.DEALER_BLACKJACKS)] == 1
+    assert card_counter_unbalanced.stats.stats[StatsKey(count=3, category=StatsCategory.NET_WINNINGS)] == -10
+    assert card_counter_unbalanced.stats.stats[StatsKey(count=4, category=StatsCategory.INSURANCE_AMOUNT_BET)] == 0
+    assert card_counter_unbalanced.stats.stats[StatsKey(count=4, category=StatsCategory.INSURANCE_NET_WINNINGS)] == 0
+
+
 def test_player_initial_decision_insurance_dealer_blackjack(card_counter_unbalanced, dealer):
     """
     Tests the player_initial_decision function when the player buys
