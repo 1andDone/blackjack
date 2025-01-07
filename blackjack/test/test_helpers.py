@@ -294,7 +294,7 @@ def test_player_initial_decision_player_blackjack(player, dealer, rules):
         playing_strategy=playing_strategy
     ) is None
     assert player.get_first_hand().status == HandStatus.SETTLED
-    assert player.bankroll == 1050
+    assert player.bankroll == 1030
     assert player.stats.stats[StatsKey(count=1, category=StatsCategory.PLAYER_HANDS_WON)] == 1
     assert player.stats.stats[StatsKey(count=1, category=StatsCategory.PLAYER_BLACKJACKS)] == 1
     assert player.stats.stats[StatsKey(count=1, category=StatsCategory.NET_WINNINGS)] == 30
