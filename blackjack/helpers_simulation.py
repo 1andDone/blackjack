@@ -402,11 +402,7 @@ def play_round(
 
     for player in table.players:
         player.stats.add_value(count=count_dict[player], category=StatsCategory.TOTAL_ROUNDS_PLAYED)
-        place_bet(
-            player=player,
-            amount=placed_bet_dict[player],
-            count=count_dict[player]
-        )
+        place_bet(player=player, amount=placed_bet_dict[player], count=count_dict[player])
 
     players = table.players
     if players:

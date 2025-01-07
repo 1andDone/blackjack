@@ -1,13 +1,13 @@
 import pytest
 from blackjack.enums import StatsCategory
 from blackjack.hand import HandStatus
-from blackjack.helpers import get_count, get_insurance_count
-from blackjack.helpers import get_placed_bet, place_bet
-from blackjack.helpers import place_insurance_bet, initialize_hands
-from blackjack.helpers import add_back_counters, remove_back_counters
-from blackjack.helpers import player_initial_decision, player_plays_hands
-from blackjack.helpers import dealer_turn, dealer_plays_hand, compare_hands
-from blackjack.helpers import clear_hands, play_round
+from blackjack.helpers_simulation import get_count, get_insurance_count
+from blackjack.helpers_simulation import get_placed_bet, place_bet
+from blackjack.helpers_simulation import place_insurance_bet, initialize_hands
+from blackjack.helpers_simulation import add_back_counters, remove_back_counters
+from blackjack.helpers_simulation import player_initial_decision, player_plays_hands
+from blackjack.helpers_simulation import dealer_turn, dealer_plays_hand, compare_hands
+from blackjack.helpers_simulation import clear_hands, play_round
 from blackjack.player import Player
 from blackjack.playing_strategy import PlayingStrategy
 from blackjack.shoe import Shoe
