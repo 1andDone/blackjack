@@ -1,10 +1,14 @@
 # blackjack
 
-Fully-customizable blackjack simulation.
+A fully customizable blackjack simulation and training tool.
 
 ![Blackjack](/images/blackjack.jpg?raw=true)
 
-## Setup
+## Overview
+
+This package provides a flexible environment for simulating and training various Blackjack strategies, including card counting and back-counting techniques. Whether you want to practice basic strategy or experiment with advanced betting systems, this tool makes it easy to configure the game to your preferred rules and play style.
+
+## Installation
 
 Clone the repository and install locally via pip.
 
@@ -12,9 +16,11 @@ Clone the repository and install locally via pip.
 pip install .
 ```
 
-## Usage
+## Getting Started
 
-Begin by setting up the `Blackjack` class object with certain house rules.
+### Setting up the Game
+
+Create a `Blackjack` instance and configure the house rules to your liking.
 
 ```python
 from blackjack.blackjack import Blackjack
@@ -34,25 +40,34 @@ blackjack = Blackjack(
 )
 ```
 
-Next, create each player that will be added to the table. There are several different
-card counting systems (both balanced and unbalanced) available for each `CardCounter`
-and `BackCounter` class instance. `Player` class instances do not count cards.
+### Creating Players
 
+You can add different types of players to the game, each with unique behaviors and betting strategies.
+
+#### Player
+
+A `Player` uses basic strategy for every decision and always bets a fixed amount.
 
 ```python
-from blackjack.back_counter import BackCounter
-from blackjack.card_counter import CardCounter
-from blackjack.enums import CardCountingSystem
 from blackjack.player import Player
 
-player1 = Player(
-    name='Player 1',
+player = Player(
+    name='Player',
     bankroll=1000000,
     min_bet=10
 )
+```
 
-player2 = CardCounter(
-    name='Player 2',
+#### Card Counter
+
+A `CardCounter` uses basic strategy in conjunction with a chosen card counting system. Bets vary based on the current running/true count.
+
+```python
+from blackjack.card_counter import CardCounter
+from blackjack.enums import CardCountingSystem
+
+card_counter = CardCounter(
+    name='Card Counter',
     bankroll=50000,
     min_bet=10,
     card_counting_system=CardCountingSystem.HI_LO,
@@ -63,11 +78,21 @@ player2 = CardCounter(
         4: 80,
         5: 150
     },
-    insurance=None
+    insurance=None,
+    training=True
 )
+```
 
-player3 = BackCounter(
-    name='Player 3',
+#### Back Counter
+
+A `BackCounter` is similar to a `CardCounter`, but they may join the table when the running/true count is favorable or leave it when it becomes unfavorable.
+
+```python
+from blackjack.back_counter import BackCounter
+from blackjack.enums import CardCountingSystem
+
+back_counter = BackCounter(
+    name='Back Counter',
     bankroll=15000,
     min_bet=10,
     card_counting_system=CardCountingSystem.HI_LO,
@@ -80,26 +105,50 @@ player3 = BackCounter(
     },
     insurance=3,
     entry_point=2,
-    exit_point=1
+    exit_point=1,
+    training=False
 )
 ```
 
-Finally, add all players and simulate.
+### Adding Players to the Table
+
+Player's are dealt cards in the order that they are added.
 
 ```python
-blackjack.add_player(player=player1)
-blackjack.add_player(player=player2)
-blackjack.add_player(player=player3)
+blackjack.add_player(player=player)
+blackjack.add_player(player=card_counter)
+blackjack.add_player(player=back_counter)
+```
+
+### Modes
+
+#### Simulation Mode
+
+Simulate a large number of shoes:
+
+```python
 blackjack.simulate(penetration=0.75, number_of_shoes=50000, shoe_size=8, seed=1)
 ```
 
-## Results
+#### Training Mode
 
-Summary statistics are available after each run by using each player's `stats` method.
+Play individual rounds for practice:
 
 ```python
-print(player3.stats.summary(string=True))
+blackjack.training(penetration=0.65, shoe_size=6, seed=3)
 ```
+
+> **_NOTE_:** To enable training features, set `training=True` on either a `CardCounter` or `BackCounter` instance.
+
+### Viewing Results
+
+After running either mode, each player’s performance can be reviewed:
+
+```python
+print(back_counter.stats.summary(string=True))
+```
+
+Example summary:
 
 ```
 TOTAL ROUNDS PLAYED: 267,773
@@ -122,5 +171,5 @@ TOTAL NET WINNINGS: $37,475.00
 If desired, the statistics at each count can be accessed as well.
 
 ```python
-player3.stats.stats
+back_counter.stats.stats
 ```
