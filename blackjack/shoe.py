@@ -69,4 +69,5 @@ class Shoe:
     def true_count(self, card_counting_system: CardCountingSystem) -> float | int:
         if card_counting_system == CardCountingSystem.KO:
             raise ValueError('"true_count" is only applicable for balanced card counting systems.')
-        return round(self.running_count(card_counting_system=card_counting_system) / self.remaining_decks, 0)
+        result = round(self.running_count(card_counting_system=card_counting_system) / self.remaining_decks, 0)
+        return 0 if result == 0 else result

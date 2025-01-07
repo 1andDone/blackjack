@@ -121,6 +121,18 @@ def test_true_count():
     assert shoe.true_count(card_counting_system=CardCountingSystem.HI_OPT_II) == -21
 
 
+def test_true_count_zero():
+    """Tests the true_count method within the Shoe class when it is zero."""
+    shoe = Shoe(shoe_size=8)
+    # burn 1 card as a visible 'K'
+    # roughly 8 decks remain
+    shoe.burn_card(seen=False)
+    shoe.add_to_seen_cards(card='K')
+    assert shoe.running_count(card_counting_system=CardCountingSystem.HI_LO) < 0
+    assert shoe.remaining_decks > 0
+    assert shoe.true_count(card_counting_system=CardCountingSystem.HI_LO) == 0
+
+
 def test_true_count_unbalanced_counting_system(shoe):
     """
     Tests the true_count method within the Shoe class
