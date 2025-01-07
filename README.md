@@ -138,7 +138,7 @@ Play individual rounds for practice:
 blackjack.training(penetration=0.65, shoe_size=6, seed=3)
 ```
 
-> **_NOTE_:** To enable training features, set `training=True` on either a `CardCounter` or `BackCounter` instance.
+> **_NOTE_:** To enable training mode, one `CardCounter` or `BackCounter` instance is required to have `training=True`.
 
 ### Viewing Results
 
