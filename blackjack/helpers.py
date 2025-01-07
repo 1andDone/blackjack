@@ -98,7 +98,7 @@ def _update_blackjack_stats(
             player.stats.add_value(count=count, category=StatsCategory.PLAYER_BLACKJACKS)
             player.stats.add_value(count=count, category=StatsCategory.DEALER_BLACKJACKS)
         else:
-            player.adjust_bankroll(amount=placed_bet * (1 + blackjack_payout))
+            player.adjust_bankroll(amount=placed_bet * blackjack_payout)
             player.stats.add_hand(count=count, category=StatsCategory.PLAYER_HANDS_WON)
             player.stats.add_value(count=count, category=StatsCategory.PLAYER_BLACKJACKS)
             player.stats.add_value(
