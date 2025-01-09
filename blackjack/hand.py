@@ -39,6 +39,18 @@ class Hand:
         self._total_bet: float | int = 0
         self._side_bet: float | int = 0
 
+        # caching attributes
+        self._total_cache: int | None = None
+        self._hard_total_cache: int | None = None
+        self._is_soft_cache: bool | None = None
+        self._is_blackjack_cache: bool | None = None
+
+    def _invalidate_cache(self):
+        self._total_cache = None
+        self._hard_total_cache = None
+        self._is_soft_cache = None
+        self._is_blackjack_cache = None
+
     @property
     def cards(self) -> list[str]:
         return self._cards
@@ -67,27 +79,30 @@ class Hand:
 
     def add_card(self, card: str) -> None:
         self._cards.append(card)
+        self._invalidate_cache()
 
     @property
     def number_of_cards(self) -> int:
         return len(self._cards)
 
     def _calculate_hard_total(self) -> int:
-        return sum(HARD_CARD_VALUE[card] for card in self._cards)
+        if self._hard_total_cache is None:
+            self._hard_total_cache = sum(HARD_CARD_VALUE[card] for card in self._cards)
+        return self._hard_total_cache
 
     @property
     def total(self) -> int:
-        total = self._calculate_hard_total()
-        if 'A' in self._cards and total < 12:
-            total += 10
-        return total
+        if self._total_cache is None:
+            hard_total = self._calculate_hard_total()
+            self._total_cache = hard_total + 10 if 'A' in self._cards and hard_total < 12 else hard_total
+        return self._total_cache
 
     @property
     def is_soft(self) -> bool:
-        if 'A' in self._cards:
-            total = self._calculate_hard_total()
-            return total < 12
-        return False
+        if self._is_soft_cache is None:
+            hard_total = self._calculate_hard_total()
+            self._is_soft_cache = 'A' in self._cards and hard_total < 12
+        return self._is_soft_cache
 
     @property
     def is_busted(self) -> bool:
@@ -110,5 +125,7 @@ class Hand:
 
     @property
     def is_blackjack(self) -> bool:
-        return self.number_of_cards == 2 and self.total == 21 and \
-            not self._was_split and not self._is_split
+        if self._is_blackjack_cache is None:
+            self._is_blackjack_cache = self.number_of_cards == 2 and self.total == 21 and \
+                not self._was_split and not self._is_split
+        return self._is_blackjack_cache

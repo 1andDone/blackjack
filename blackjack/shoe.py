@@ -39,10 +39,8 @@ class Shoe:
         self.burn_card()
 
     def add_to_seen_cards(self, card: str) -> None:
-        if card in {'10', 'J', 'Q', 'K'}:
-            self._seen_cards['10-J-Q-K'] += 1
-        else:
-            self._seen_cards[card] += 1
+        key = '10-J-Q-K' if card in {'10', 'J', 'Q', 'K'} else card
+        self._seen_cards[key] += 1
 
     @property
     def seen_cards(self) -> dict[str, int]:
