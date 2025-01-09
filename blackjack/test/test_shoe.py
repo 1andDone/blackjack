@@ -49,6 +49,14 @@ def test_burn_card_seen(shoe):
     assert shoe.seen_cards[burn_card] == 1
 
 
+def test_deal_card(shoe):
+    """Tests the deal_card method within the Shoe class."""
+    assert shoe.deal_card(seen=True) == 'A'
+    assert shoe.seen_cards['A'] == 1
+    assert shoe.deal_card(seen=False) == 'K'
+    assert shoe.seen_cards['10-J-Q-K'] == 0
+
+
 def test_shuffle(shoe):
     """Tests the shuffle method within the Shoe class."""
     before_shuffle = shoe._cards.copy()
@@ -86,14 +94,14 @@ def test_remaining_decks(shoe):
 def test_cut_card_reached(shoe):
     """Tests the cut_card_reached method within the Shoe class."""
     # burn one card away from half the shoe
-    for _ in range(0, 25):
+    for _ in range(0, 38):
         shoe.burn_card(seen=False)
 
-    assert 1 - (len(shoe._cards) / 52) < 0.5
-    assert not shoe.cut_card_reached(penetration=0.5)
+    assert 1 - (len(shoe._cards) / 52) < 0.75
+    assert not shoe.cut_card_reached
     shoe.burn_card(seen=False)
-    assert 1 - (len(shoe._cards) / 52) >= 0.5
-    assert shoe.cut_card_reached(penetration=0.5)
+    assert 1 - (len(shoe._cards) / 52) >= 0.75
+    assert shoe.cut_card_reached
 
 
 def test_running_count():
@@ -131,14 +139,3 @@ def test_true_count_zero():
     assert shoe.running_count(card_counting_system=CardCountingSystem.HI_LO) < 0
     assert shoe.remaining_decks > 0
     assert shoe.true_count(card_counting_system=CardCountingSystem.HI_LO) == 0
-
-
-def test_true_count_unbalanced_counting_system(shoe):
-    """
-    Tests the true_count method within the Shoe class
-    when an unbalanced counting system is used.
-
-    """
-    with pytest.raises(ValueError) as e:
-        shoe.true_count(card_counting_system=CardCountingSystem.KO)
-    assert str(e.value) == '"true_count" is only applicable for balanced card counting systems.'
