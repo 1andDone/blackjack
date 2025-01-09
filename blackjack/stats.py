@@ -1,12 +1,5 @@
 from collections import defaultdict
-from dataclasses import dataclass
 from blackjack.enums import StatsCategory
-
-
-@dataclass(frozen=True)
-class StatsKey:
-    count : float | int | None
-    category : StatsCategory
 
 
 class Stats:
@@ -23,16 +16,16 @@ class Stats:
         return self._stats
 
     def add_hand(self, count: float | int | None, category: StatsCategory) -> None:
-        self._stats[StatsKey(count=count, category=category)] += 1
-        self._stats[StatsKey(count=count, category=StatsCategory.TOTAL_HANDS_PLAYED)] += 1
+        self._stats[(count, category)] += 1
+        self._stats[(count, StatsCategory.TOTAL_HANDS_PLAYED)] += 1
 
     def add_value(self, count: float | int | None, category: StatsCategory, value: float | int = 1) -> None:
-        self._stats[StatsKey(count=count, category=category)] += value
+        self._stats[(count, category)] += value
 
     def _compute_totals(self) -> defaultdict[str, float]:
         totals: defaultdict[str, float] = defaultdict(float)
         for stats_key, value in self._stats.items():
-            totals[stats_key.category.value] += value
+            totals[stats_key[1].value] += value
         return totals
 
     def _get_total(self, totals: defaultdict[str, float], *categories: StatsCategory) -> float:
