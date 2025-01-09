@@ -12,15 +12,8 @@ class Stats:
         self._stats = defaultdict(float)
 
     @property
-    def stats(self) -> defaultdict[str, float]:
+    def stats(self) -> defaultdict[tuple[float | int | None, StatsCategory], float]:
         return self._stats
-
-    def add_hand(self, count: float | int | None, category: StatsCategory) -> None:
-        self._stats[(count, category)] += 1
-        self._stats[(count, StatsCategory.TOTAL_HANDS_PLAYED)] += 1
-
-    def add_value(self, count: float | int | None, category: StatsCategory, value: float | int = 1) -> None:
-        self._stats[(count, category)] += value
 
     def _compute_totals(self) -> defaultdict[str, float]:
         totals: defaultdict[str, float] = defaultdict(float)

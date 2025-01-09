@@ -2,23 +2,6 @@ from blackjack.enums import StatsCategory
 from blackjack.stats import Stats
 
 
-def test_add_hand():
-    """Tests the add_hand method within the Stats class."""
-    stats = Stats()
-    stats.add_hand(count=1, category=StatsCategory.PLAYER_HANDS_WON)
-    assert stats.stats[(1, StatsCategory.PLAYER_HANDS_WON)] == 1
-    assert stats.stats[(1, StatsCategory.TOTAL_HANDS_PLAYED)] == 1
-
-
-def test_add_value(stats):
-    """Tests the add_value method within the Stats class."""
-    stats = Stats()
-    stats.add_value(count=1, category=StatsCategory.NET_WINNINGS, value=5.5)
-    assert stats.stats[(1, StatsCategory.NET_WINNINGS)] == 5.5
-    stats.add_value(count=1, category=StatsCategory.PLAYER_SURRENDERS)
-    assert stats.stats[(1, StatsCategory.PLAYER_SURRENDERS)] == 1
-
-
 def test_summary(stats):
     """Tests the summary method within the Stats class."""
     assert stats.summary(string=False) == {
