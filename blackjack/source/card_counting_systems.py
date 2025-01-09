@@ -117,11 +117,5 @@ COUNT_VALUES: dict[CardCountingSystem, dict[str, Any]] = {
 # unbalanced card counting systems (KO) begin at a running count equal to -4 * (shoe size - 1)
 # the additional (shoe size - 1) factor for KO is added when used
 INITIAL_COUNTS = {
-    CardCountingSystem.HI_LO: 0,
-    CardCountingSystem.HI_OPT_I: 0,
-    CardCountingSystem.HI_OPT_II: 0,
-    CardCountingSystem.OMEGA_II: 0,
-    CardCountingSystem.HALVES: 0,
-    CardCountingSystem.ZEN_COUNT: 0,
     CardCountingSystem.KO: -4
 }
