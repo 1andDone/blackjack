@@ -32,6 +32,7 @@ class BackCounter(CardCounter):
 
         self._entry_point = entry_point
         self._exit_point = exit_point
+        self._is_seated_at_table = False
 
     @property
     def entry_point(self) -> float | int:
@@ -46,3 +47,11 @@ class BackCounter(CardCounter):
 
     def can_exit(self, count: float | int) -> bool:
         return count <= self._exit_point
+
+    @property
+    def is_seated_at_table(self) -> bool:
+        return self._is_seated_at_table
+
+    @is_seated_at_table.setter
+    def is_seated_at_table(self, seated: bool) -> None:
+        self._is_seated_at_table = seated
