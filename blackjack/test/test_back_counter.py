@@ -101,11 +101,11 @@ def test_can_exit(back_counter, test_count, expected):
     assert back_counter.can_exit(count=test_count) is expected
 
 
-def test_is_seated_at_table(back_counter):
+def test_is_seated(back_counter):
     """
-    Tests the is_seated_at_table getter and setter methods
+    Tests the is_seated getter and setter methods
     within the BackCounter class.
     
     """
-    back_counter.is_seated_at_table = True
-    assert back_counter.is_seated_at_table is True
+    back_counter.is_seated = True
+    assert back_counter.is_seated is True
