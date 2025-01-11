@@ -163,7 +163,7 @@ def test_add_back_counter(table, back_counter):
     table.add_back_counter(back_counter=back_counter)
     assert back_counter in table.players
     assert back_counter not in table.observers
-    assert back_counter.is_seated_at_table is True
+    assert back_counter.is_seated is True
 
 
 def test_add_back_counter_non_back_counter(table, player):
@@ -186,7 +186,7 @@ def test_remove_back_counter(table, back_counter):
     table.remove_back_counter(back_counter=back_counter)
     assert back_counter not in table.players
     assert back_counter in table.observers
-    assert back_counter.is_seated_at_table is False
+    assert back_counter.is_seated is False
 
 
 def test_remove_back_counter_non_back_counter(table, player):
