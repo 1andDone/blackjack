@@ -115,7 +115,7 @@ class Blackjack:
         while not shoe.cut_card_reached and self._table.players:
             play_round(table=self._table, dealer=self._dealer, rules=self._rules, shoe=shoe, playing_strategy=self._playing_strategy)
 
-    def simulate(self, penetration: float, number_of_shoes: int, shoe_size: int, seed: int | None = None, reset_bankroll: bool = False) -> None:
+    def simulate(self, penetration: float, number_of_shoes: int, shoe_size: int, seed: int | None = None) -> None:
         if seed:
             random.seed(seed)
 
@@ -123,6 +123,3 @@ class Blackjack:
             if not self._table.players:
                 break
             self._play_shoe(penetration=penetration, shoe_size=shoe_size)
-            if reset_bankroll:
-                for player in self._table.players + self._table.observers:
-                    player.reset_bankroll()
