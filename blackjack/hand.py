@@ -37,8 +37,6 @@ class Hand:
         self._is_split = False
         self._status = HandStatus.IN_PLAY
         self._total_bet: float | int = 0
-
-        # caching attributes
         self._total_cache: int | None = None
         self._hard_total_cache: int | None = None
         self._is_soft_cache: bool | None = None
@@ -118,6 +116,6 @@ class Hand:
     @property
     def is_blackjack(self) -> bool:
         if self._is_blackjack_cache is None:
-            self._is_blackjack_cache = self.number_of_cards == 2 and self.total == 21 and \
+            self._is_blackjack_cache = len(self._cards) == 2 and self.total == 21 and \
                 not self._was_split and not self._is_split
         return self._is_blackjack_cache

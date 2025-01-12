@@ -166,17 +166,6 @@ def test_add_back_counter(table, back_counter):
     assert back_counter.is_seated is True
 
 
-def test_add_back_counter_non_back_counter(table, player):
-    """
-    Tests the add_back_counter method within the Table class
-    when an attempt is made to add a non-back counter.
-
-    """
-    with pytest.raises(TypeError) as e:
-        table.add_back_counter(back_counter=player)
-    assert str(e.value) == 'Expected a BackCounter object.'
-
-
 def test_remove_back_counter(table, back_counter):
     """Tests the remove_back_counter method within the Table class."""
     table.add_player(player=back_counter)
@@ -187,15 +176,3 @@ def test_remove_back_counter(table, back_counter):
     assert back_counter not in table.players
     assert back_counter in table.observers
     assert back_counter.is_seated is False
-
-
-def test_remove_back_counter_non_back_counter(table, player):
-    """
-    Tests the remove_back_counter method within the Table class
-    when an attempt is made to remove a non-back counter.
-
-    """
-    table.add_player(player=player)
-    with pytest.raises(TypeError) as e:
-        table.remove_back_counter(back_counter=player)
-    assert str(e.value) == 'Expected a BackCounter object.'

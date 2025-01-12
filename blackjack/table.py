@@ -54,15 +54,11 @@ class Table:
         self._players.remove(player)
 
     def add_back_counter(self, back_counter: BackCounter) -> None:
-        if not isinstance(back_counter, BackCounter):
-            raise TypeError('Expected a BackCounter object.')
         self._observers.remove(back_counter)
         self._players.append(back_counter)
         back_counter.is_seated = True
 
     def remove_back_counter(self, back_counter: BackCounter) -> None:
-        if not isinstance(back_counter, BackCounter):
-            raise TypeError('Expected a BackCounter object.')
         self._players.remove(back_counter)
         self._observers.append(back_counter)
         back_counter.is_seated = False

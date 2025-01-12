@@ -37,7 +37,7 @@ class Shoe:
     def burn_card(self) -> None:
         card = self._cards.pop()
 
-    def deal_card(self, seen: bool = True) -> str:
+    def deal_card(self, seen = True) -> str:
         card = self._cards.pop()
         if seen:
             self.add_to_seen_cards(card=card)
@@ -69,6 +69,5 @@ class Shoe:
             return running_count + INITIAL_COUNTS[card_counting_system] * (self._shoe_size - 1)
         return running_count
 
-    def true_count(self, card_counting_system: CardCountingSystem) -> float | int:
-        result = round(self.running_count(card_counting_system=card_counting_system) / self.remaining_decks, 0)
-        return 0 if result == 0 else result
+    def true_count(self, card_counting_system: CardCountingSystem) -> int:
+        return int(round(self.running_count(card_counting_system=card_counting_system) / self.remaining_decks, 0))
