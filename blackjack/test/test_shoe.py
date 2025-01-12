@@ -23,30 +23,13 @@ def test_init_invalid_shoe_size(test_shoe_size):
     assert str(e.value) == 'Shoe size must be between 1 and 8 decks.'
 
 
-def test_burn_card_not_seen(shoe):
-    """
-    Tests the burn_card method within the Shoe class when the
-    burn card is not seen.
-
-    """
+def test_burn_card(shoe):
+    """Tests the burn_card method within the Shoe class."""
     assert len(shoe._cards) == 52
     burn_card = shoe._cards[-1]
-    shoe.burn_card(seen=False)
+    shoe.burn_card()
     assert len(shoe._cards) == 51
     assert shoe.seen_cards[burn_card] == 0
-
-
-def test_burn_card_seen(shoe):
-    """
-    Tests the burn_card method within the Shoe class
-    when the burn card is seen.
-
-    """
-    assert len(shoe._cards) == 52
-    burn_card = shoe._cards[-1]
-    shoe.burn_card(seen=True)
-    assert len(shoe._cards) == 51
-    assert shoe.seen_cards[burn_card] == 1
 
 
 def test_deal_card(shoe):
@@ -83,11 +66,11 @@ def test_remaining_decks(shoe):
     assert shoe.remaining_decks == 1
     # burn half a deck
     for _ in range(0, 26):
-        shoe.burn_card(seen=False)
+        shoe.burn_card()
     assert shoe.remaining_decks == 0.5
     # burn a quarter of a deck
     for _ in range(0, 13):
-        shoe.burn_card(seen=False)
+        shoe.burn_card()
     assert shoe.remaining_decks == 0.25
 
 
@@ -95,11 +78,11 @@ def test_cut_card_reached(shoe):
     """Tests the cut_card_reached method within the Shoe class."""
     # burn one card away from half the shoe
     for _ in range(0, 38):
-        shoe.burn_card(seen=False)
+        shoe.burn_card()
 
     assert 1 - (len(shoe._cards) / 52) < 0.75
     assert not shoe.cut_card_reached
-    shoe.burn_card(seen=False)
+    shoe.burn_card()
     assert 1 - (len(shoe._cards) / 52) >= 0.75
     assert shoe.cut_card_reached
 
@@ -123,7 +106,7 @@ def test_true_count():
     # burn an entire 52 card deck and make them all visible 'K'
     # exactly 5 decks remain
     for _ in range(0, 52):
-        shoe.burn_card(seen=False)
+        shoe.burn_card()
         shoe.add_to_seen_cards(card='K')
     assert shoe.true_count(card_counting_system=CardCountingSystem.HI_LO) == -10
     assert shoe.true_count(card_counting_system=CardCountingSystem.HI_OPT_II) == -21
@@ -134,7 +117,7 @@ def test_true_count_zero():
     shoe = Shoe(shoe_size=8)
     # burn 1 card as a visible 'K'
     # roughly 8 decks remain
-    shoe.burn_card(seen=False)
+    shoe.burn_card()
     shoe.add_to_seen_cards(card='K')
     assert shoe.running_count(card_counting_system=CardCountingSystem.HI_LO) < 0
     assert shoe.remaining_decks > 0

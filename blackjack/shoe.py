@@ -34,10 +34,8 @@ class Shoe:
     def cards(self) -> list[str]:
         return self._cards
 
-    def burn_card(self, seen: bool = False) -> None:
+    def burn_card(self) -> None:
         card = self._cards.pop()
-        if seen:
-            self.add_to_seen_cards(card=card)
 
     def deal_card(self, seen: bool = True) -> str:
         card = self._cards.pop()
