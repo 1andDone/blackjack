@@ -37,7 +37,6 @@ class Hand:
         self._is_split = False
         self._status = HandStatus.IN_PLAY
         self._total_bet: float | int = 0
-        self._side_bet: float | int = 0
 
         # caching attributes
         self._total_cache: int | None = None
@@ -69,13 +68,6 @@ class Hand:
 
     def add_to_total_bet(self, amount: float | int) -> None:
         self._total_bet += amount
-
-    @property
-    def side_bet(self) -> float | int:
-        return self._side_bet
-
-    def add_to_side_bet(self, amount: float | int) -> None:
-        self._side_bet += amount
 
     def add_card(self, card: str) -> None:
         self._cards.append(card)

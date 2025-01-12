@@ -29,18 +29,6 @@ def test_add_to_total_bet(hand_with_ace):
     assert hand_with_ace.total_bet == 25
 
 
-def test_add_to_side_bet(hand_with_ace):
-    """
-    Tests the add_to_side_bet method within
-    the Hand class.
-
-    """
-    hand_with_ace.add_to_side_bet(amount=10)
-    assert hand_with_ace.side_bet == 10
-    hand_with_ace.add_to_side_bet(amount=15)
-    assert hand_with_ace.side_bet == 25
-
-
 def test_add_cards(hand_with_ace):
     """Tests the add_cards method within the Hand class."""
     assert hand_with_ace.cards == ['A', '6']
