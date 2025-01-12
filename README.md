@@ -1,12 +1,8 @@
 # blackjack
 
-A fully customizable blackjack simulation and training tool.
+A fully customizable blackjack simulation tool.
 
 ![Blackjack](/images/blackjack.jpg?raw=true)
-
-## Overview
-
-This package provides a flexible environment for simulating and training various Blackjack strategies, including card counting and back-counting techniques. Whether you want to practice basic strategy or experiment with advanced betting systems, this tool makes it easy to configure the game to your preferred rules and play style.
 
 ## Installation
 
@@ -78,8 +74,7 @@ card_counter = CardCounter(
         4: 80,
         5: 150
     },
-    insurance=None,
-    training=True
+    insurance=None
 )
 ```
 
@@ -105,8 +100,7 @@ back_counter = BackCounter(
     },
     insurance=3,
     entry_point=2,
-    exit_point=1,
-    training=False
+    exit_point=1
 )
 ```
 
@@ -120,25 +114,13 @@ blackjack.add_player(player=card_counter)
 blackjack.add_player(player=back_counter)
 ```
 
-### Modes
-
-#### Simulation Mode
+### Simulation Mode
 
 Simulate a large number of shoes:
 
 ```python
 blackjack.simulate(penetration=0.75, number_of_shoes=50000, shoe_size=8, seed=1)
 ```
-
-#### Training Mode
-
-Play individual rounds for practice:
-
-```python
-blackjack.training(penetration=0.65, shoe_size=6, seed=3)
-```
-
-> **_NOTE_:** To enable training mode, one `CardCounter` or `BackCounter` instance is required to have `training=True`.
 
 ### Viewing Results
 

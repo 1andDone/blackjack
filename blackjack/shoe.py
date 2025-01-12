@@ -35,14 +35,14 @@ class Shoe:
         return self._cards
 
     def burn_card(self) -> None:
-        card = self._cards.pop()
+        self._cards.pop()
 
     def deal_card(self, seen = True) -> str:
         card = self._cards.pop()
         if seen:
             self.add_to_seen_cards(card=card)
         return card
-    
+
     def shuffle(self) -> None:
         random.shuffle(self._cards)
         self.burn_card()

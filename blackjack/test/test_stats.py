@@ -1,7 +1,3 @@
-from blackjack.enums import StatsCategory
-from blackjack.stats import Stats
-
-
 def test_summary(stats):
     """Tests the summary method within the Stats class."""
     assert stats.summary(string=False) == {

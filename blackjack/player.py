@@ -27,6 +27,7 @@ class Player:
 
         self._name = name
         self._bankroll = bankroll
+        self._initial_bankroll = bankroll
         self._min_bet = min_bet
         self._hands = [Hand()]
         self._stats = Stats()

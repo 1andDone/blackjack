@@ -1,11 +1,10 @@
 import random
 import sys
 import time
-from typing import Callable, Generator
+from typing import Generator
 from blackjack.card_counter import CardCounter
 from blackjack.dealer import Dealer
-from blackjack.helpers_simulation import play_round as play_round_simulation
-from blackjack.helpers_training import play_round as play_round_training
+from blackjack.gameplay import play_round
 from blackjack.player import Player
 from blackjack.playing_strategy import PlayingStrategy
 from blackjack.rules import Rules
@@ -24,7 +23,7 @@ def _shoe_progress_bar(shoe_range: range, size: int = 60) -> Generator[int, None
         minutes = int(minutes)
         seconds = int(seconds)
         time_str = f'{minutes if minutes > 10 else minutes:02}:{seconds if seconds > 10 else seconds:02}'
-        print(f"Shoes Simulated: [{'█' * x}{('.' * (size - x))}] {shoe_number}/{total_shoes} Estimated wait {time_str}", end='\r', file=sys.stdout, flush=True)
+        print(f"Shoes Simulated: [{'█' * x}{('.' * (size - x))}] {shoe_number}/{total_shoes} Estimated wait: {time_str}", end='\r', file=sys.stdout, flush=True)
 
     for shoe_number in shoe_range:
         _show(shoe_number=shoe_number + 1)
@@ -106,37 +105,24 @@ class Blackjack:
             self._training_player = player
         return self._table.add_player(player=player)
 
-    def _play_shoe(self, play_round: Callable[..., None], penetration: float, shoe_size: int) -> None:
+    def _play_shoe(self, penetration: float, shoe_size: int) -> None:
         if penetration > 0.9:
             raise ValueError('Penetration must be less than or equal to 0.9.')
 
-        shoe = Shoe(shoe_size=shoe_size)
+        shoe = Shoe(shoe_size=shoe_size, penetration=penetration)
         shoe.shuffle()
 
-        while not shoe.cut_card_reached(penetration=penetration) and self._table.players:
+        while not shoe.cut_card_reached and self._table.players:
             play_round(table=self._table, dealer=self._dealer, rules=self._rules, shoe=shoe, playing_strategy=self._playing_strategy)
 
-    def simulate(self, penetration: float, number_of_shoes: int, shoe_size: int, seed: int | None = None) -> None:
+    def simulate(self, penetration: float, number_of_shoes: int, shoe_size: int, seed: int | None = None, reset_bankroll: bool = False) -> None:
         if seed:
             random.seed(seed)
 
-        print('\nBeginning Blackjack simulation...')
         for _ in _shoe_progress_bar(shoe_range=range(number_of_shoes)):
             if not self._table.players:
                 break
-            self._play_shoe(play_round=play_round_simulation, penetration=penetration, shoe_size=shoe_size)
-
-    def training(self, penetration: float, shoe_size: int, seed: int | None = None) -> None:
-        if seed:
-            random.seed(seed)
-
-        if self._training_player is not None:
-            print('\nBeginning Blackjack training...')
-            print(f'You will be making all playing decisions for {self._training_player.name}...')
-            while True:
-                if not self._table.players:
-                    break
-                self._play_shoe(play_round=play_round_training, penetration=penetration, shoe_size=shoe_size)
-                print('\n----- END OF SHOE -----\n')
-        else:
-            print('No players at the table have training enabled. Please add a player with "training" set to True.')
+            self._play_shoe(penetration=penetration, shoe_size=shoe_size)
+            if reset_bankroll:
+                for player in self._table.players + self._table.observers:
+                    player.reset_bankroll()

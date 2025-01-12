@@ -1,5 +1,4 @@
 from blackjack.hand import Hand
-from blackjack.shoe import Shoe
 
 
 class Dealer:

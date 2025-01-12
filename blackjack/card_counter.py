@@ -16,7 +16,6 @@ class CardCounter(Player):
         card_counting_system: CardCountingSystem,
         bet_ramp: dict[float | int, float | int],
         insurance: float | int | None = None,
-        training: bool = False,
         **kwargs: Any
     ):
         """
@@ -33,8 +32,6 @@ class CardCounter(Player):
         insurance
             Minimum running or true count at which a player will
             purchase insurance, if desired, and if available
-        training
-            True if training mode is enabled, False otherwise
 
         """
         super().__init__(**kwargs)
@@ -61,7 +58,6 @@ class CardCounter(Player):
         self._bet_ramp = bet_ramp
         self._card_counting_system = card_counting_system
         self._insurance = insurance
-        self._training = training
 
     @property
     def card_counting_system(self) -> CardCountingSystem:
@@ -83,7 +79,3 @@ class CardCounter(Player):
     @property
     def insurance(self) -> float | int | None:
         return self._insurance
-
-    @property
-    def training(self) -> bool:
-        return self._training
