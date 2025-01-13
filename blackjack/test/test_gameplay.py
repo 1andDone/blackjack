@@ -460,7 +460,7 @@ def test_player_plays_hands_resplit_aces(player, shoe, dealer):
         rules=rules,
         playing_strategy=playing_strategy
     )
-    assert rules.resplit_aces is True
+    assert rules.resplit_aces
     assert player.bankroll == 970
     assert player.number_of_hands == 3
     assert player_hand.status == HandStatus.SHOWDOWN
@@ -505,7 +505,7 @@ def test_player_plays_hands_resplit_aces_insufficient_bankroll(shoe, dealer):
         rules=rules,
         playing_strategy=playing_strategy
     )
-    assert rules.resplit_aces is True
+    assert rules.resplit_aces
     assert player.bankroll == 0
     assert player.number_of_hands == 2
     assert player_hand.status == HandStatus.SHOWDOWN
@@ -546,7 +546,7 @@ def test_player_plays_hands_resplit_aces_max_hands(player, shoe, dealer):
         rules=rules,
         playing_strategy=playing_strategy
     )
-    assert rules.resplit_aces is True
+    assert rules.resplit_aces
     assert player.bankroll == 970
     assert player.number_of_hands == 3
     assert player.number_of_hands == rules.max_hands
@@ -589,7 +589,7 @@ def test_player_plays_hands_resplit_aces_not_allowed(player, shoe, dealer):
         rules=rules,
         playing_strategy=playing_strategy
     )
-    assert rules.resplit_aces is False
+    assert not rules.resplit_aces
     assert player.bankroll == 980
     assert player.number_of_hands == 2
     assert player_hand.status == HandStatus.SHOWDOWN
@@ -628,7 +628,7 @@ def test_player_plays_hands_double_down(player, dealer, shoe):
         rules=rules,
         playing_strategy=playing_strategy
     )
-    assert rules.double_down is True
+    assert rules.double_down
     assert player.bankroll == 980
     assert player_hand.status == HandStatus.SHOWDOWN
     assert player_hand.cards == ['5', '6', 'A']
@@ -664,7 +664,7 @@ def test_player_plays_hands_double_down_not_allowed(player, dealer, shoe):
         rules=rules,
         playing_strategy=playing_strategy
     )
-    assert rules.double_down is False
+    assert not rules.double_down
     assert player.bankroll == 990
     assert player_hand.status == HandStatus.SETTLED
     assert player_hand.cards == ['5', '6', 'A', 'K']
@@ -703,7 +703,7 @@ def test_player_plays_hands_double_down_insufficient_bankroll(player, dealer, sh
         rules=rules,
         playing_strategy=playing_strategy
     )
-    assert rules.double_down is True
+    assert rules.double_down
     assert player.bankroll == 0
     assert player_hand.status == HandStatus.SETTLED
     assert player_hand.total_bet == 10
@@ -742,7 +742,7 @@ def test_player_plays_hands_double_after_split(player, dealer, shoe):
         rules=rules,
         playing_strategy=playing_strategy
     )
-    assert rules.double_after_split is True
+    assert rules.double_after_split
     assert player.bankroll == 960
     assert player.number_of_hands == 2
     assert player_hand.status == HandStatus.SHOWDOWN
@@ -782,7 +782,7 @@ def test_player_plays_hands_double_after_split_not_allowed(player, dealer, shoe)
         rules=rules,
         playing_strategy=playing_strategy
     )
-    assert rules.double_after_split is False
+    assert not rules.double_after_split
     assert player.bankroll == 990
     assert player_hand.status == HandStatus.SHOWDOWN
     assert player_hand.total_bet == 10
@@ -911,11 +911,11 @@ def test_dealer_turn(player, table):
     table.add_player(player=player)
     player_hand = player.get_first_hand()
     player_hand.status = HandStatus.IN_PLAY
-    assert dealer_turn(players=table.players) is False
+    assert not dealer_turn(players=table.players)
     player_hand.status = HandStatus.SETTLED
-    assert dealer_turn(players=table.players) is False
+    assert not dealer_turn(players=table.players)
     player_hand.status = HandStatus.SHOWDOWN
-    assert dealer_turn(players=table.players) is True
+    assert dealer_turn(players=table.players)
 
 
 def test_compare_hands_win_total(player, dealer):
@@ -1046,8 +1046,8 @@ def test_clear_hands(table, dealer_with_hand, player, rules):
     assert player.hands[1].cards == ['A', '6']
     clear_hands(dealer=dealer_with_hand, players=table.players)
     assert player.number_of_hands == 1
-    assert player.get_first_hand().cards == []
-    assert dealer_with_hand.hand.cards == []
+    assert not player.get_first_hand().cards
+    assert not dealer_with_hand.hand.cards
 
 
 def test_play_round_back_counters_added(table, shoe, dealer, rules, card_counter_balanced, back_counter):
@@ -1250,8 +1250,8 @@ def test_play_round_clear_hands(table, player, dealer, shoe, rules):
     playing_strategy = PlayingStrategy(s17=rules.s17)
     table.add_player(player=player)
     play_round(table=table, dealer=dealer, shoe=shoe, rules=rules, playing_strategy=playing_strategy)
-    assert dealer.hand.cards == []
-    assert player.get_first_hand().cards == []
+    assert not dealer.hand.cards
+    assert not player.get_first_hand().cards
 
 
 def test_play_round_player_removed(table, player, dealer, shoe, rules):

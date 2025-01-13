@@ -77,3 +77,6 @@ class Player:
 
     def reset_hands(self) -> None:
         self._hands = [Hand()]
+
+    def reset_bankroll(self) -> None:
+        self._bankroll = self._initial_bankroll

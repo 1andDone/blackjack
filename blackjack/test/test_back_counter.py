@@ -85,7 +85,7 @@ def test_can_enter_insufficient_bankroll(back_counter):
 
     """
     back_counter.adjust_bankroll(amount=-1000)
-    assert back_counter.can_enter(count=10) is False
+    assert not back_counter.can_enter(count=10)
 
 
 @pytest.mark.parametrize(
@@ -108,4 +108,4 @@ def test_is_seated(back_counter):
     
     """
     back_counter.is_seated = True
-    assert back_counter.is_seated is True
+    assert back_counter.is_seated

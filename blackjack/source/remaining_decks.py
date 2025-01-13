@@ -1,8 +1,8 @@
-# for decks 2-8, the number of decks was estimated to the nearest integer value
-# values with fractional parts greater than or equal to .5 (i.e. 338 / 52) were rounded up
-# values with fractional parts less than .5 (i.e. 337 / 52) were rounded down
-# when less than 75% of the cards in the last deck remained (i.e. 38 / 52), an estimate of 0.5 was used
-# when less than 25% of the cards in the last deck remained (i.e. 13 / 52), an estimate of 0.25 was used
+# for decks 2-8, the number of decks was estimated to the nearest integer
+# fractional values greater than or equal to .5 (i.e. 338 / 52) were rounded up
+# fractional values less than .5 (i.e. 337 / 52) were rounded down
+# if less than 75% of the cards in the last deck remained (i.e. 38 / 52), 0.5 was used as an estimate
+# if less than 25% of the cards in the last deck remained (i.e. 13 / 52), 0.25 was used as an estimate
 REMAINING_CARDS_TO_DECKS = {
     0: 0.25,
     1: 0.25,

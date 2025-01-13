@@ -47,11 +47,7 @@ A `Player` uses basic strategy for every decision and always bets a fixed amount
 ```python
 from blackjack.player import Player
 
-player = Player(
-    name='Player',
-    bankroll=1000000,
-    min_bet=10
-)
+player = Player(name='Player', bankroll=1000000, min_bet=10)
 ```
 
 #### Card Counter
@@ -119,12 +115,21 @@ blackjack.add_player(player=back_counter)
 Simulate a large number of shoes:
 
 ```python
-blackjack.simulate(penetration=0.75, number_of_shoes=50000, shoe_size=8, seed=1)
+blackjack.simulate(
+    penetration=0.75,
+    number_of_shoes=50000,
+    shoe_size=8,
+    seed=1,
+    reset_bankroll=True,
+    progress_bar=True
+)
 ```
+
+Although not included in this package, Python's built-in `multiprocessing` library can be utilized to significantly speed up the simulation process.
 
 ### Viewing Results
 
-After running either mode, each player’s performance can be reviewed:
+After running, each player’s performance can be reviewed:
 
 ```python
 print(back_counter.stats.summary(string=True))

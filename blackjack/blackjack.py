@@ -2,7 +2,6 @@ import random
 import sys
 import time
 from typing import Generator
-from blackjack.card_counter import CardCounter
 from blackjack.dealer import Dealer
 from blackjack.gameplay import play_round
 from blackjack.player import Player
@@ -96,16 +95,12 @@ class Blackjack:
         self._table = Table(rules=self._rules)
         self._playing_strategy = PlayingStrategy(s17=s17)
         self._dealer = Dealer()
-        self._training_player: CardCounter | None = None
 
     def add_player(self, player: Player) -> None:
-        if isinstance(player, CardCounter) and player.training:
-            if self._training_player is not None:
-                raise Exception('Only one player at the table is allowed to be in training.')
-            self._training_player = player
+        """Add a player to the table."""
         return self._table.add_player(player=player)
 
-    def _play_shoe(self, penetration: float, shoe_size: int) -> None:
+    def _play_shoe(self, penetration: float, shoe_size: int, reset_bankroll: bool) -> None:
         if penetration > 0.9:
             raise ValueError('Penetration must be less than or equal to 0.9.')
 
@@ -113,13 +108,33 @@ class Blackjack:
         shoe.shuffle()
 
         while not shoe.cut_card_reached and self._table.players:
-            play_round(table=self._table, dealer=self._dealer, rules=self._rules, shoe=shoe, playing_strategy=self._playing_strategy)
+            play_round(
+                table=self._table,
+                dealer=self._dealer,
+                rules=self._rules,
+                shoe=shoe,
+                playing_strategy=self._playing_strategy
+            )
 
-    def simulate(self, penetration: float, number_of_shoes: int, shoe_size: int, seed: int | None = None) -> None:
+            if reset_bankroll:
+                for player in self._table.players + self._table.observers:
+                    player.reset_bankroll()
+
+    def simulate(
+        self,
+        penetration: float,
+        number_of_shoes: int,
+        shoe_size: int, seed: int | None = None,
+        reset_bankroll: bool = False,
+        progress_bar: bool = True
+    ) -> None:
+        """Simulates a series of blackjack games across multiple shoes."""
         if seed:
             random.seed(seed)
 
-        for _ in _shoe_progress_bar(shoe_range=range(number_of_shoes)):
-            if not self._table.players:
-                break
-            self._play_shoe(penetration=penetration, shoe_size=shoe_size)
+        if progress_bar:
+            for _ in _shoe_progress_bar(shoe_range=range(number_of_shoes)):
+                self._play_shoe(penetration=penetration, shoe_size=shoe_size, reset_bankroll=reset_bankroll)
+        else:
+            for _ in range(number_of_shoes):
+                self._play_shoe(penetration=penetration, shoe_size=shoe_size, reset_bankroll=reset_bankroll)
