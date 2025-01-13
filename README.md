@@ -120,7 +120,7 @@ blackjack.simulate(
     number_of_shoes=50000,
     shoe_size=8,
     seed=1,
-    reset_bankroll=True,
+    reset_bankroll=False,
     progress_bar=True
 )
 ```
