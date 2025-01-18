@@ -84,8 +84,9 @@ def test_can_enter_insufficient_bankroll(back_counter):
     a wager at the current count.
 
     """
-    back_counter.adjust_bankroll(amount=-1000)
-    assert back_counter.can_enter(count=10) is False
+    back_counter._bankroll = 0
+    assert back_counter.bankroll == 0
+    assert not back_counter.can_enter(count=10)
 
 
 @pytest.mark.parametrize(
@@ -99,3 +100,15 @@ def test_can_enter_insufficient_bankroll(back_counter):
 def test_can_exit(back_counter, test_count, expected):
     """Tests the can_exit method within the BackCounter class."""
     assert back_counter.can_exit(count=test_count) is expected
+
+
+def test_is_seated(back_counter):
+    """
+    Tests the is_seated getter and setter methods
+    within the BackCounter class.
+    
+    """
+    back_counter.is_seated = True
+    assert back_counter.is_seated
+    back_counter.is_seated = False
+    assert not back_counter.is_seated

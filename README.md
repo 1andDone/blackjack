@@ -1,10 +1,10 @@
 # blackjack
 
-Fully-customizable blackjack simulation.
+A fully customizable blackjack simulation tool.
 
 ![Blackjack](/images/blackjack.jpg?raw=true)
 
-## Setup
+## Installation
 
 Clone the repository and install locally via pip.
 
@@ -12,9 +12,11 @@ Clone the repository and install locally via pip.
 pip install .
 ```
 
-## Usage
+## Getting Started
 
-Begin by setting up the `Blackjack` class object with certain house rules.
+### Setting up the Game
+
+Create a `Blackjack` instance and configure the house rules to your liking.
 
 ```python
 from blackjack.blackjack import Blackjack
@@ -34,25 +36,30 @@ blackjack = Blackjack(
 )
 ```
 
-Next, create each player that will be added to the table. There are several different
-card counting systems (both balanced and unbalanced) available for each `CardCounter`
-and `BackCounter` class instance. `Player` class instances do not count cards.
+### Creating Players
 
+You can add different types of players to the game, each with unique behaviors and betting strategies.
+
+#### Player
+
+A `Player` uses basic strategy for every decision and always bets a fixed amount.
 
 ```python
-from blackjack.back_counter import BackCounter
-from blackjack.card_counter import CardCounter
-from blackjack.enums import CardCountingSystem
 from blackjack.player import Player
 
-player1 = Player(
-    name='Player 1',
-    bankroll=1000000,
-    min_bet=10
-)
+player = Player(name='Player', bankroll=1000000, min_bet=10)
+```
 
-player2 = CardCounter(
-    name='Player 2',
+#### Card Counter
+
+A `CardCounter` uses basic strategy in conjunction with a chosen card counting system. Bets vary based on the current running/true count.
+
+```python
+from blackjack.card_counter import CardCounter
+from blackjack.enums import CardCountingSystem
+
+card_counter = CardCounter(
+    name='Card Counter',
     bankroll=50000,
     min_bet=10,
     card_counting_system=CardCountingSystem.HI_LO,
@@ -65,9 +72,18 @@ player2 = CardCounter(
     },
     insurance=None
 )
+```
 
-player3 = BackCounter(
-    name='Player 3',
+#### Back Counter
+
+A `BackCounter` is similar to a `CardCounter`, but they may join the table when the running/true count is favorable or leave it when it becomes unfavorable.
+
+```python
+from blackjack.back_counter import BackCounter
+from blackjack.enums import CardCountingSystem
+
+back_counter = BackCounter(
+    name='Back Counter',
     bankroll=15000,
     min_bet=10,
     card_counting_system=CardCountingSystem.HI_LO,
@@ -84,43 +100,63 @@ player3 = BackCounter(
 )
 ```
 
-Finally, add all players and simulate.
+### Adding Players to the Table
+
+Player's are dealt cards in the order that they are added.
 
 ```python
-blackjack.add_player(player=player1)
-blackjack.add_player(player=player2)
-blackjack.add_player(player=player3)
-blackjack.simulate(penetration=0.75, number_of_shoes=50000, shoe_size=8, seed=1)
+blackjack.add_player(player=player)
+blackjack.add_player(player=card_counter)
+blackjack.add_player(player=back_counter)
 ```
 
-## Results
+### Simulation Mode
 
-Summary statistics are available after each run by using each player's `stats` method.
+Simulate a large number of shoes:
 
 ```python
-print(player3.stats.summary(string=True))
+blackjack.simulate(
+    penetration=0.75,
+    number_of_shoes=50000,
+    shoe_size=8,
+    seed=1,
+    reset_bankroll=False,
+    progress_bar=True
+)
 ```
 
+Although not included in this package, Python's built-in `multiprocessing` library can be utilized to significantly speed up the simulation process.
+
+### Viewing Results
+
+After running, each player’s performance can be reviewed:
+
+```python
+print(back_counter.stats.summary(string=True))
 ```
-TOTAL ROUNDS PLAYED: 267,773
-TOTAL HANDS PLAYED: 274,062
-PLAYER HANDS WON: 117,821
-PLAYER HANDS LOST: 132,534
-PLAYER HANDS PUSHED: 23,707
-PLAYER BLACKJACKS: 14,450
-DEALER BLACKJACKS: 14,484
-PLAYER DOUBLE DOWNS: 22,497
-PLAYER SURRENDERS: 12,349
-INSURANCE AMOUNT BET: $376,810.00
-INSURANCE NET WINNINGS: -$120,750.00
-AMOUNT BET: $14,306,490.00
-NET WINNINGS: $158,225.00
-TOTAL AMOUNT BET: $14,683,300.00
-TOTAL NET WINNINGS: $37,475.00
+
+Example summary:
+
+```
+TOTAL ROUNDS PLAYED: 266,873
+TOTAL HANDS PLAYED: 273,134
+PLAYER HANDS WON: 117,328
+PLAYER HANDS LOST: 132,183
+PLAYER HANDS PUSHED: 23,623
+PLAYER BLACKJACKS: 14,385
+DEALER BLACKJACKS: 14,464
+PLAYER DOUBLE DOWNS: 22,416
+PLAYER SURRENDERS: 12,305
+INSURANCE AMOUNT BET: $373,290.00
+INSURANCE NET WINNINGS: -$118,760.00
+AMOUNT BET: $14,216,900.00
+NET WINNINGS: $146,990.00
+TOTAL AMOUNT BET: $14,590,190.00
+TOTAL NET WINNINGS: $28,230.00
 ```
 
 If desired, the statistics at each count can be accessed as well.
 
 ```python
-player3.stats.stats
+back_counter.stats.stats
 ```

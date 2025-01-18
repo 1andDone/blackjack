@@ -69,8 +69,6 @@ class CardCounter(Player):
 
     @override
     def placed_bet(self, **kwargs: Any) -> float | int:
-        if 'count' not in kwargs:
-            raise KeyError('"count" needs to be included in the kwargs.')
         count = kwargs['count']
         if count < self.min_count:
             return self._min_bet

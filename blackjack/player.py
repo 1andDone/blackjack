@@ -27,6 +27,7 @@ class Player:
 
         self._name = name
         self._bankroll = bankroll
+        self._initial_bankroll = bankroll
         self._min_bet = min_bet
         self._hands = [Hand()]
         self._stats = Stats()
@@ -64,9 +65,8 @@ class Player:
         return amount <= self._bankroll
 
     def _is_split_allowed(self, hand: Hand, max_hands: int) -> bool:
-        if self.has_sufficient_bankroll(amount=hand.total_bet):
-            return hand.number_of_cards == 2 and (hand.cards[0] == hand.cards[1]) and len(self._hands) < max_hands
-        return False
+        return hand.number_of_cards == 2 and (hand.cards[0] == hand.cards[1]) and \
+            len(self._hands) < max_hands and self.has_sufficient_bankroll(amount=hand.total_bet)
 
     def decision(self, playing_strategy: PlayingStrategy, hand: Hand, dealer_up_card: str, max_hands: int) -> str:
         if self._is_split_allowed(hand=hand, max_hands=max_hands):
@@ -77,3 +77,6 @@ class Player:
 
     def reset_hands(self) -> None:
         self._hands = [Hand()]
+
+    def reset_bankroll(self) -> None:
+        self._bankroll = self._initial_bankroll

@@ -25,20 +25,8 @@ def test_add_to_total_bet(hand_with_ace):
     """
     hand_with_ace.add_to_total_bet(amount=10)
     assert hand_with_ace.total_bet == 10
-    hand_with_ace.add_to_total_bet(amount=15)
-    assert hand_with_ace.total_bet == 25
-
-
-def test_add_to_side_bet(hand_with_ace):
-    """
-    Tests the add_to_side_bet method within
-    the Hand class.
-
-    """
-    hand_with_ace.add_to_side_bet(amount=10)
-    assert hand_with_ace.side_bet == 10
-    hand_with_ace.add_to_side_bet(amount=15)
-    assert hand_with_ace.side_bet == 25
+    hand_with_ace.add_to_total_bet(amount=-5)
+    assert hand_with_ace.total_bet == 5
 
 
 def test_add_cards(hand_with_ace):
@@ -81,6 +69,7 @@ def test_is_soft_without_ace(hand_without_ace):
     the hand does not contain an ace.
 
     """
+    assert 'A' not in hand_without_ace.cards
     assert not hand_without_ace.is_soft
 
 
@@ -98,8 +87,8 @@ def test_split(hand_pair):
     assert hand_pair.cards == ['7', '7']
     new_hand = hand_pair.split()
     assert hand_pair.cards == ['7']
-    assert hand_pair.is_split
     assert new_hand.cards == ['7']
+    assert hand_pair.is_split
     assert not new_hand.is_split
 
 

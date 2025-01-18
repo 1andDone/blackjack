@@ -3,7 +3,7 @@ import sys
 import time
 from typing import Generator
 from blackjack.dealer import Dealer
-from blackjack.helpers import play_round
+from blackjack.gameplay import play_round
 from blackjack.player import Player
 from blackjack.playing_strategy import PlayingStrategy
 from blackjack.rules import Rules
@@ -22,7 +22,7 @@ def _shoe_progress_bar(shoe_range: range, size: int = 60) -> Generator[int, None
         minutes = int(minutes)
         seconds = int(seconds)
         time_str = f'{minutes if minutes > 10 else minutes:02}:{seconds if seconds > 10 else seconds:02}'
-        print(f"Shoes Simulated: [{'█' * x}{('.' * (size - x))}] {shoe_number}/{total_shoes} Estimated wait {time_str}", end='\r', file=sys.stdout, flush=True)
+        print(f"Shoes Simulated: [{'█' * x}{('.' * (size - x))}] {shoe_number}/{total_shoes} Estimated wait: {time_str}", end='\r', file=sys.stdout, flush=True)
 
     for shoe_number in shoe_range:
         _show(shoe_number=shoe_number + 1)
@@ -97,23 +97,44 @@ class Blackjack:
         self._dealer = Dealer()
 
     def add_player(self, player: Player) -> None:
+        """Add a player to the table."""
         return self._table.add_player(player=player)
 
-    def _play_shoe(self, penetration: float, shoe_size: int) -> None:
+    def _play_shoe(self, penetration: float, shoe_size: int, reset_bankroll: bool) -> None:
         if penetration > 0.9:
-            raise ValueError('Penetration must be less than or equal to 0.9')
+            raise ValueError('Penetration must be less than or equal to 0.9.')
 
-        shoe = Shoe(shoe_size=shoe_size)
+        shoe = Shoe(shoe_size=shoe_size, penetration=penetration)
         shoe.shuffle()
 
-        while not shoe.cut_card_reached(penetration=penetration) and self._table.players:
-            play_round(table=self._table, dealer=self._dealer, rules=self._rules, shoe=shoe, playing_strategy=self._playing_strategy)
+        while not shoe.cut_card_reached and self._table.players:
+            play_round(
+                table=self._table,
+                dealer=self._dealer,
+                rules=self._rules,
+                shoe=shoe,
+                playing_strategy=self._playing_strategy
+            )
 
-    def simulate(self, penetration: float, number_of_shoes: int, shoe_size: int, seed: int | None = None) -> None:
+            if reset_bankroll:
+                for player in self._table.players + self._table.observers:
+                    player.reset_bankroll()
+
+    def simulate(
+        self,
+        penetration: float,
+        number_of_shoes: int,
+        shoe_size: int, seed: int | None = None,
+        reset_bankroll: bool = False,
+        progress_bar: bool = True
+    ) -> None:
+        """Simulates a series of blackjack games across multiple shoes."""
         if seed:
             random.seed(seed)
 
-        for _ in _shoe_progress_bar(shoe_range=range(number_of_shoes)):
-            if not self._table.players:
-                break
-            self._play_shoe(penetration=penetration, shoe_size=shoe_size)
+        if progress_bar:
+            for _ in _shoe_progress_bar(shoe_range=range(number_of_shoes)):
+                self._play_shoe(penetration=penetration, shoe_size=shoe_size, reset_bankroll=reset_bankroll)
+        else:
+            for _ in range(number_of_shoes):
+                self._play_shoe(penetration=penetration, shoe_size=shoe_size, reset_bankroll=reset_bankroll)

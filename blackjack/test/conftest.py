@@ -20,7 +20,7 @@ def rules():
 
 @pytest.fixture
 def shoe():
-    return Shoe(shoe_size=1)
+    return Shoe(shoe_size=1, penetration=0.75)
 
 
 @pytest.fixture
@@ -69,11 +69,7 @@ def dealer_with_hand(dealer):
 
 @pytest.fixture
 def player():
-    return Player(
-        name='Player 1',
-        min_bet=10,
-        bankroll=1000
-    )
+    return Player(name='Player 1', min_bet=10, bankroll=1000)
 
 
 @pytest.fixture
@@ -145,17 +141,19 @@ def playing_strategy_s17():
 @pytest.fixture
 def stats():
     stats = Stats()
-    stats.add_value(count=1, category=StatsCategory.TOTAL_ROUNDS_PLAYED)
-    stats.add_hand(count=1, category=StatsCategory.PLAYER_HANDS_LOST)
-    stats.add_value(count=1, category=StatsCategory.DEALER_BLACKJACKS)
-    stats.add_value(count=1, category=StatsCategory.AMOUNT_BET, value=25)
-    stats.add_value(count=1, category=StatsCategory.NET_WINNINGS, value=-25)
-    stats.add_value(count=2, category=StatsCategory.INSURANCE_AMOUNT_BET, value=12.5)
-    stats.add_value(count=2, category=StatsCategory.INSURANCE_NET_WINNINGS, value=25)
-    stats.add_value(count=3, category=StatsCategory.TOTAL_ROUNDS_PLAYED)
-    stats.add_hand(count=3, category=StatsCategory.PLAYER_HANDS_LOST)
-    stats.add_value(count=3, category=StatsCategory.AMOUNT_BET, value=10)
-    stats.add_value(count=3, category=StatsCategory.NET_WINNINGS, value=-10)
+    stats.stats[(1, StatsCategory.TOTAL_ROUNDS_PLAYED)] += 1
+    stats.stats[(1, StatsCategory.TOTAL_HANDS_PLAYED)] += 1
+    stats.stats[(1, StatsCategory.PLAYER_HANDS_LOST)] += 1
+    stats.stats[(1, StatsCategory.DEALER_BLACKJACKS)] += 1
+    stats.stats[(1, StatsCategory.AMOUNT_BET)] += 25
+    stats.stats[(1, StatsCategory.NET_WINNINGS)] -= 25
+    stats.stats[(2, StatsCategory.INSURANCE_AMOUNT_BET)] += 12.5
+    stats.stats[(2, StatsCategory.INSURANCE_NET_WINNINGS)] += 25
+    stats.stats[(3, StatsCategory.TOTAL_ROUNDS_PLAYED)] += 1
+    stats.stats[(3, StatsCategory.TOTAL_HANDS_PLAYED)] += 1
+    stats.stats[(3, StatsCategory.PLAYER_HANDS_LOST)] += 1
+    stats.stats[(3, StatsCategory.AMOUNT_BET)] += 10
+    stats.stats[(3, StatsCategory.NET_WINNINGS)] -= 10
     return stats
 
 
