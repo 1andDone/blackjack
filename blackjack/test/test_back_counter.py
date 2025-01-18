@@ -84,7 +84,8 @@ def test_can_enter_insufficient_bankroll(back_counter):
     a wager at the current count.
 
     """
-    back_counter.adjust_bankroll(amount=-1000)
+    back_counter._bankroll = 0
+    assert back_counter.bankroll == 0
     assert not back_counter.can_enter(count=10)
 
 
@@ -109,3 +110,5 @@ def test_is_seated(back_counter):
     """
     back_counter.is_seated = True
     assert back_counter.is_seated
+    back_counter.is_seated = False
+    assert not back_counter.is_seated

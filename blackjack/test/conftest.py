@@ -69,11 +69,7 @@ def dealer_with_hand(dealer):
 
 @pytest.fixture
 def player():
-    return Player(
-        name='Player 1',
-        min_bet=10,
-        bankroll=1000
-    )
+    return Player(name='Player 1', min_bet=10, bankroll=1000)
 
 
 @pytest.fixture
