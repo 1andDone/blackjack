@@ -1050,8 +1050,8 @@ def test_clear_hands(table, dealer_with_hand, player, rules):
     assert not dealer_with_hand.hand.cards
 
 
-def test_play_round_back_counters_added(table, shoe, dealer, rules, card_counter_balanced, back_counter):
-    """Tests the play_round function when back counters are added."""
+def test_play_round_back_counter_added(table, shoe, dealer, rules, card_counter_balanced, back_counter):
+    """Tests the play_round function when a back counter is added."""
     playing_strategy = PlayingStrategy(s17=rules.s17)
     table.add_player(player=card_counter_balanced)
     table.add_player(player=back_counter)
@@ -1070,6 +1070,16 @@ def test_play_round_back_counters_added(table, shoe, dealer, rules, card_counter
     assert back_counter.stats.stats[(3, StatsCategory.PLAYER_HANDS_WON)] == 1
     assert back_counter.stats.stats[(3, StatsCategory.AMOUNT_BET)] == 40
     assert back_counter.stats.stats[(3, StatsCategory.NET_WINNINGS)] == 40
+
+
+def test_play_round_back_counter_not_added(table, shoe, dealer, rules, card_counter_balanced, back_counter):
+    """Tests the play_round function when a back counter is not added."""
+    playing_strategy = PlayingStrategy(s17=rules.s17)
+    table.add_player(player=card_counter_balanced)
+    table.add_player(player=back_counter)
+    play_round(table=table, dealer=dealer, shoe=shoe, rules=rules, playing_strategy=playing_strategy)
+    assert card_counter_balanced in table.players
+    assert back_counter not in table.players
 
 
 def test_play_round_insufficient_funds(table, dealer, player, shoe, rules):

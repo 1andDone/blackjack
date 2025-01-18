@@ -23,12 +23,23 @@ def test_init_invalid_shoe_size(test_shoe_size):
     assert str(e.value) == 'Shoe size must be between 1 and 8 decks.'
 
 
+def test_cards(shoe):
+    """Tests the cards method within the Shoe class."""
+    assert len(shoe.cards) == 52
+    assert shoe.cards[-13:] == [
+        '2', '3', '4', '5', '6', '7', '8', '9', '10', 'J', 'Q', 'K', 'A'
+    ]
+    assert shoe.cards[:13] == [
+        '2', '3', '4', '5', '6', '7', '8', '9', '10', 'J', 'Q', 'K', 'A'
+    ]
+
+
 def test_burn_card(shoe):
     """Tests the burn_card method within the Shoe class."""
-    assert len(shoe._cards) == 52
-    burn_card = shoe._cards[-1]
+    assert len(shoe.cards) == 52
+    burn_card = shoe.cards[-1]
     shoe.burn_card()
-    assert len(shoe._cards) == 51
+    assert len(shoe.cards) == 51
     assert shoe.seen_cards[burn_card] == 0
 
 
@@ -42,11 +53,11 @@ def test_deal_card(shoe):
 
 def test_shuffle(shoe):
     """Tests the shuffle method within the Shoe class."""
-    before_shuffle = shoe._cards.copy()
+    before_shuffle = shoe.cards.copy()
     assert len(before_shuffle) == 52
     random.seed(1)
     shoe.shuffle()
-    after_shuffle = shoe._cards
+    after_shuffle = shoe.cards
     assert len(after_shuffle) == 51
     assert before_shuffle[0] != after_shuffle[0]
 
@@ -80,10 +91,10 @@ def test_cut_card_reached(shoe):
     for _ in range(0, 38):
         shoe.burn_card()
 
-    assert 1 - (len(shoe._cards) / 52) < 0.75
+    assert 1 - (len(shoe.cards) / 52) < 0.75
     assert not shoe.cut_card_reached
     shoe.burn_card()
-    assert 1 - (len(shoe._cards) / 52) >= 0.75
+    assert 1 - (len(shoe.cards) / 52) >= 0.75
     assert shoe.cut_card_reached
 
 
