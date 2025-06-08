@@ -126,7 +126,44 @@ def test_player_initial_decision_insurance_dealer_blackjack(card_counter_unbalan
     assert card_counter_unbalanced.stats.stats[(3, StatsCategory.AMOUNT_BET)] == 10
     assert card_counter_unbalanced.stats.stats[(3, StatsCategory.NET_WINNINGS)] == -10
     assert card_counter_unbalanced.stats.stats[(4, StatsCategory.INSURANCE_AMOUNT_BET)] == 5
-    assert card_counter_unbalanced.stats.stats[(4, StatsCategory.INSURANCE_NET_WINNINGS)] == 5
+    assert card_counter_unbalanced.stats.stats[(4, StatsCategory.INSURANCE_NET_WINNINGS)] == 10
+
+
+def test_player_initial_decision_insurance_player_blackjack_dealer_blackjack(card_counter_unbalanced, dealer):
+    """
+    Tests the player_initial_decision function when the player buys
+    insurance and both the player and dealer have blackjack.
+
+    """
+    rules = Rules(min_bet=10, max_bet=500)
+    playing_strategy = PlayingStrategy(s17=rules.s17)
+    card_counter_unbalanced_hand = card_counter_unbalanced.get_first_hand()
+    card_counter_unbalanced_hand.add_card(card='K')
+    card_counter_unbalanced_hand.add_card(card='A')
+    dealer.hand.add_card(card='K')
+    dealer.hand.add_card(card='A')
+    assert card_counter_unbalanced.bankroll == 1000
+    assert player_initial_decision(
+        player=card_counter_unbalanced,
+        player_stats=card_counter_unbalanced.stats.stats,
+        placed_bet=10,
+        count=3,
+        insurance_count=4,
+        dealer_hand_is_blackjack=dealer.hand.is_blackjack,
+        dealer_up_card=dealer.up_card,
+        rules=rules,
+        playing_strategy=playing_strategy
+    ) is None
+    assert card_counter_unbalanced.bankroll == 1010
+    assert card_counter_unbalanced_hand.status == HandStatus.SETTLED
+    assert card_counter_unbalanced.stats.stats[(3, StatsCategory.TOTAL_HANDS_PLAYED)] == 1
+    assert card_counter_unbalanced.stats.stats[(3, StatsCategory.PLAYER_HANDS_PUSHED)] == 1
+    assert card_counter_unbalanced.stats.stats[(3, StatsCategory.PLAYER_BLACKJACKS)] == 1
+    assert card_counter_unbalanced.stats.stats[(3, StatsCategory.DEALER_BLACKJACKS)] == 1
+    assert card_counter_unbalanced.stats.stats[(3, StatsCategory.AMOUNT_BET)] == 10
+    assert card_counter_unbalanced.stats.stats[(3, StatsCategory.NET_WINNINGS)] == 0
+    assert card_counter_unbalanced.stats.stats[(4, StatsCategory.INSURANCE_AMOUNT_BET)] == 5
+    assert card_counter_unbalanced.stats.stats[(4, StatsCategory.INSURANCE_NET_WINNINGS)] == 10
 
 
 def test_player_initial_decision_insurance_no_dealer_blackjack(card_counter_unbalanced, dealer):
@@ -1114,7 +1151,7 @@ def test_play_round_insurance_win(dealer, shoe, card_counter_unbalanced):
     assert card_counter_unbalanced.stats.stats[(3, StatsCategory.AMOUNT_BET)] == 40
     assert card_counter_unbalanced.stats.stats[(3, StatsCategory.NET_WINNINGS)] == -40
     assert card_counter_unbalanced.stats.stats[(2, StatsCategory.INSURANCE_AMOUNT_BET)] == 20
-    assert card_counter_unbalanced.stats.stats[(2, StatsCategory.INSURANCE_NET_WINNINGS)] == 20
+    assert card_counter_unbalanced.stats.stats[(2, StatsCategory.INSURANCE_NET_WINNINGS)] == 40
 
 
 def test_play_round_insurance_loss(dealer, shoe, card_counter_unbalanced):
