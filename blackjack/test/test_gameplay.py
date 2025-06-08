@@ -118,7 +118,7 @@ def test_player_initial_decision_insurance_dealer_blackjack(card_counter_unbalan
         rules=rules,
         playing_strategy=playing_strategy
     ) is None
-    assert card_counter_unbalanced.bankroll == 995
+    assert card_counter_unbalanced.bankroll == 1000
     assert card_counter_unbalanced_hand.status == HandStatus.SETTLED
     assert card_counter_unbalanced.stats.stats[(3, StatsCategory.TOTAL_HANDS_PLAYED)] == 1
     assert card_counter_unbalanced.stats.stats[(3, StatsCategory.PLAYER_HANDS_LOST)] == 1
