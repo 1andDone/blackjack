@@ -1,5 +1,6 @@
 from collections import Counter
 import random
+import time
 from blackjack.enums import CardCountingSystem
 from blackjack.source.card_counting_systems import COUNT_VALUES, INITIAL_COUNTS
 from blackjack.source.remaining_decks import REMAINING_CARDS_TO_DECKS
@@ -29,7 +30,12 @@ class Shoe:
         self._total_cards = len(self._cards)
         self._cut_card_location = self._total_cards - int(penetration * self._total_cards)
         self._seen_cards: Counter[str] = Counter()
+        self._shoe_id: str = str(int(time.time()))
 
+    @property
+    def shoe_id(self) -> str:
+        return self._shoe_id
+    
     @property
     def cards(self) -> list[str]:
         return self._cards

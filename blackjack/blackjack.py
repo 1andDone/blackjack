@@ -1,3 +1,4 @@
+from pathlib import Path
 import random
 import sys
 import time
@@ -100,7 +101,7 @@ class Blackjack:
         """Add a player to the table."""
         return self._table.add_player(player=player)
 
-    def _play_shoe(self, penetration: float, shoe_size: int, reset_bankroll: bool) -> None:
+    def _play_shoe(self, penetration: float, shoe_size: int, reset_bankroll: bool, _logfile: Path) -> None:
         if penetration > 0.9:
             raise ValueError('Penetration must be less than or equal to 0.9.')
 
@@ -113,7 +114,8 @@ class Blackjack:
                 dealer=self._dealer,
                 rules=self._rules,
                 shoe=shoe,
-                playing_strategy=self._playing_strategy
+                playing_strategy=self._playing_strategy,
+                _logfile=_logfile
             )
 
             if reset_bankroll:
@@ -126,7 +128,8 @@ class Blackjack:
         number_of_shoes: int,
         shoe_size: int, seed: int | None = None,
         reset_bankroll: bool = False,
-        progress_bar: bool = True
+        progress_bar: bool = True,
+        _logfile: Path = None
     ) -> None:
         """Simulates a series of blackjack games across multiple shoes."""
         if seed:
@@ -134,7 +137,7 @@ class Blackjack:
 
         if progress_bar:
             for _ in _shoe_progress_bar(shoe_range=range(number_of_shoes)):
-                self._play_shoe(penetration=penetration, shoe_size=shoe_size, reset_bankroll=reset_bankroll)
+                self._play_shoe(penetration=penetration, shoe_size=shoe_size, reset_bankroll=reset_bankroll, _logfile=_logfile)
         else:
             for _ in range(number_of_shoes):
-                self._play_shoe(penetration=penetration, shoe_size=shoe_size, reset_bankroll=reset_bankroll)
+                self._play_shoe(penetration=penetration, shoe_size=shoe_size, reset_bankroll=reset_bankroll, _logfile=_logfile)
